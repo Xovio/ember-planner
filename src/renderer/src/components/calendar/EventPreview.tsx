@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { addMinutes, differenceInMinutes } from 'date-fns'
-import { AlignLeft, Bell, Copy, MapPin, Pencil, Repeat, Trash2, X } from 'lucide-react'
+import { AlignLeft, Bell, Copy, Lock, MapPin, Pencil, Repeat, Trash2, X } from 'lucide-react'
+import { isCalendarLocked } from '@shared/google'
 import { useStore } from '../../store'
 import { calVar } from '../../lib/theme'
 import { fmt, formatDuration, reminderLabel, toLocalTime } from '../../lib/dates'
@@ -26,24 +27,35 @@ export function EventPreview(): React.JSX.Element | null {
   const start = pv.occurrenceStart ? new Date(pv.occurrenceStart) : baseStart
   const end = addMinutes(start, duration)
   const isSeries = !!ev.recurrence
+  const locked = isCalendarLocked(cal)
 
   return (
     <Popover anchor={pv.anchor} onClose={() => setPreview(null)} width={340} label="Termin">
       <div className="pv" style={{ '--c': calVar(cal?.color ?? 'red') } as React.CSSProperties}>
         <div className="pv-toolbar">
-          <button className="icon-btn sm" title="Bearbeiten (Doppelklick)" onClick={() => selectEvent(ev.id, pv.occurrenceStart)}>
+          <button
+            className="icon-btn sm"
+            title={locked ? 'Details (Doppelklick)' : 'Bearbeiten (Doppelklick)'}
+            onClick={() => selectEvent(ev.id, pv.occurrenceStart)}
+          >
             <Pencil size={14} />
           </button>
-          <button className="icon-btn sm" title="Duplizieren" onClick={() => duplicate(ev.id)}>
+          <button
+            className="icon-btn sm"
+            title={locked ? 'Als eigenen Termin kopieren' : 'Duplizieren'}
+            onClick={() => duplicate(ev.id)}
+          >
             <Copy size={14} />
           </button>
-          <button
-            className="icon-btn sm danger"
-            title="Löschen (Entf)"
-            onClick={() => (isSeries && pv.occurrenceStart ? setAskScope(true) : del(ev.id, 'all'))}
-          >
-            <Trash2 size={14} />
-          </button>
+          {!locked && (
+            <button
+              className="icon-btn sm danger"
+              title="Löschen (Entf)"
+              onClick={() => (isSeries && pv.occurrenceStart ? setAskScope(true) : del(ev.id, 'all'))}
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
           <span style={{ flex: 1 }} />
           <button className="icon-btn sm" onClick={() => setPreview(null)} aria-label="Schließen">
             <X size={14} />
@@ -86,7 +98,12 @@ export function EventPreview(): React.JSX.Element | null {
           )}
           {ev.reminders.length > 0 && (
             <li>
-              <Bell size={14} /> {ev.reminders.slice().sort((a, b) => a - b).map(reminderLabel).join(', ')}
+              <Bell size={14} />{' '}
+              {ev.reminders
+                .slice()
+                .sort((a, b) => a - b)
+                .map(reminderLabel)
+                .join(', ')}
             </li>
           )}
           {ev.notes && (
@@ -96,6 +113,11 @@ export function EventPreview(): React.JSX.Element | null {
           )}
           <li className="pv-cal">
             <i /> {cal?.name}
+            {locked && (
+              <span className="pv-locked" title="Dieser Kalender ist schreibgeschützt">
+                <Lock size={11} /> schreibgeschützt
+              </span>
+            )}
           </li>
         </ul>
         {todo && (

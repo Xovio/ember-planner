@@ -1,13 +1,40 @@
 import { useState } from 'react'
-import { Check, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Check, CloudAlert, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { CALENDAR_COLORS, type CalendarColor, type CalendarInfo } from '@shared/types'
 import { uid, useStore } from '../../store'
 import { COLOR_NAMES, calVar } from '../../lib/theme'
+import { api } from '../../lib/api'
+import { lastSyncLabel, useGoogleStatus, useTick } from '../../lib/googleStatus'
 
 export function CalendarList(): React.JSX.Element {
   const calendars = useStore((s) => s.data!.calendars)
   const toggle = useStore((s) => s.toggleCalendar)
   const [editing, setEditing] = useState<CalendarInfo | null>(null)
+  const local = calendars.filter((c) => c.external?.provider !== 'google')
+  const google = calendars.filter((c) => c.external?.provider === 'google')
+
+  const renderRow = (c: CalendarInfo): React.JSX.Element =>
+    editing?.id === c.id ? (
+      <CalendarEditForm key={c.id} value={editing} onDone={() => setEditing(null)} />
+    ) : (
+      <div key={c.id} className="callist-row">
+        <button
+          className={`cal-check ${c.visible ? 'on' : ''}`}
+          style={{ '--c': calVar(c.color) } as React.CSSProperties}
+          onClick={() => toggle(c.id)}
+          aria-pressed={c.visible}
+          aria-label={`${c.name} ${c.visible ? 'ausblenden' : 'einblenden'}`}
+        >
+          {c.visible && <Check size={12} strokeWidth={3} />}
+        </button>
+        <span className="callist-name" onClick={() => toggle(c.id)}>
+          {c.name}
+        </span>
+        <button className="icon-btn sm ghost-hover" onClick={() => setEditing(c)} aria-label="Bearbeiten">
+          <Pencil size={13} />
+        </button>
+      </div>
+    )
 
   return (
     <div className="callist">
@@ -30,32 +57,20 @@ export function CalendarList(): React.JSX.Element {
         </button>
       </div>
 
-      {calendars.map((c) =>
-        editing?.id === c.id ? (
-          <CalendarEditForm key={c.id} value={editing} onDone={() => setEditing(null)} />
-        ) : (
-          <div key={c.id} className="callist-row">
-            <button
-              className={`cal-check ${c.visible ? 'on' : ''}`}
-              style={{ '--c': calVar(c.color) } as React.CSSProperties}
-              onClick={() => toggle(c.id)}
-              aria-pressed={c.visible}
-              aria-label={`${c.name} ${c.visible ? 'ausblenden' : 'einblenden'}`}
-            >
-              {c.visible && <Check size={12} strokeWidth={3} />}
-            </button>
-            <span className="callist-name" onClick={() => toggle(c.id)}>
-              {c.name}
-            </span>
-            <button className="icon-btn sm ghost-hover" onClick={() => setEditing(c)} aria-label="Bearbeiten">
-              <Pencil size={13} />
-            </button>
-          </div>
-        )
-      )}
+      {local.map(renderRow)}
 
       {editing && !calendars.some((c) => c.id === editing.id) && (
         <CalendarEditForm value={editing} onDone={() => setEditing(null)} isNew />
+      )}
+
+      {google.length > 0 && (
+        <>
+          <div className="section-head">
+            <span>Google</span>
+            <GoogleSyncButton />
+          </div>
+          {google.map(renderRow)}
+        </>
       )}
     </div>
   )
@@ -129,5 +144,30 @@ function CalendarEditForm({
         </button>
       </div>
     </div>
+  )
+}
+
+/** sync state of the Google section: spins while syncing, warns on problems, click syncs now */
+function GoogleSyncButton(): React.JSX.Element | null {
+  const status = useGoogleStatus()
+  useTick()
+  if (!status || !api.google) return null
+  const sync = status.sync
+  const problem = status.state !== 'connected' ? (status.error ?? 'Nicht mit Google verbunden') : sync?.error
+  const title = problem
+    ? `Problem: ${problem}`
+    : sync?.running
+      ? 'Gleiche mit Google ab …'
+      : `Zuletzt abgeglichen ${lastSyncLabel(sync?.lastSync)}${sync?.pending ? ` · ${sync.pending} Änderung(en) ausstehend` : ''} – klicken zum Abgleichen`
+  return (
+    <button
+      className={`icon-btn sm ${problem ? 'sync-problem' : ''}`}
+      title={title}
+      aria-label={title}
+      disabled={sync?.running || status.state !== 'connected'}
+      onClick={() => void api.google?.syncNow()}
+    >
+      {problem ? <CloudAlert size={14} /> : <RefreshCw size={13} className={sync?.running ? 'spin' : ''} />}
+    </button>
   )
 }

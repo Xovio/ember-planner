@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { addDays } from 'date-fns'
 import { Clock, Maximize2 } from 'lucide-react'
+import { isCalendarLocked } from '@shared/google'
 import { useStore } from '../../store'
 import { calVar } from '../../lib/theme'
 import { fmt, fromLocal, toLocalDate, toLocalTime } from '../../lib/dates'
@@ -9,10 +10,12 @@ import { Popover } from '../ui/Popover'
 /** Small "new event" popover at the clicked slot (title, time, calendar). */
 export function QuickCreate(): React.JSX.Element | null {
   const qc = useStore((s) => s.quickCreate)
-  const calendars = useStore((s) => s.data!.calendars)
+  const allCalendars = useStore((s) => s.data!.calendars)
+  // Google calendars can't take new events until writing back is available
+  const calendars = allCalendars.filter((c) => !isCalendarLocked(c))
   const setQuickCreate = useStore((s) => s.setQuickCreate)
   const createEvent = useStore((s) => s.createEvent)
-  const firstVisible = calendars.find((c) => c.visible) ?? calendars[0]
+  const firstVisible = calendars.find((c) => c.visible) ?? calendars[0] ?? allCalendars[0]
   const [title, setTitle] = useState('')
   const [calendarId, setCalendarId] = useState(firstVisible.id)
   const [times, setTimes] = useState(() =>
@@ -35,7 +38,10 @@ export function QuickCreate(): React.JSX.Element | null {
 
   return (
     <Popover anchor={qc.anchor} onClose={() => setQuickCreate(null)} width={330} label="Neuer Termin">
-      <div className="qc" style={{ '--c': calVar(calendars.find((c) => c.id === calendarId)?.color ?? 'red') } as React.CSSProperties}>
+      <div
+        className="qc"
+        style={{ '--c': calVar(calendars.find((c) => c.id === calendarId)?.color ?? 'red') } as React.CSSProperties}
+      >
         <input
           autoFocus
           className="qc-title"
@@ -53,9 +59,21 @@ export function QuickCreate(): React.JSX.Element | null {
             <span className="muted">ganztägig</span>
           ) : (
             <>
-              <input type="time" className="input xs-time" step={900} value={times.s} onChange={(e) => setTimes({ ...times, s: e.target.value })} />
+              <input
+                type="time"
+                className="input xs-time"
+                step={900}
+                value={times.s}
+                onChange={(e) => setTimes({ ...times, s: e.target.value })}
+              />
               <span className="muted">–</span>
-              <input type="time" className="input xs-time" step={900} value={times.e} onChange={(e) => setTimes({ ...times, e: e.target.value })} />
+              <input
+                type="time"
+                className="input xs-time"
+                step={900}
+                value={times.e}
+                onChange={(e) => setTimes({ ...times, e: e.target.value })}
+              />
             </>
           )}
         </div>
@@ -73,7 +91,11 @@ export function QuickCreate(): React.JSX.Element | null {
           ))}
         </div>
         <div className="qc-actions">
-          <button className="btn btn-ghost sm" onClick={() => save(true)} title="Anlegen und alle Details bearbeiten (Strg+Enter)">
+          <button
+            className="btn btn-ghost sm"
+            onClick={() => save(true)}
+            title="Anlegen und alle Details bearbeiten (Strg+Enter)"
+          >
             <Maximize2 size={13} /> Mehr Optionen
           </button>
           <span style={{ flex: 1 }} />

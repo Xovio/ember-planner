@@ -19,18 +19,19 @@ Wohin sich Ember Planner entwickeln soll. Was schon da ist: [Funktionen & Umfang
 | 1 | Grundgerüst, Kalender, Erinnerungen, Tray, Themes, Übersicht | ✅ fertig |
 | 2 | ToDos mit harten/weichen Deadlines, Listen, Kategorien, Einplanen per Drag & Drop, Deadline-Widgets | ✅ fertig |
 | 2.5 | UX-Überarbeitung: eine Arbeitsfläche, Popups, Detailspalte, Schnelleingabe, Befehlspalette, Undo, Kontextmenüs | ✅ fertig |
-| 3 | Google-Kalender-Sync (2-Wege, OAuth) | geplant |
+| 3 | Google-Kalender-Sync (2-Wege, OAuth) | ✅ fertig |
 | 4 | Obsidian-Anbindung & Claude-Integration | geplant – Konzept vorher gemeinsam festlegen |
 | 5 | Verteilung: Installer, Auto-Update | geplant |
 | 6 | Mobile-Version | geplant |
 
-## Phase 3 – Google Kalender
+## Phase 3 – Google Kalender ✅
 
-- Anmeldung per OAuth (eigenes Google-Cloud-Projekt, Anleitung in der App)
-- Kalenderliste aus Google übernehmen, pro Kalender Sync an/aus
-- 2-Wege-Sync mit `syncToken` und ETags; Konflikte: neuere Änderung gewinnt, Hinweis bei Kollision
-- Wiederholungen (RRULE) und Ausnahmen korrekt abbilden
-- Offline-Änderungen sammeln und später übertragen
+Umgesetzt – Details in [GOOGLE-SYNC.md](GOOGLE-SYNC.md), Einrichtung in [GOOGLE-SETUP.md](GOOGLE-SETUP.md).
+Offen geblieben:
+
+- Lokalen Kalender zu Google hochladen („Kalender zu Google hochladen“)
+- Einzelne Termine einer Serie in der App verschieben/bearbeiten („nur dieser“) – das Datenmodell (`seriesId`/`originalStart`) steht
+- Serien in fremden Zeitzonen exakt expandieren, `RDATE` unterstützen
 - Optional: einmaliger Import per ICS-Datei / iCal-Adresse
 
 ## Phase 4 – Obsidian & Claude
@@ -45,6 +46,10 @@ Ideen:
 - **Dataview-freundlich:** Tags und Felder so wählen, dass bestehende Dataview-Abfragen funktionieren
 - **DnD-Kampagnen:** Session-Notizen mit Datum werden zu Terminen; Prep-ToDos einer Session hängen am Termin;
   Countdown-Widget „Tage bis zur nächsten Session“ mit offenen Prep-Aufgaben
+- **Discord-Events:** über einen eigenen Bot die geplanten Events ausgewählter Server (z. B. DnD-Runde) als Kalender
+  einblenden – inkl. Anzahl „Interessiert“ – und Sessions aus dem Kalender per „In Discord ankündigen“ als Server-Event
+  anlegen; verschiebt man die Session, wandert das Discord-Event mit. Baut auf dem Sync-Fundament aus Phase 3 auf
+  (Patches, Outbox, verschlüsselter Token-Speicher). Konzept vorher abstimmen.
 - **Claude-Anbindung (MCP-Server):** Claude kann Termine und ToDos lesen, anlegen und abhaken – z. B. „plane mir die
   Session-Vorbereitung bis Freitag ein“ oder ToDos aus einer Projektnotiz ableiten (immer mit Bestätigung)
 

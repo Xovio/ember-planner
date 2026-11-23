@@ -1,9 +1,13 @@
-import { app, BrowserWindow, ipcMain, Menu, Tray, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, Tray, safeStorage, shell } from 'electron'
 import { join } from 'path'
 import { DataStore } from './store'
 import { ReminderScheduler } from './reminders'
 import { createAppIcon } from './icon'
-import type { AppData, TitleBarTheme } from '@shared/types'
+import { GoogleAccount } from './google/account'
+import { registerGoogleIpc } from './google/ipc'
+import { GoogleSync } from './google/sync'
+import type { GoogleStatus } from '@shared/google'
+import type { AppData, LoadResult, TitleBarTheme } from '@shared/types'
 
 const APP_ID = 'de.ember.planner'
 const startHidden = process.argv.includes('--hidden')
@@ -12,6 +16,7 @@ let win: BrowserWindow | null = null
 let tray: Tray | null = null
 let store: DataStore
 let reminders: ReminderScheduler
+let googleSync: GoogleSync | null = null
 let quitting = false
 
 if (!app.requestSingleInstanceLock()) {
@@ -26,10 +31,10 @@ function init(): void {
   store = new DataStore()
   applyLoginItem(store.get())
 
-  ipcMain.handle('data:load', () => store.get())
-  ipcMain.handle('data:save', (_e, next: AppData) => {
+  ipcMain.handle('data:load', (): LoadResult => ({ data: store.get(), seq: store.seq }))
+  ipcMain.handle('data:save', (_e, next: AppData, baseSeq?: number) => {
     const prevLogin = store.get().settings.launchAtLogin
-    store.set(next)
+    store.set(next, baseSeq)
     if (prevLogin !== next.settings.launchAtLogin) applyLoginItem(next)
     reminders.poke()
     return true
@@ -52,6 +57,38 @@ function init(): void {
     }
   )
   reminders.start()
+
+  const google = new GoogleAccount({
+    dir: app.getPath('userData'),
+    box: {
+      available: () => safeStorage.isEncryptionAvailable(),
+      encrypt: (plain) => safeStorage.encryptString(plain),
+      decrypt: (data) => safeStorage.decryptString(data)
+    },
+    openBrowser: (url) => void shell.openExternal(url),
+    onStatus: () => sendGoogleStatus()
+  })
+  googleSync = new GoogleSync({
+    store,
+    account: google,
+    dir: app.getPath('userData'),
+    onState: () => sendGoogleStatus(),
+    onNotice: (text) => win?.webContents.send('google:notice', text)
+  })
+  const googleStatus = (): GoogleStatus => ({ ...google.status(), sync: googleSync?.state })
+  const sendGoogleStatus = (): void => win?.webContents.send('google:status', googleStatus())
+  registerGoogleIpc(store, google, googleSync, googleStatus)
+  googleSync.start()
+
+  store.subscribe({
+    onLocalChange(diff, data) {
+      googleSync?.recordLocal(diff, data)
+    },
+    onRemoteChange(change) {
+      win?.webContents.send('data:remote', change)
+      reminders.poke()
+    }
+  })
 
   createWindow()
   createTray()
@@ -76,6 +113,9 @@ function createWindow(): void {
       nodeIntegration: false
     }
   })
+
+  // coming back to the window is a good moment to look for changes at Google
+  win.on('focus', () => googleSync?.poke())
 
   win.once('ready-to-show', () => {
     if (!startHidden) win?.show()
@@ -141,6 +181,7 @@ function quit(): void {
 app.on('before-quit', () => {
   quitting = true
   reminders?.stop()
+  googleSync?.stop()
   store?.flush()
 })
 
