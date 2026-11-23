@@ -149,6 +149,12 @@ export interface AppData {
   settings: Settings
 }
 
+/** what the UI receives on start: the data plus the number of the last remote patch in it */
+export interface LoadResult {
+  data: AppData
+  seq: number
+}
+
 export interface ReminderPayload {
   kind: 'event' | 'todo'
   /** event id or todo id */

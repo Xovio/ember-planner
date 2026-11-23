@@ -3,7 +3,7 @@ import { join } from 'path'
 import { DataStore } from './store'
 import { ReminderScheduler } from './reminders'
 import { createAppIcon } from './icon'
-import type { AppData, TitleBarTheme } from '@shared/types'
+import type { AppData, LoadResult, TitleBarTheme } from '@shared/types'
 
 const APP_ID = 'de.ember.planner'
 const startHidden = process.argv.includes('--hidden')
@@ -26,10 +26,10 @@ function init(): void {
   store = new DataStore()
   applyLoginItem(store.get())
 
-  ipcMain.handle('data:load', () => store.get())
-  ipcMain.handle('data:save', (_e, next: AppData) => {
+  ipcMain.handle('data:load', (): LoadResult => ({ data: store.get(), seq: store.seq }))
+  ipcMain.handle('data:save', (_e, next: AppData, baseSeq?: number) => {
     const prevLogin = store.get().settings.launchAtLogin
-    store.set(next)
+    store.set(next, baseSeq)
     if (prevLogin !== next.settings.launchAtLogin) applyLoginItem(next)
     reminders.poke()
     return true
@@ -52,6 +52,13 @@ function init(): void {
     }
   )
   reminders.start()
+
+  store.subscribe({
+    onRemoteChange(change) {
+      win?.webContents.send('data:remote', change)
+      reminders.poke()
+    }
+  })
 
   createWindow()
   createTray()

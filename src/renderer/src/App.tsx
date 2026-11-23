@@ -51,7 +51,8 @@ export function App(): React.JSX.Element {
         st.selectEvent(id)
       }),
       api.onOpenTodo((id) => useStore.getState().selectTodo(id)),
-      api.onNewEvent(() => useStore.getState().openAdd('event'))
+      api.onNewEvent(() => useStore.getState().openAdd('event')),
+      api.onRemoteChange((c) => useStore.getState().applyRemote(c))
     ]
     return () => offs.forEach((off) => off())
   }, [])

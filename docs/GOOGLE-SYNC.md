@@ -1,6 +1,6 @@
 # Konzept: Google-Kalender-Sync (Phase 3)
 
-Stand: 2026-11-23 · Branch `feature/google-sync` · Status: **Entwurf, noch nicht umgesetzt**
+Stand: 2026-11-23 · Branch `feature/google-sync` · Status: **in Arbeit** – Etappen 0 und 1 fertig
 
 ## Ziel
 
@@ -33,10 +33,15 @@ mutate() ──data:save──────────▶ DataStore  ── Diff
    Geänderte, neue und gelöschte Termine in Google-Kalendern landen in einer **Outbox**, die dauerhaft gespeichert wird.
 2. **Änderungen von Google** spielt der Main-Prozess ein und schickt sie als Patch (`data:remote`) an den Renderer.
    Der Renderer übernimmt den Patch in seinen aktuellen Zustand, sodass laufende Eingaben erhalten bleiben.
-3. **Schutz vor veralteten Ständen:** Jeder Termin bekommt einen Revisionszähler. Ein Speichervorgang mit älterer
-   Revision überschreibt keine neuere Version von Google.
-4. **Undo wird patch-basiert:** Rückgängig macht nur die eigene Änderung rückgängig, nicht dazwischen eingespielte
-   Änderungen von Google. Das Rückgängigmachen ist selbst wieder eine lokale Änderung und wird hochgeladen.
+3. **Schutz vor veralteten Ständen:** Jeder Patch von außen bekommt eine laufende Nummer (`seq`). Der Renderer schickt
+   beim Speichern die letzte Nummer mit, die er schon kennt. Fehlen in seinem Stand neuere Patches, spielt der Main-Prozess
+   sie vor dem Übernehmen erneut ein (`RemoteLog` in `src/shared/patch.ts`). Patches lassen sich mehrfach anwenden, ohne
+   dass sich das Ergebnis ändert.
+4. **Undo bleibt gültig:** Kommt ein Patch an, wendet der Renderer ihn auch auf alle Undo-/Redo-Schnappschüsse an.
+   Rückgängig nimmt deshalb nur die eigene Änderung zurück, nicht dazwischen eingespielte Änderungen von Google.
+   Das Rückgängigmachen ist selbst wieder eine lokale Änderung und wird hochgeladen.
+5. **Lokale Änderungen erkennen:** `DataStore.set` vergleicht den alten und den neuen Stand der Termine (`diffEvents`) und meldet
+   neue, geänderte und gelöschte Termine an Listener. Daraus füllt Etappe 4 die Outbox.
 
 ## Anmeldung (OAuth)
 
@@ -93,8 +98,8 @@ Jede Etappe ist für sich lauffähig und wird ein eigener Commit. Am Ende entste
 
 | # | Etappe | Ergebnis |
 |---|---|---|
-| 0 | **Tests einrichten** (Vitest) | Tests für Wiederholungslogik und das spätere Mapping |
-| 1 | **Fundament:** Main als Schiedsrichter, Revisionen, `data:remote`, patch-basiertes Undo | App verhält sich wie vorher, ist aber bereit für Fremdänderungen |
+| 0 ✅ | **Tests einrichten** (Vitest) | Tests für Wiederholungslogik und das spätere Mapping |
+| 1 ✅ | **Fundament:** Main als Schiedsrichter, nummerierte Patches, `data:remote`, Undo-Historie wird angepasst | App verhält sich wie vorher, ist aber bereit für Fremdänderungen |
 | 2 | **Anmeldung:** OAuth, TokenStore, Optionen-Seite, Kalenderliste abrufen | Konto verbinden, Google-Kalender auswählen |
 | 3 | **Abruf (nur lesen):** Erst- und Folgeabgleich, Mapping, Serien + Ausnahmen, `rrule` | Google-Termine erscheinen und aktualisieren sich |
 | 4 | **Hochladen:** Outbox, etag, Konflikte, Offline | Echte 2-Wege-Synchronisation |

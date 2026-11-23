@@ -13,6 +13,7 @@ import {
   type Todo,
   type TodoList
 } from '@shared/types'
+import { applyPatch, type RemoteChange } from '@shared/patch'
 import { api, isDemo } from './lib/api'
 
 /* ───────────── UI types ───────────── */
@@ -110,6 +111,8 @@ interface State {
   canRedo: boolean
 
   init(): Promise<void>
+  /** change from the main process (e.g. Google sync) – not an undo step */
+  applyRemote(change: RemoteChange): void
   setPage(p: Page): void
   setView(v: CalendarViewKind): void
   setCursor(d: Date): void
@@ -169,10 +172,17 @@ export const uid = (): string =>
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2) + Date.now().toString(36)
 
+/** number of the last remote change contained in the local data */
+let remoteSeq = 0
 let saveTimer: ReturnType<typeof setTimeout> | null = null
-function persist(data: AppData): void {
+/** saves the newest state (read when the timer fires, so remote changes received meanwhile are included) */
+function persist(): void {
   if (saveTimer) clearTimeout(saveTimer)
-  saveTimer = setTimeout(() => void api.save(data), 250)
+  saveTimer = setTimeout(() => {
+    saveTimer = null
+    const data = useStore.getState().data
+    if (data) void api.save(data, remoteSeq)
+  }, 250)
 }
 
 const HISTORY_MAX = 100
@@ -206,7 +216,7 @@ export const useStore = create<State>((set, get) => {
       future.length = 0
     }
     set({ data: next })
-    persist(next)
+    persist()
     if (record) syncHistoryFlags()
     if (opts.undoToast && opts.label) get().pushToast({ kind: 'undo', title: opts.label })
   }
@@ -232,7 +242,8 @@ export const useStore = create<State>((set, get) => {
     canRedo: false,
 
     async init() {
-      const data = await api.load()
+      const { data, seq } = await api.load()
+      remoteSeq = seq
       set({ data, view: data.settings.defaultView })
       if (isDemo) applyDemoParams()
     },
@@ -283,6 +294,17 @@ export const useStore = create<State>((set, get) => {
     openPalette: () => set({ overlay: { kind: 'palette' }, quickCreate: null, preview: null, contextMenu: null }),
     closeOverlay: () => set({ overlay: null }),
 
+    applyRemote({ seq, patch }) {
+      const cur = get().data
+      // before load finished the loaded data already contains it; older numbers were seen already
+      if (!cur || seq <= remoteSeq) return
+      remoteSeq = seq
+      // rebase the undo history so undoing a local step does not revert the remote change
+      for (const entry of past) entry.data = applyPatch(entry.data, patch)
+      for (const entry of future) entry.data = applyPatch(entry.data, patch)
+      set({ data: applyPatch(cur, patch) })
+    },
+
     /* ── history ── */
     undo() {
       const cur = get().data
@@ -291,7 +313,7 @@ export const useStore = create<State>((set, get) => {
       future.push({ data: cur, label: entry.label })
       lastCoalesce = null
       set({ data: entry.data })
-      persist(entry.data)
+      persist()
       syncHistoryFlags()
       get().pushToast({ kind: 'info', title: `Rückgängig: ${entry.label}` })
     },
@@ -302,7 +324,7 @@ export const useStore = create<State>((set, get) => {
       past.push({ data: cur, label: entry.label })
       lastCoalesce = null
       set({ data: entry.data })
-      persist(entry.data)
+      persist()
       syncHistoryFlags()
       get().pushToast({ kind: 'info', title: `Wiederholt: ${entry.label}` })
     },
