@@ -4,6 +4,11 @@ Ember Planner spricht direkt mit der Google-Kalender-API. Dafür brauchst du ein
 kostenloses Google-Cloud-Projekt mit einer **OAuth-Client-ID**. Das dauert etwa 10 Minuten.
 Deine Daten gehen dabei nur zwischen deinem PC und Google hin und her, es gibt keinen Server dazwischen.
 
+> **Kosten:** Für Ember Planner fallen keine Kosten an, und du brauchst keine Kreditkarte. Google bewirbt in der Console
+> ein Angebot „Kostenlos testen“ mit Startguthaben. Das gilt für kostenpflichtige Cloud-Dienste, die wir nicht nutzen.
+> Ignoriere es einfach. Fragt ein Schritt nach einem Rechnungskonto oder einer Kreditkarte, bist du im Testangebot gelandet:
+> abbrechen und zurück zur Console.
+
 ## 1. Projekt anlegen
 
 1. Öffne die [Google Cloud Console](https://console.cloud.google.com/) und melde dich mit dem Google-Konto an,
