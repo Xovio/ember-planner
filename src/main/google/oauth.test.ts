@@ -22,7 +22,9 @@ afterEach(() => vi.restoreAllMocks())
 
 describe('PKCE', () => {
   it('matches the RFC 7636 example', () => {
-    expect(challengeFor('dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk')).toBe('E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM')
+    expect(challengeFor('dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk')).toBe(
+      'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM'
+    )
   })
 
   it('creates verifiers of valid length and charset', () => {
@@ -33,7 +35,12 @@ describe('PKCE', () => {
 
   it('builds the consent URL with offline access and both scopes', () => {
     const url = new URL(
-      buildAuthUrl({ clientId: 'id.apps.googleusercontent.com', redirectUri: 'http://127.0.0.1:5000', challenge: 'c', state: 's' })
+      buildAuthUrl({
+        clientId: 'id.apps.googleusercontent.com',
+        redirectUri: 'http://127.0.0.1:5000',
+        challenge: 'c',
+        state: 's'
+      })
     )
     expect(url.origin + url.pathname).toBe('https://accounts.google.com/o/oauth2/v2/auth')
     expect(url.searchParams.get('scope')).toBe(GOOGLE_SCOPES.join(' '))
@@ -103,7 +110,9 @@ describe('runLoopbackFlow', () => {
       clientId: 'x.apps.googleusercontent.com',
       openBrowser: (authUrl) => {
         const u = new URL(authUrl)
-        void realFetch(`${u.searchParams.get('redirect_uri')}/?error=access_denied&state=${u.searchParams.get('state')}`)
+        void realFetch(
+          `${u.searchParams.get('redirect_uri')}/?error=access_denied&state=${u.searchParams.get('state')}`
+        )
       }
     })
     await expect(flow).rejects.toThrow('nicht erlaubt')

@@ -2175,3 +2175,9 @@ input[type='time'].input {
 .spin {
   animation: spin 0.9s linear infinite;
 }
+.google-sync-error {
+  color: var(--danger) !important;
+}
+.icon-btn.sync-problem {
+  color: var(--danger);
+}

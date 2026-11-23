@@ -14,8 +14,29 @@ export const GOOGLE_SETUP_URL = 'https://github.com/Xovio/ember-planner/blob/mas
 
 export type GoogleState = 'unconfigured' | 'disconnected' | 'connecting' | 'connected'
 
+export interface GoogleSyncState {
+  running: boolean
+  /** last successful sync (ISO) */
+  lastSync?: string
+  /** last sync problem in plain German */
+  error?: string
+}
+
+/**
+ * Writing back to Google arrives in stage 4. Until then Google events are read-only in the app,
+ * so local edits can't silently get lost on the next sync.
+ */
+export const GOOGLE_WRITE_ENABLED = false
+
+/** events in this calendar can't be changed in the app */
+export function isCalendarLocked(cal: { readOnly?: boolean; external?: { provider: string } } | undefined): boolean {
+  if (!cal) return false
+  return !!cal.readOnly || (cal.external?.provider === 'google' && !GOOGLE_WRITE_ENABLED)
+}
+
 export interface GoogleStatus {
   state: GoogleState
+  sync?: GoogleSyncState
   /** shown so the user can recognise which client is set up (not secret) */
   clientId?: string
   /** e-mail of the connected account (id of the primary calendar) */
@@ -120,5 +141,6 @@ export interface GoogleApi {
   reset(): Promise<GoogleResult<GoogleStatus>>
   calendars(): Promise<GoogleResult<GoogleCalendarEntry[]>>
   setEnabled(entry: GoogleCalendarEntry, enabled: boolean): Promise<GoogleResult<boolean>>
+  syncNow(): Promise<GoogleResult<GoogleStatus>>
   onStatus(cb: (s: GoogleStatus) => void): () => void
 }

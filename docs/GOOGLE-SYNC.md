@@ -1,6 +1,6 @@
 # Konzept: Google-Kalender-Sync (Phase 3)
 
-Stand: 2026-11-23 · Branch `feature/google-sync` · Status: **in Arbeit** – Etappen 0–2 fertig · Einrichtung: [GOOGLE-SETUP.md](GOOGLE-SETUP.md)
+Stand: 2026-11-23 · Branch `feature/google-sync` · Status: **in Arbeit** – Etappen 0–3 fertig (Google-Termine werden gelesen, noch nicht hochgeladen) · Einrichtung: [GOOGLE-SETUP.md](GOOGLE-SETUP.md)
 
 ## Ziel
 
@@ -71,6 +71,16 @@ mutate() ──data:save──────────▶ DataStore  ── Diff
 
 Push-Benachrichtigungen (Webhooks) von Google funktionieren für eine Desktop-App ohne Server nicht, daher wird abgefragt.
 
+**Umsetzung des Abrufs** (`src/main/google/sync.ts`, `mapping.ts`):
+- Sync-Tokens pro Kalender liegen in `google-sync.json` im userData-Ordner, nicht in `data.json`.
+- Abgerufene Änderungen gehen als Patch über `DataStore.applyRemote` an die Oberfläche (siehe Etappe 1).
+- Lokale Termin-ID `g:<Kalender-ID>:<Event-ID>`, deshalb ersetzen wiederholte Abrufe Termine, statt sie zu verdoppeln.
+- Wird ein Kalender ausgeschaltet, vergisst die App sein Token. Beim Wiedereinschalten folgt ein vollständiger Abruf.
+- Fehler bleiben je Kalender getrennt; vorhandene Daten bleiben erhalten, der nächste Lauf versucht es erneut.
+- **Bis Etappe 4 sind Google-Termine schreibgeschützt** (`GOOGLE_WRITE_ENABLED` in `src/shared/google.ts`).
+  Bearbeiten, Verschieben und Löschen werden mit einem Hinweis abgefangen. Mit „Kopieren“ landet ein Google-Termin
+  als eigener Termin in einem lokalen Kalender.
+
 ## Abbildung der Daten
 
 | Google | Ember Planner |
@@ -84,6 +94,14 @@ Push-Benachrichtigungen (Webhooks) von Google funktionieren für eine Desktop-Ap
 | Teilnehmer, Videokonferenz, Farbe usw. | werden nicht angefasst, weil wir nur geänderte Felder per `patch` senden |
 | Kalender mit `accessRole` reader / freeBusyReader | als **schreibgeschützt** markiert, im UI nicht verschiebbar |
 | Kalenderfarbe | auf die nächste Farbe der eigenen Palette gemappt (Farbschwäche-Prüfung bleibt erhalten) |
+
+**Ausnahmen in Serien:** Verschobene und abgesagte Einzeltermine tragen ihren ursprünglichen Beginn als `exdate` in die Serie ein.
+Verschobene gibt es zusätzlich als eigenen Termin mit `seriesId` und `originalStart`. Beim Folgeabgleich bleiben die
+`exdates` erhalten, auch wenn sich die Serie selbst ändert. Beim vollständigen Abruf werden sie neu aufgebaut.
+
+**Zeitzonen:** Einzeltermine werden als absoluter Zeitpunkt gespeichert und sind damit immer korrekt. Serien werden in
+der Zeitzone des PCs expandiert. Liegt eine Serie in einer anderen Zeitzone, kann sie rund um die Zeitumstellung eine Stunde abweichen.
+`RDATE` (zusätzliche Einzeldaten einer Serie) wird noch nicht unterstützt.
 
 **Wiederholungen, die unser Modell nicht kann** (z. B. „jeden 2. Dienstag“): Für die Anzeige expandieren wir die
 Roh-RRULE mit der Bibliothek `rrule`. Im Editor zeigt die Wiederholung dann „Benutzerdefiniert (aus Google)“ und bleibt
@@ -108,7 +126,7 @@ Jede Etappe ist für sich lauffähig und wird ein eigener Commit. Am Ende entste
 | 0 ✅ | **Tests einrichten** (Vitest) | Tests für Wiederholungslogik und das spätere Mapping |
 | 1 ✅ | **Fundament:** Main als Schiedsrichter, nummerierte Patches, `data:remote`, Undo-Historie wird angepasst | App verhält sich wie vorher, ist aber bereit für Fremdänderungen |
 | 2 ✅ | **Anmeldung:** OAuth, TokenStore, Optionen-Seite, Kalenderliste abrufen | Konto verbinden, Google-Kalender auswählen |
-| 3 | **Abruf (nur lesen):** Erst- und Folgeabgleich, Mapping, Serien + Ausnahmen, `rrule` | Google-Termine erscheinen und aktualisieren sich |
+| 3 ✅ | **Abruf (nur lesen):** Erst- und Folgeabgleich, Mapping, Serien + Ausnahmen, `rrule` | Google-Termine erscheinen und aktualisieren sich |
 | 4 | **Hochladen:** Outbox, etag, Konflikte, Offline | Echte 2-Wege-Synchronisation |
 | 5 | **Feinschliff:** Statusanzeige, Fehlertexte, Doku (FEATURES/ROADMAP) | bereit zum Mergen |
 

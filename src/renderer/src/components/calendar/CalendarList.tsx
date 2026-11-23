@@ -1,8 +1,10 @@
 import { useState } from 'react'
-import { Check, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Check, CloudAlert, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
 import { CALENDAR_COLORS, type CalendarColor, type CalendarInfo } from '@shared/types'
 import { uid, useStore } from '../../store'
 import { COLOR_NAMES, calVar } from '../../lib/theme'
+import { api } from '../../lib/api'
+import { lastSyncLabel, useGoogleStatus, useTick } from '../../lib/googleStatus'
 
 export function CalendarList(): React.JSX.Element {
   const calendars = useStore((s) => s.data!.calendars)
@@ -65,6 +67,7 @@ export function CalendarList(): React.JSX.Element {
         <>
           <div className="section-head">
             <span>Google</span>
+            <GoogleSyncButton />
           </div>
           {google.map(renderRow)}
         </>
@@ -141,5 +144,30 @@ function CalendarEditForm({
         </button>
       </div>
     </div>
+  )
+}
+
+/** sync state of the Google section: spins while syncing, warns on problems, click syncs now */
+function GoogleSyncButton(): React.JSX.Element | null {
+  const status = useGoogleStatus()
+  useTick()
+  if (!status || !api.google) return null
+  const sync = status.sync
+  const problem = status.state !== 'connected' ? (status.error ?? 'Nicht mit Google verbunden') : sync?.error
+  const title = problem
+    ? `Problem: ${problem}`
+    : sync?.running
+      ? 'Gleiche mit Google ab …'
+      : `Zuletzt abgeglichen ${lastSyncLabel(sync?.lastSync)} – klicken zum Abgleichen`
+  return (
+    <button
+      className={`icon-btn sm ${problem ? 'sync-problem' : ''}`}
+      title={title}
+      aria-label={title}
+      disabled={sync?.running || status.state !== 'connected'}
+      onClick={() => void api.google?.syncNow()}
+    >
+      {problem ? <CloudAlert size={14} /> : <RefreshCw size={13} className={sync?.running ? 'spin' : ''} />}
+    </button>
   )
 }

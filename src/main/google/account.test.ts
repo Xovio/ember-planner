@@ -59,7 +59,12 @@ describe('GoogleAccount setup', () => {
 
     const raw = readFileSync(join(dir, 'google-auth.bin')).toString()
     expect(raw).not.toContain('geheim')
-    expect(make().status()).toEqual({ state: 'disconnected', clientId: '123-abc.apps.googleusercontent.com', account: undefined, error: undefined })
+    expect(make().status()).toEqual({
+      state: 'disconnected',
+      clientId: '123-abc.apps.googleusercontent.com',
+      account: undefined,
+      error: undefined
+    })
   })
 
   it('refuses to store without OS encryption', () => {
@@ -119,7 +124,16 @@ describe('GoogleAccount API calls', () => {
         status: 200,
         json: {
           items: [
-            { id: 'dnd', summary: 'DnD', summaryOverride: 'DnD-Runde', accessRole: 'owner', defaultReminders: [{ method: 'popup', minutes: 30 }, { method: 'email', minutes: 60 }] },
+            {
+              id: 'dnd',
+              summary: 'DnD',
+              summaryOverride: 'DnD-Runde',
+              accessRole: 'owner',
+              defaultReminders: [
+                { method: 'popup', minutes: 30 },
+                { method: 'email', minutes: 60 }
+              ]
+            },
             { id: 'old', summary: 'Alt', accessRole: 'owner', deleted: true }
           ]
         }

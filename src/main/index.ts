@@ -5,6 +5,8 @@ import { ReminderScheduler } from './reminders'
 import { createAppIcon } from './icon'
 import { GoogleAccount } from './google/account'
 import { registerGoogleIpc } from './google/ipc'
+import { GoogleSync } from './google/sync'
+import type { GoogleStatus } from '@shared/google'
 import type { AppData, LoadResult, TitleBarTheme } from '@shared/types'
 
 const APP_ID = 'de.ember.planner'
@@ -14,6 +16,7 @@ let win: BrowserWindow | null = null
 let tray: Tray | null = null
 let store: DataStore
 let reminders: ReminderScheduler
+let googleSync: GoogleSync | null = null
 let quitting = false
 
 if (!app.requestSingleInstanceLock()) {
@@ -63,9 +66,18 @@ function init(): void {
       decrypt: (data) => safeStorage.decryptString(data)
     },
     openBrowser: (url) => void shell.openExternal(url),
-    onStatus: (status) => win?.webContents.send('google:status', status)
+    onStatus: () => sendGoogleStatus()
   })
-  registerGoogleIpc(store, google)
+  googleSync = new GoogleSync({
+    store,
+    account: google,
+    dir: app.getPath('userData'),
+    onState: () => sendGoogleStatus()
+  })
+  const googleStatus = (): GoogleStatus => ({ ...google.status(), sync: googleSync?.state })
+  const sendGoogleStatus = (): void => win?.webContents.send('google:status', googleStatus())
+  registerGoogleIpc(store, google, googleSync, googleStatus)
+  googleSync.start()
 
   store.subscribe({
     onRemoteChange(change) {
@@ -97,6 +109,9 @@ function createWindow(): void {
       nodeIntegration: false
     }
   })
+
+  // coming back to the window is a good moment to look for changes at Google
+  win.on('focus', () => googleSync?.poke())
 
   win.once('ready-to-show', () => {
     if (!startHidden) win?.show()
@@ -162,6 +177,7 @@ function quit(): void {
 app.on('before-quit', () => {
   quitting = true
   reminders?.stop()
+  googleSync?.stop()
   store?.flush()
 })
 

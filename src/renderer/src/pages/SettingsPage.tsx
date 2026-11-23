@@ -1,5 +1,6 @@
 import { Check } from 'lucide-react'
 import type { CalendarViewKind } from '@shared/types'
+import { isCalendarLocked } from '@shared/google'
 import { useStore } from '../store'
 import { THEMES } from '../lib/theme'
 import { REMINDER_PRESETS, reminderLabel } from '../lib/dates'
@@ -10,7 +11,7 @@ import { GoogleSection } from '../components/settings/GoogleSection'
 export function SettingsPage(): React.JSX.Element {
   const s = useStore((st) => st.data!.settings)
   const update = useStore((st) => st.updateSettings)
-  const calendars = useStore((st) => st.data!.calendars)
+  const calendars = useStore((st) => st.data!.calendars).filter((c) => !isCalendarLocked(c))
 
   return (
     <div className="settings-page">

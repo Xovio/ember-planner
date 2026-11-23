@@ -13,6 +13,7 @@ const google: GoogleApi = {
   reset: () => ipcRenderer.invoke('google:reset'),
   calendars: () => ipcRenderer.invoke('google:calendars'),
   setEnabled: (entry: GoogleCalendarEntry, enabled: boolean) => ipcRenderer.invoke('google:setEnabled', entry, enabled),
+  syncNow: () => ipcRenderer.invoke('google:syncNow'),
   onStatus: (cb: (s: GoogleStatus) => void) => listen('google:status', cb)
 }
 

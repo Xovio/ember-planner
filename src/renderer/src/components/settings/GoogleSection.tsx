@@ -1,13 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ExternalLink, Lock, RefreshCw } from 'lucide-react'
-import {
-  GOOGLE_SETUP_URL,
-  paletteColorForHex,
-  type GoogleCalendarEntry,
-  type GoogleResult,
-  type GoogleStatus
-} from '@shared/google'
+import { GOOGLE_SETUP_URL, paletteColorForHex, type GoogleCalendarEntry, type GoogleResult } from '@shared/google'
 import { api } from '../../lib/api'
+import { lastSyncLabel, useGoogleStatus, useTick } from '../../lib/googleStatus'
 import { calVar } from '../../lib/theme'
 
 const ROLE_LABEL: Record<GoogleCalendarEntry['accessRole'], string> = {
@@ -19,7 +14,8 @@ const ROLE_LABEL: Record<GoogleCalendarEntry['accessRole'], string> = {
 
 export function GoogleSection(): React.JSX.Element {
   const google = api.google
-  const [status, setStatus] = useState<GoogleStatus | null>(null)
+  const status = useGoogleStatus()
+  useTick()
   const [error, setError] = useState<string | null>(null)
   const [editing, setEditing] = useState(false)
   const [clientId, setClientId] = useState('')
@@ -37,12 +33,6 @@ export function GoogleSection(): React.JSX.Element {
     setError(r.error)
     return undefined
   }, [])
-
-  useEffect(() => {
-    if (!google) return
-    void google.status().then(setStatus)
-    return google.onStatus(setStatus)
-  }, [google])
 
   const loadCalendars = useCallback(async () => {
     if (!google) return
@@ -174,11 +164,33 @@ export function GoogleSection(): React.JSX.Element {
           <div className="settings-row">
             <div className="settings-label">
               <span>Verbunden{status.account ? ` als ${status.account}` : ''}</span>
-              <small>Termine werden in einer späteren Version automatisch abgeglichen.</small>
+              <small>Wird beim Start, alle 5 Minuten und beim Zurückkehren ins Fenster abgeglichen.</small>
             </div>
             <div className="settings-control">
               <button className="btn btn-ghost sm" onClick={() => void run(google.disconnect())}>
                 Trennen
+              </button>
+            </div>
+          </div>
+
+          <div className="settings-row">
+            <div className="settings-label">
+              <span>
+                {status.sync?.running ? 'Gleiche ab …' : `Zuletzt abgeglichen: ${lastSyncLabel(status.sync?.lastSync)}`}
+              </span>
+              {status.sync?.error ? (
+                <small className="google-sync-error">{status.sync.error}</small>
+              ) : (
+                <small>Google-Termine sind vorerst schreibgeschützt; das Hochladen von Änderungen folgt.</small>
+              )}
+            </div>
+            <div className="settings-control">
+              <button
+                className="btn btn-outline sm"
+                disabled={status.sync?.running}
+                onClick={() => void run(google.syncNow())}
+              >
+                <RefreshCw size={13} className={status.sync?.running ? 'spin' : ''} /> Jetzt abgleichen
               </button>
             </div>
           </div>

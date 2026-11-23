@@ -15,8 +15,14 @@ export interface Recurrence {
   until?: LocalDate
   /** total number of occurrences */
   count?: number
-  /** start timestamps of occurrences that were deleted individually */
+  /** start timestamps of occurrences that were deleted or moved individually */
   exdates?: ISODateTime[]
+  /**
+   * Original RRULE (without "RRULE:") when the rule needs more than the fields above,
+   * e.g. "FREQ=MONTHLY;BYDAY=2TU". Then it wins over freq/interval/… for expansion,
+   * which only stay as an approximation for display.
+   */
+  rrule?: string
 }
 
 /** Keys into the calendar palette; actual hex values depend on the theme. */
@@ -46,6 +52,8 @@ export interface ExternalRef {
   id: string
   etag?: string
   calendarId?: string
+  /** last change at the provider (ISO) */
+  updated?: string
 }
 
 export interface CalendarInfo {
@@ -77,6 +85,10 @@ export interface CalendarEvent {
   external?: ExternalRef
   /** time block created by scheduling a ToDo */
   todoId?: string
+  /** single occurrence that was changed: id of the series it belongs to */
+  seriesId?: string
+  /** single occurrence that was changed: its start in the series (the series has it as exdate) */
+  originalStart?: ISODateTime
   createdAt: ISODateTime
   updatedAt: ISODateTime
 }

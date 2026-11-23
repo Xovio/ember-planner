@@ -10,6 +10,7 @@ import type { DataPatch } from '@shared/patch'
 import type { AppData, CalendarInfo } from '@shared/types'
 import type { DataStore } from '../store'
 import type { GoogleAccount } from './account'
+import type { GoogleSync } from './sync'
 
 const isGoogle = (c: CalendarInfo): boolean => c.external?.provider === 'google'
 
@@ -46,15 +47,37 @@ export function refreshCalendarsPatch(data: AppData, entries: Omit<GoogleCalenda
   return { calendars: { upsert } }
 }
 
-export function registerGoogleIpc(store: DataStore, account: GoogleAccount): void {
-  ipcMain.handle('google:status', (): GoogleStatus => account.status())
+export function registerGoogleIpc(
+  store: DataStore,
+  account: GoogleAccount,
+  sync: GoogleSync,
+  statusOf: () => GoogleStatus
+): void {
+  ipcMain.handle('google:status', (): GoogleStatus => statusOf())
 
   ipcMain.handle('google:configure', (_e, clientId: string, clientSecret?: string) =>
     wrap(() => account.configure(clientId, clientSecret))
   )
 
-  ipcMain.handle('google:connect', () => wrap(() => account.connect()))
-  ipcMain.handle('google:cancel', () => wrap(() => account.cancelConnect()))
+  ipcMain.handle('google:connect', () =>
+    wrap(async () => {
+      await account.connect()
+      if (account.isConnected) void sync.syncNow()
+      return statusOf()
+    })
+  )
+  ipcMain.handle('google:cancel', () =>
+    wrap(() => {
+      account.cancelConnect()
+      return statusOf()
+    })
+  )
+  ipcMain.handle('google:syncNow', () =>
+    wrap(async () => {
+      await sync.syncNow()
+      return statusOf()
+    })
+  )
 
   const dropGoogleCalendars = (): void => {
     const data = store.get()
@@ -64,17 +87,19 @@ export function registerGoogleIpc(store: DataStore, account: GoogleAccount): voi
 
   ipcMain.handle('google:disconnect', () =>
     wrap(async () => {
-      const status = await account.disconnect()
+      await account.disconnect()
       dropGoogleCalendars()
-      return status
+      sync.reset()
+      return statusOf()
     })
   )
 
   ipcMain.handle('google:reset', () =>
     wrap(async () => {
-      const status = await account.reset()
+      await account.reset()
       dropGoogleCalendars()
-      return status
+      sync.reset()
+      return statusOf()
     })
   )
 
@@ -99,8 +124,12 @@ export function registerGoogleIpc(store: DataStore, account: GoogleAccount): voi
         store.applyRemote({
           calendars: { upsert: [calendarInfoFromGoogle(entry, existing)] }
         })
+        // fetch its events from scratch right away
+        sync.forget(entry.id)
+        void sync.syncNow()
       } else {
         store.applyRemote(removeCalendarsPatch(data, [id]))
+        sync.forget(entry.id)
       }
       return true
     })
