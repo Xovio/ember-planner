@@ -13,7 +13,7 @@ import {
   type Todo,
   type TodoList
 } from '@shared/types'
-import { api } from './lib/api'
+import { api, isDemo } from './lib/api'
 
 /* ───────────── UI types ───────────── */
 
@@ -234,6 +234,7 @@ export const useStore = create<State>((set, get) => {
     async init() {
       const data = await api.load()
       set({ data, view: data.settings.defaultView })
+      if (isDemo) applyDemoParams()
     },
 
     /* ── navigation ── */
@@ -611,6 +612,48 @@ export const useStore = create<State>((set, get) => {
     }
   }
 })
+
+/**
+ * Demo/screenshot URL parameters (web build with ?demo only), e.g.
+ * ?demo&page=plan&view=month&tab=today&theme=rose&todo=2&add=Text&palette=suche
+ */
+function applyDemoParams(): void {
+  const p = new URLSearchParams(location.search)
+  const st = useStore.getState()
+  const page = p.get('page') as Page | null
+  if (page) st.setPage(page)
+  const view = p.get('view') as CalendarViewKind | null
+  if (view) useStore.setState({ view })
+  const theme = p.get('theme')
+  if (theme) st.updateSettings({ theme })
+  const tab = p.get('tab') as RightTab | null
+  if (tab) useStore.setState({ rightTab: tab })
+  const todo = p.get('todo')
+  if (todo) {
+    const t = st.data?.todos[Number(todo)]
+    if (t) st.selectTodo(t.id)
+  }
+  const ev = p.get('event')
+  if (ev) {
+    const e = st.data?.events[Number(ev)]
+    if (e) st.selectEvent(e.id)
+  }
+  if (p.has('add')) st.openAdd('auto', p.get('add') ?? '')
+  if (p.has('palette')) {
+    st.openPalette()
+    const q = p.get('palette')
+    if (q) setTimeout(() => {
+      const input = document.querySelector<HTMLInputElement>('.palette input')
+      if (!input) return
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(input, q)
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    }, 50)
+  }
+  if (p.has('picked')) {
+    const ids = (st.data?.todos ?? []).filter((t) => !t.done).slice(0, Number(p.get('picked')) || 3).map((t) => t.id)
+    st.setPicked(ids)
+  }
+}
 
 /** next half hour */
 export function roundUp(d: Date, step = 30): Date {

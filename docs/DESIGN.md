@@ -71,6 +71,9 @@ Für die Startseite „Heute“ und später ein frei anordenbares Dashboard:
 
 ## 6. Phasen
 
+> Aktueller Stand und weitere Ideen: [ROADMAP.md](ROADMAP.md) · Funktionsumfang: [FEATURES.md](FEATURES.md)
+
+
 1. Grundgerüst, Theme, Kalender (Tag/Woche/Monat/Agenda), Termine, Wiederholung, Erinnerungen, Tray, Heute-Ansicht mit ersten Widgets
 2. ✅ ToDos (Listen, Kategorien, harte/weiche Deadlines, Unteraufgaben, Zeitschätzung), Seitenleiste im Kalender, Drag & Drop, Schnelleingabe, Deadline-Widgets, Deadline-Erinnerungen · offen: Befehlspalette, Eisenhower-Matrix
 3. Google-Kalender 2-Wege-Sync
