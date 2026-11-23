@@ -9,8 +9,8 @@ damit eine spätere Obsidian-Anbindung nahtlos passt.
 
 ![Planen – Wochenansicht mit ToDo-Spalte](docs/screenshots/planen-woche.png)
 
-> Status: **frühe Version (0.1)** für Windows. Läuft lokal, Daten bleiben auf dem eigenen Rechner.
-> Google-Kalender-Sync und Obsidian-Anbindung sind geplant – siehe [Roadmap](docs/ROADMAP.md).
+> Status: **frühe Version (0.1)** für Windows. Läuft lokal, Daten bleiben auf dem eigenen Rechner –
+> optional mit **2-Wege-Sync zu Google Kalender**. Obsidian-Anbindung ist geplant – siehe [Roadmap](docs/ROADMAP.md).
 
 ## Highlights
 
@@ -21,6 +21,7 @@ damit eine spätere Obsidian-Anbindung nahtlos passt.
 - **Eine Eingabe für alles** (`N`) – „Zahnarzt Do 14 Uhr 1h“ wird ein Termin, „Karte zeichnen bis Fr ~Mi #dnd !! 2h“ ein ToDo
 - **Befehlspalette** (`Strg+K`) – Termine, ToDos und Befehle durchsuchen
 - **Rückgängig statt Rückfragen** – `Strg+Z` / `Strg+Y` für alles, keine „Wirklich löschen?“-Dialoge
+- **Google Kalender** – 2-Wege-Sync mit eigenem Google-Konto, inkl. Serien, Erinnerungen und Offline-Warteschlange ([Einrichtung](docs/GOOGLE-SETUP.md))
 - **Übersicht** – Wochenauslastung, Deadline-Radar, Kategorien und Aktivitäts-Heatmap
 - **Themes** – „Ember“ (dunkel) und „Rosé“ (hell), weitere Styles folgen
 
@@ -52,6 +53,7 @@ npm run dev
 | `npm run build` / `npm run start` | Produktions-Bundle bauen / starten |
 | `npm run web` | Nur die Oberfläche im Browser (http://localhost:5199) – mit `?demo` und Beispieldaten |
 | `npm run typecheck` | TypeScript prüfen |
+| `npm test` | Tests (Vitest) |
 
 <details>
 <summary>Electron startet nicht („Electron failed to install correctly“)?</summary>
@@ -98,13 +100,14 @@ ToDo ins Raster ziehen → einplanen · Deadline-Markierung ziehen → Deadline 
 
 ## Technik
 
-Electron · React 19 · TypeScript · Vite (electron-vite) · Zustand · date-fns · lucide-react.
+Electron · React 19 · TypeScript · Vite (electron-vite) · Zustand · date-fns · rrule · lucide-react · Vitest.
 Daten als JSON-Datei hinter einer Repository-Schicht (später SQLite möglich). Aufbau und Designentscheidungen:
 [docs/DESIGN.md](docs/DESIGN.md).
 
 | Ordner | Inhalt |
 |---|---|
 | `src/main` | Hauptprozess: Fenster, Tray, Datenspeicher, Erinnerungs-Scheduler |
+| `src/main/google` | Google-Anmeldung (OAuth/PKCE), Abgleich, Outbox fürs Hochladen |
 | `src/preload` | sichere IPC-Brücke (`window.api`) |
 | `src/shared` | Datentypen, Wiederholungen, ToDo-/Tasks-Format-Logik |
 | `src/renderer` | Oberfläche: Seiten, Kalenderansichten, Details, Widgets, Themes |
@@ -115,6 +118,7 @@ Daten als JSON-Datei hinter einer Repository-Schicht (später SQLite möglich). 
 - [Funktionen & Umfang](docs/FEATURES.md)
 - [Roadmap, Ideen & Ziele](docs/ROADMAP.md)
 - [Designkonzept & Recherche](docs/DESIGN.md)
+- [Google Kalender einrichten](docs/GOOGLE-SETUP.md) · [Sync-Konzept](docs/GOOGLE-SYNC.md)
 
 ## Lizenz
 

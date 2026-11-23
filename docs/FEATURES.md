@@ -85,18 +85,39 @@ Die linke Leiste filtert die ToDo-Spalte: Ein Klick auf eine Liste oder Kategori
 - Status (überfällig, verpasst) immer mit Symbol + Text, nie nur über Farbe
 - Schrift Inter, lokal eingebunden (offline)
 
+## Google Kalender (2-Wege-Sync)
+
+- **Verbinden** unter *Optionen → Google Kalender* mit eigener Client-ID (einmalig, kostenlos, Anleitung:
+  [GOOGLE-SETUP.md](GOOGLE-SETUP.md)); Anmeldung im Browser, Token verschlüsselt gespeichert
+- **Kalender auswählen**: Google-Kalender erscheinen links im Abschnitt *Google*; Name, Farbe und Sichtbarkeit lassen sich lokal anpassen
+- **Abgleich** beim Start, alle 5 Minuten, beim Zurückkehren ins Fenster und auf Knopfdruck (↻ neben *Google*); nach einer
+  Änderung in der App wird nach ca. 2,5 Sekunden hochgeladen
+- **In beide Richtungen**: anlegen, bearbeiten, verschieben (auch per Drag & Drop und zwischen Kalendern), löschen
+- **Serien** inkl. einzeln verschobener oder abgesagter Termine; Regeln wie „jeden 2. Dienstag“ werden angezeigt und bleiben erhalten
+- **Erinnerungen** aus Google lösen Windows-Benachrichtigungen aus; geänderte Erinnerungen gehen zurück zu Google
+- **Konflikte**: die neuere Änderung gewinnt, mit Hinweis · **Offline**: Änderungen warten und werden später übertragen
+- **Sicher**: Kalender ausschalten oder trennen löscht nie etwas bei Google; Felder, die Ember Planner nicht kennt
+  (Teilnehmer, Videokonferenz), bleiben unangetastet
+- **Schreibgeschützt** sind Kalender, in denen du bei Google nur Leserechte hast (z. B. Feiertage) – mit „Kopieren“ in einen eigenen Kalender übernehmen
+- Zeitblöcke aus ToDos werden mitsynchronisiert, wenn der ToDo-Kalender ein Google-Kalender ist
+
+Technik und Entscheidungen: [GOOGLE-SYNC.md](GOOGLE-SYNC.md)
+
 ## Daten & Technik
 
 - Lokale JSON-Datei `%APPDATA%\Ember Planner\data.json`, atomar geschrieben; defekte Dateien werden gesichert statt überschrieben
-- Datenmodell bereits vorbereitet für Google-IDs (Sync) und Obsidian-Quellen (Datei + Zeile)
+- Google-Anmeldung (`google-auth.bin`, verschlüsselt) und Sync-Zustand (`google-sync.json`) liegen getrennt von `data.json`
+- Datenmodell vorbereitet für Obsidian-Quellen (Datei + Zeile)
+- Automatisierte Tests mit Vitest (`npm test`) für Wiederholungen, iCalendar-Regeln, Google-Mapping, Sync und Hochladen
 - Web-Build (`npm run web`) mit Demo-Modus `?demo` – Grundlage für eine spätere Mobil-/Web-Version
 
 ## Grenzen der aktuellen Version
 
 - Nur **Windows** getestet; kein Installer, Start aus dem Quellcode
-- **Keine Synchronisation** – weder Google Kalender noch andere Geräte
+- **Sync nur mit Google Kalender** – ToDos werden nicht zwischen Geräten abgeglichen
+- Google-Serien in einer anderen Zeitzone als der des PCs können rund um die Zeitumstellung um eine Stunde abweichen; `RDATE` wird nicht unterstützt
+- Einzelne Termine einer Serie lassen sich in der App weiterhin nur löschen, nicht einzeln verschieben (in Google geänderte werden korrekt angezeigt)
 - **Keine Obsidian-Anbindung** (nur das Format ist vorbereitet)
 - Wiederkehrende Termine: Änderungen gelten immer für die ganze Serie; einzelne Termine lassen sich nur löschen, nicht verschieben
 - Mehrtägige Termine mit Uhrzeit erscheinen pro Tag als eigenes Stück
 - Keine Zeitzonen-Auswahl (es gilt die Systemzeitzone)
-- Keine automatisierten Tests

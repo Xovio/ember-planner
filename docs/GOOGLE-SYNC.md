@@ -1,6 +1,6 @@
 # Konzept: Google-Kalender-Sync (Phase 3)
 
-Stand: 2026-11-23 · Branch `feature/google-sync` · Status: **in Arbeit** – Etappen 0–4 fertig (2-Wege-Sync), Feinschliff folgt · Einrichtung: [GOOGLE-SETUP.md](GOOGLE-SETUP.md)
+Stand: 2026-11-23 · Branch `feature/google-sync` · Status: **fertig** – alle Etappen umgesetzt und mit echtem Konto getestet · Einrichtung: [GOOGLE-SETUP.md](GOOGLE-SETUP.md)
 
 ## Ziel
 
@@ -130,7 +130,9 @@ unverändert, solange man sie nicht bewusst ersetzt.
   Lokale Kalender-ID ist `g:<Google-ID>`, damit ein Kalender beim erneuten Einschalten seine Einstellungen behält.
   Name, Farbe und Sichtbarkeit lassen sich lokal ändern und werden nicht von Google überschrieben.
 - **Trennen** widerruft das Token bei Google und entfernt die Google-Kalender samt Terminen aus der App
-- **Status:** dezentes Symbol in der Titelleiste (synchron · läuft · offline · Fehler) mit Tooltip „zuletzt vor 2 Min.“
+- **Status:** ↻-Symbol neben dem Abschnitt *Google* in der linken Leiste (dreht sich beim Abgleich, wird bei Problemen rot,
+  Tooltip mit „zuletzt vor 2 Min.“ und ausstehenden Änderungen) sowie eine Zeile in den Optionen. Auf ein zusätzliches
+  Symbol in der Titelleiste wurde bewusst verzichtet.
 - Schreibgeschützte Termine zeigen ein Schloss-Symbol
 
 ## Umsetzung in Etappen
@@ -144,7 +146,7 @@ Jede Etappe ist für sich lauffähig und wird ein eigener Commit. Am Ende entste
 | 2 ✅ | **Anmeldung:** OAuth, TokenStore, Optionen-Seite, Kalenderliste abrufen | Konto verbinden, Google-Kalender auswählen |
 | 3 ✅ | **Abruf (nur lesen):** Erst- und Folgeabgleich, Mapping, Serien + Ausnahmen, `rrule` | Google-Termine erscheinen und aktualisieren sich |
 | 4 ✅ | **Hochladen:** Outbox, etag, Konflikte, Offline | Echte 2-Wege-Synchronisation |
-| 5 | **Feinschliff:** Statusanzeige, Fehlertexte, Doku (FEATURES/ROADMAP) | bereit zum Mergen |
+| 5 ✅ | **Feinschliff:** Statusanzeige, Fehlertexte, Doku (FEATURES/ROADMAP) | bereit zum Mergen |
 
 ## Berührungspunkte mit dem parallelen Chat (Ideen-Sammlung)
 
