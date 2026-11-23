@@ -10,6 +10,7 @@ Ausblick und Ideen stehen in der [Roadmap](ROADMAP.md).
 | **Planen** (Startseite) | Kalender in der Mitte · links Mini-Monat, Kalender, ToDo-Ansichten, Listen, Kategorien · rechts Seitenspalte mit den Reitern *ToDos*, *Heute*, *Details* |
 | **ToDos** | Alle ToDos zum Organisieren, gruppiert nach Dringlichkeit, mit Tastatursteuerung und Mehrfachauswahl |
 | **Übersicht** | Dashboard mit Kennzahlen und Diagrammen |
+| **Ideen** | Brainstorm-Boards: freie Fläche mit Zetteln, Rahmen und Pfeilen; Zusammenfassen und Export nach Obsidian |
 | **Optionen** | Theme, Standards für Termine und Erinnerungen, System-Einstellungen |
 
 Die linke Leiste filtert die ToDo-Spalte: Ein Klick auf eine Liste oder Kategorie zeigt rechts nur deren ToDos.
@@ -89,6 +90,34 @@ Die linke Leiste filtert die ToDo-Spalte: Ein Klick auf eine Liste oder Kategori
 | Deadline-Radar | 14 Tage, Korridor zwischen weicher und harter Deadline |
 | Aktivität | Heatmap über 12 Monate – Termine oder erledigte ToDos |
 
+## Ideen (Brainstorm-Boards)
+
+Eine freie Fläche zum Sammeln und Ordnen – in der Art von Miro, aber bewusst schlicht.
+
+- **Boards** in der linken Spalte: anlegen (`+`), umbenennen (Titel in der Werkzeugleiste), löschen per Rechtsklick (`Strg+Z` holt es zurück)
+- **Zettel** in den acht App-Farben: Doppelklick auf die Fläche (oder `N`) legt einen an, Doppelklick auf einen Zettel bearbeitet ihn.
+  Beim Schreiben: `Enter` = fertig + **verbundener** Zettel rechts daneben, `Tab` = fertig + Zettel **darunter** (am selben Elternzettel),
+  `Shift+Enter` = Zeilenumbruch, `Esc` = fertig. So entsteht schnell eine Mindmap
+- **Rahmen** gruppieren Zettel: `G` fasst die Auswahl in einen Rahmen (ohne Auswahl: leerer Rahmen). Zettel gehören zu dem Rahmen,
+  in dem ihre Oberkante liegt; zieht man den Rahmen am Titel, wandert der Inhalt mit. Ecke unten rechts = Größe ändern
+- **Pfeile:** den Punkt am rechten Rand eines Zettels auf einen anderen ziehen · ins Leere ziehen = neuer verbundener Zettel dort
+- **Punkte vergeben** (`+` am Zettel, Klick auf die Punkte entfernt einen) – bestimmen die Reihenfolge in der Zusammenfassung
+- **Nächster Schritt** (Rechtsklick) markiert Zettel als Aufgabe; **Als ToDo übernehmen** legt ein ToDo im Eingang an und verknüpft es
+  (Häkchen am Zettel öffnet das ToDo) · **Als Termin planen** öffnet die Schnelleingabe mit dem Zetteltext
+- **Bedienung:** Fläche ziehen = verschieben · Mausrad = scrollen · `Strg+Mausrad` = zoomen · `0` = alles zeigen ·
+  `Shift+Ziehen` = Auswahlrahmen · Pfeiltasten = Auswahl verschieben · `Strg+D` = duplizieren · `Entf` = löschen · alles mit `Strg+Z`
+
+**Zusammenfassen & Export** (Knopf rechts in der Werkzeugleiste):
+
+- **Fazit:** eigenes Textfeld für die Kernaussage – steht oben in der Notiz
+- **Gliederung ohne KI, aus dem Aufbau des Boards:** Rahmen → Überschriften (oben links zuerst), Pfeile im selben Rahmen →
+  Einrückung, Punkte → Reihenfolge, Zettel außerhalb von Rahmen → „Weitere Ideen“, nächste Schritte → `- [ ]` im Tasks-Format
+  (verknüpfte ToDos mit ihren Deadlines und Erledigt-Status)
+- **Vorschau** des Markdowns, vor dem Speichern frei anpassbar („Neu erzeugen“ verwirft die Anpassung)
+- **Als Notiz speichern:** `.md` mit Frontmatter (`title`, `date`, `tags: brainstorm`); mit Fazit wandern die Ideen in einen
+  eingeklappten Callout `> [!note]- Alle Ideen`. Optional landet daneben eine **`.canvas`-Datei** (offenes JSON-Canvas-Format), die
+  Obsidian als Board öffnet und die in der Notiz eingebettet wird (`![[… .canvas]]`) · außerdem: Markdown kopieren, nur `.canvas` speichern
+
 ## Darstellung
 
 - Themes **Ember** (dunkel, Karminrot) und **Rosé** (hell); alle Farben sind CSS-Variablen
@@ -105,7 +134,8 @@ Die linke Leiste filtert die ToDo-Spalte: Ein Klick auf eine Liste oder Kategori
   ToDos als Markdown im Obsidian-Tasks-Format, nach Listen gegliedert
 - **Import:** JSON-Sicherung (ersetzt alle Daten) · Markdown mit Tasks-Zeilen (fügt ToDos samt Unteraufgaben zum Eingang hinzu) –
   beides mit `Strg+Z` rückgängig
-- **Automatisierte Tests** (`npm test`, Vitest): Wiederholungen, Schnelleingabe, Tasks-Format, Feiertage, Export/Import
+- **Automatisierte Tests** (`npm test`, Vitest): Wiederholungen, Schnelleingabe, Tasks-Format, Feiertage, Export/Import,
+  Board-Gliederung, Markdown- und Canvas-Export
 - Datenmodell bereits vorbereitet für Google-IDs (Sync) und Obsidian-Quellen (Datei + Zeile)
 - Web-Build (`npm run web`) mit Demo-Modus `?demo` – Grundlage für eine spätere Mobil-/Web-Version
 
@@ -119,4 +149,6 @@ Die linke Leiste filtert die ToDo-Spalte: Ein Klick auf eine Liste oder Kategori
 - Keine Zeitzonen-Auswahl (es gilt die Systemzeitzone)
 - Kein ICS-*Import* (kommt mit dem Google-Sync); Sicherungen gibt es nur in der Desktop-App, nicht im Web-Build
 - Papierkorb nur für ToDos; gelöschte Termine lassen sich nur per `Strg+Z` in derselben Sitzung zurückholen
+- Ideen-Boards: keine Bilder, kein Freihandzeichnen, Zettel mit fester Breite; die Zusammenfassung ordnet nur, sie formuliert
+  nichts neu (das ist für die Claude-Anbindung in Phase 4 vorgesehen); kein Import von `.canvas`-Dateien
 - Feiertage, die nur in einzelnen Gemeinden gelten (z. B. Mariä Himmelfahrt in Teilen Bayerns), fehlen

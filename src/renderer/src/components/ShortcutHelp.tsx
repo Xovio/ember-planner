@@ -43,6 +43,18 @@ const SECTIONS: { title: string; rows: Row[] }[] = [
     ]
   },
   {
+    title: 'Ideen-Board',
+    rows: [
+      [['Doppelklick'], 'Neuer Zettel (auch N)'],
+      [['↵'], 'Beim Schreiben: fertig + verbundener Zettel'],
+      [['Tab'], 'Beim Schreiben: fertig + Zettel darunter'],
+      [['Shift', '↵'], 'Zeilenumbruch im Zettel'],
+      [['G'], 'Auswahl in Rahmen fassen'],
+      [['Shift', 'Ziehen'], 'Mehrere auswählen'],
+      [['Strg', 'Mausrad'], 'Zoomen (0 = alles zeigen)']
+    ]
+  },
+  {
     title: 'Schnelleingabe',
     rows: [
       [['Tab'], 'Zwischen Termin und ToDo wechseln'],

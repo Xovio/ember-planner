@@ -1,10 +1,11 @@
-import { CalendarDays, CheckSquare, LayoutDashboard, Search, Settings } from 'lucide-react'
+import { CalendarDays, CheckSquare, LayoutDashboard, Lightbulb, Search, Settings } from 'lucide-react'
 import { useStore, type Page } from '../store'
 
 const ITEMS: { id: Page; label: string; icon: typeof CalendarDays; hint: string }[] = [
   { id: 'plan', label: 'Planen', icon: CalendarDays, hint: 'T' },
   { id: 'todos', label: 'ToDos', icon: CheckSquare, hint: '' },
-  { id: 'overview', label: 'Übersicht', icon: LayoutDashboard, hint: '' }
+  { id: 'overview', label: 'Übersicht', icon: LayoutDashboard, hint: '' },
+  { id: 'ideas', label: 'Ideen', icon: Lightbulb, hint: '' }
 ]
 
 export function NavRail(): React.JSX.Element {

@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, Tray, shell } from 'electron'
 import { readFileSync, writeFileSync } from 'fs'
-import { basename, join } from 'path'
+import { basename, dirname, join } from 'path'
 import { DataStore } from './store'
 import { ReminderScheduler } from './reminders'
 import { Backups } from './backup'
@@ -55,12 +55,17 @@ function init(): void {
     return shell.openPath(backups.dir)
   })
 
-  ipcMain.handle('file:save', async (_e, name: string, content: string, filters: FileFilter[]) => {
-    const res = await dialog.showSaveDialog(win!, { defaultPath: join(app.getPath('documents'), name), filters })
-    if (res.canceled || !res.filePath) return null
-    writeFileSync(res.filePath, content, 'utf8')
-    return res.filePath
-  })
+  ipcMain.handle(
+    'file:save',
+    async (_e, name: string, content: string, filters: FileFilter[], extras: { name: string; content: string }[] = []) => {
+      const res = await dialog.showSaveDialog(win!, { defaultPath: join(app.getPath('documents'), name), filters })
+      if (res.canceled || !res.filePath) return null
+      writeFileSync(res.filePath, content, 'utf8')
+      // companion files (e.g. a .canvas next to its note); plain names only, same folder
+      for (const x of extras) writeFileSync(join(dirname(res.filePath), basename(x.name)), x.content, 'utf8')
+      return res.filePath
+    }
+  )
   ipcMain.handle('file:open', async (_e, filters: FileFilter[]) => {
     const res = await dialog.showOpenDialog(win!, { properties: ['openFile'], filters })
     const path = res.filePaths[0]

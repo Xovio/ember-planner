@@ -5,6 +5,7 @@ import './styles/themes.css'
 import './styles/app.css'
 import './styles/todos.css'
 import './styles/ux.css'
+import './styles/ideas.css'
 import { App } from './App'
 
 createRoot(document.getElementById('root')!).render(

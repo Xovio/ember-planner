@@ -16,6 +16,7 @@ import { CalendarPage } from './pages/CalendarPage'
 import { TodayPage } from './pages/TodayPage'
 import { TodosPage } from './pages/TodosPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { IdeasPage } from './pages/IdeasPage'
 import { RightPanel } from './components/RightPanel'
 
 export function App(): React.JSX.Element {
@@ -81,6 +82,7 @@ export function App(): React.JSX.Element {
               {selection && <RightPanel tabs={false} />}
             </div>
           )}
+          {page === 'ideas' && <IdeasPage />}
           {page === 'settings' && <SettingsPage />}
         </main>
       </div>
@@ -137,6 +139,9 @@ function useKeyboardShortcuts(): void {
         if (st.selection) return st.clearSelection()
         return
       }
+
+      // the board has its own keys (letters, Entf, Tab …)
+      if (st.page === 'ideas' && !['/', '?', 'escape'].includes(k)) return
 
       // Entf on a selected / previewed event
       if (k === 'delete' || k === 'backspace') {

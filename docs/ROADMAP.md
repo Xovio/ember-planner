@@ -20,6 +20,7 @@ Wohin sich Ember Planner entwickeln soll. Was schon da ist: [Funktionen & Umfang
 | 2 | ToDos mit harten/weichen Deadlines, Listen, Kategorien, Einplanen per Drag & Drop, Deadline-Widgets | ✅ fertig |
 | 2.5 | UX-Überarbeitung: eine Arbeitsfläche, Popups, Detailspalte, Schnelleingabe, Befehlspalette, Undo, Kontextmenüs | ✅ fertig |
 | 2.6 | Schnelle Gewinne: wiederkehrende ToDos, Feiertage, Tastenkürzel-Übersicht, Export/Import, automatische Backups, Archiv & Papierkorb, automatisierte Tests | ✅ fertig |
+| 2.7 | Ideen-Boards: Brainstorm-Fläche mit Zetteln, Rahmen, Pfeilen und Punkten · Zusammenfassen · Export als Obsidian-Notiz und `.canvas` | ✅ fertig |
 | 3 | Google-Kalender-Sync (2-Wege, OAuth) | geplant |
 | 4 | Obsidian-Anbindung & Claude-Integration | geplant – Konzept vorher gemeinsam festlegen |
 | 5 | Verteilung: Installer, Auto-Update | geplant |
@@ -48,6 +49,9 @@ Ideen:
   Countdown-Widget „Tage bis zur nächsten Session“ mit offenen Prep-Aufgaben
 - **Claude-Anbindung (MCP-Server):** Claude kann Termine und ToDos lesen, anlegen und abhaken – z. B. „plane mir die
   Session-Vorbereitung bis Freitag ein“ oder ToDos aus einer Projektnotiz ableiten (immer mit Bestätigung)
+- **Board zusammenfassen lassen:** Knopf im Zusammenfassen-Panel – Claude schlägt Kernaussagen, offene Fragen und nächste
+  Schritte als *Entwurf* vor; übernommen wird erst nach Bestätigung (die Gliederung ohne KI gibt es schon seit 2.7)
+- **Boards im Vault:** Export direkt in einen gewählten Vault-Ordner statt über den Speichern-Dialog
 
 ## Phase 5 – Verteilung
 
@@ -94,6 +98,12 @@ Ideen:
 - Kompakt- und Komfort-Dichte
 - ~~Tastenkürzel-Übersicht (`?`)~~ ✅ 2.6 · anpassbare Kürzel
 - Englische Übersetzung
+
+**Ideen-Boards** (Grundversion ✅ 2.7)
+- Bilder und Links als Karten, Zettelbreite anpassbar
+- `.canvas`-Dateien aus Obsidian importieren
+- Board-Vorlagen (z. B. „Session-Rückblick“, „Pro & Contra“, „Arc-Planung“)
+- Board mit einem Termin verknüpfen (z. B. Brainstorm zur nächsten Session)
 
 **Technik**
 - ~~Automatisierte Tests (Wiederholungslogik, Schnelleingabe-Parser, Tasks-Format)~~ ✅ 2.6 · Oberflächen-Tests (z. B. Playwright) fehlen noch
