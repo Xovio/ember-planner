@@ -210,10 +210,8 @@ export function EventDetails({ id, occurrenceStart }: { id: string; occurrenceSt
         <div className="details-locked">
           <Lock size={14} />
           <span>
-            {cal?.readOnly
-              ? 'Dieser Google-Kalender ist schreibgeschützt.'
-              : 'Google-Termine lassen sich in Ember Planner noch nicht bearbeiten – das kommt mit dem Hochladen.'}{' '}
-            Mit <Copy size={12} /> kopierst du ihn in einen eigenen Kalender.
+            Dieser Kalender ist schreibgeschützt (du hast in Google nur Lesezugriff). Mit <Copy size={12} /> kopierst du
+            ihn in einen eigenen Kalender.
           </span>
         </div>
       )}
@@ -319,25 +317,30 @@ export function EventDetails({ id, occurrenceStart }: { id: string; occurrenceSt
           <div className="field-stack">
             <select
               className="input"
-              value={rec?.freq ?? 'none'}
+              value={rec?.rrule ? 'custom' : (rec?.freq ?? 'none')}
               onChange={(e) => {
                 const v = e.target.value
                 if (v === 'none') return setRecurrence(null)
+                if (v === 'custom') return
                 const freq = v as RecurrenceFreq
                 setRecurrence({
                   ...(rec ?? { interval: 1 }),
+                  // choosing a simple rule replaces a rule from Google
+                  rrule: undefined,
                   freq,
                   byWeekday: freq === 'weekly' ? (rec?.byWeekday ?? [weekdayIndex(start)]) : undefined
                 })
               }}
             >
+              {rec?.rrule && <option value="custom">{describeRecurrence(rec, start)}</option>}
               <option value="none">Wiederholt sich nicht</option>
               <option value="daily">Täglich</option>
               <option value="weekly">Wöchentlich</option>
               <option value="monthly">Monatlich (am {start.getDate()}.)</option>
               <option value="yearly">Jährlich (am {fmt(start, 'd. MMMM')})</option>
             </select>
-            {rec && (
+            {rec?.rrule && <span className="field-hint">Regel aus Google – zum Ändern eine einfache Regel wählen</span>}
+            {rec && !rec.rrule && (
               <div className="rec-box">
                 <div className="rec-line">
                   Alle

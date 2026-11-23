@@ -14,7 +14,8 @@ const google: GoogleApi = {
   calendars: () => ipcRenderer.invoke('google:calendars'),
   setEnabled: (entry: GoogleCalendarEntry, enabled: boolean) => ipcRenderer.invoke('google:setEnabled', entry, enabled),
   syncNow: () => ipcRenderer.invoke('google:syncNow'),
-  onStatus: (cb: (s: GoogleStatus) => void) => listen('google:status', cb)
+  onStatus: (cb: (s: GoogleStatus) => void) => listen('google:status', cb),
+  onNotice: (cb: (text: string) => void) => listen('google:notice', cb)
 }
 
 function listen<T>(channel: string, cb: (payload: T) => void): () => void {

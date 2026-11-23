@@ -20,13 +20,12 @@ export interface GoogleSyncState {
   lastSync?: string
   /** last sync problem in plain German */
   error?: string
+  /** local changes not yet uploaded */
+  pending?: number
 }
 
-/**
- * Writing back to Google arrives in stage 4. Until then Google events are read-only in the app,
- * so local edits can't silently get lost on the next sync.
- */
-export const GOOGLE_WRITE_ENABLED = false
+/** local changes in Google calendars are uploaded (stage 4); false makes all Google events read-only */
+export const GOOGLE_WRITE_ENABLED = true
 
 /** events in this calendar can't be changed in the app */
 export function isCalendarLocked(cal: { readOnly?: boolean; external?: { provider: string } } | undefined): boolean {
@@ -143,4 +142,6 @@ export interface GoogleApi {
   setEnabled(entry: GoogleCalendarEntry, enabled: boolean): Promise<GoogleResult<boolean>>
   syncNow(): Promise<GoogleResult<GoogleStatus>>
   onStatus(cb: (s: GoogleStatus) => void): () => void
+  /** short messages from the sync, e.g. about conflicts */
+  onNotice(cb: (text: string) => void): () => void
 }

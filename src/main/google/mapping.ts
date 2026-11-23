@@ -60,7 +60,13 @@ export function htmlToText(html: string): string {
 }
 
 /** mapped event, or null for entries without usable times */
-export function eventFromGoogle(g: GEvent, cal: CalendarInfo, defaultReminders: number[]): CalendarEvent | null {
+export function eventFromGoogle(
+  g: GEvent,
+  cal: CalendarInfo,
+  defaultReminders: number[],
+  /** local id for a Google id; events created in the app keep their own id */
+  localIdOf: (googleId: string) => string = (gid) => googleEventLocalId(cal.external!.id, gid)
+): CalendarEvent | null {
   const calGoogleId = cal.external!.id
   const start = timeToISO(g.start)
   const end = timeToISO(g.end) ?? start
@@ -71,7 +77,7 @@ export function eventFromGoogle(g: GEvent, cal: CalendarInfo, defaultReminders: 
     : (g.reminders?.overrides ?? []).filter((r) => r.method === 'popup').map((r) => r.minutes)
 
   const ev: CalendarEvent = {
-    id: googleEventLocalId(calGoogleId, g.id),
+    id: localIdOf(g.id),
     calendarId: cal.id,
     title: g.summary ?? '',
     start,
@@ -88,7 +94,7 @@ export function eventFromGoogle(g: GEvent, cal: CalendarInfo, defaultReminders: 
   const todoId = g.extendedProperties?.private?.emberTodoId
   if (todoId) ev.todoId = todoId
   if (g.recurringEventId) {
-    ev.seriesId = googleEventLocalId(calGoogleId, g.recurringEventId)
+    ev.seriesId = localIdOf(g.recurringEventId)
     const orig = timeToISO(g.originalStartTime)
     if (orig) ev.originalStart = orig
   }
@@ -110,6 +116,8 @@ export interface ApplyInput {
   local: CalendarEvent[]
   /** full sync: everything not in `items` is gone */
   full: boolean
+  /** local ids with changes not yet uploaded – Google's version must not overwrite them */
+  pending?: Set<string>
 }
 
 /**
@@ -117,9 +125,11 @@ export interface ApplyInput {
  * Changed or cancelled single occurrences are hidden in their series via `exdates`;
  * changed ones additionally exist as own events with `seriesId`/`originalStart`.
  */
-export function patchFromGoogle({ cal, items, defaultReminders, local, full }: ApplyInput): DataPatch {
+export function patchFromGoogle({ cal, items, defaultReminders, local, full, pending }: ApplyInput): DataPatch {
   const calGoogleId = cal.external!.id
   const localById = new Map(local.map((e) => [e.id, e]))
+  const byGoogleId = new Map(local.filter((e) => e.external?.id).map((e) => [e.external!.id, e.id]))
+  const localIdOf = (gid: string): string => byGoogleId.get(gid) ?? googleEventLocalId(calGoogleId, gid)
   const upserts = new Map<string, CalendarEvent>()
   const removed = new Set<string>()
   /** series id → occurrence starts to hide */
@@ -131,10 +141,10 @@ export function patchFromGoogle({ cal, items, defaultReminders, local, full }: A
   }
 
   for (const g of items) {
-    const id = googleEventLocalId(calGoogleId, g.id)
+    const id = localIdOf(g.id)
     if (g.status === 'cancelled') {
       if (g.recurringEventId) {
-        hide(googleEventLocalId(calGoogleId, g.recurringEventId), timeToISO(g.originalStartTime))
+        hide(localIdOf(g.recurringEventId), timeToISO(g.originalStartTime))
         // a formerly changed occurrence that is now cancelled
         removed.add(id)
       } else {
@@ -144,7 +154,7 @@ export function patchFromGoogle({ cal, items, defaultReminders, local, full }: A
       }
       continue
     }
-    const ev = eventFromGoogle(g, cal, defaultReminders)
+    const ev = eventFromGoogle(g, cal, defaultReminders, localIdOf)
     if (!ev) continue
     upserts.set(ev.id, ev)
     removed.delete(ev.id)
@@ -170,6 +180,10 @@ export function patchFromGoogle({ cal, items, defaultReminders, local, full }: A
     for (const e of local) if (!upserts.has(e.id)) removed.add(e.id)
   }
   for (const id of removed) upserts.delete(id)
+  for (const id of pending ?? []) {
+    upserts.delete(id)
+    removed.delete(id)
+  }
 
   // only send what actually changed
   const upsert = [...upserts.values()].filter((e) => {

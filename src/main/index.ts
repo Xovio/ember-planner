@@ -72,7 +72,8 @@ function init(): void {
     store,
     account: google,
     dir: app.getPath('userData'),
-    onState: () => sendGoogleStatus()
+    onState: () => sendGoogleStatus(),
+    onNotice: (text) => win?.webContents.send('google:notice', text)
   })
   const googleStatus = (): GoogleStatus => ({ ...google.status(), sync: googleSync?.state })
   const sendGoogleStatus = (): void => win?.webContents.send('google:status', googleStatus())
@@ -80,6 +81,9 @@ function init(): void {
   googleSync.start()
 
   store.subscribe({
+    onLocalChange(diff, data) {
+      googleSync?.recordLocal(diff, data)
+    },
     onRemoteChange(change) {
       win?.webContents.send('data:remote', change)
       reminders.poke()

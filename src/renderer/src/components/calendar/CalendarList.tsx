@@ -158,7 +158,7 @@ function GoogleSyncButton(): React.JSX.Element | null {
     ? `Problem: ${problem}`
     : sync?.running
       ? 'Gleiche mit Google ab …'
-      : `Zuletzt abgeglichen ${lastSyncLabel(sync?.lastSync)} – klicken zum Abgleichen`
+      : `Zuletzt abgeglichen ${lastSyncLabel(sync?.lastSync)}${sync?.pending ? ` · ${sync.pending} Änderung(en) ausstehend` : ''} – klicken zum Abgleichen`
   return (
     <button
       className={`icon-btn sm ${problem ? 'sync-problem' : ''}`}

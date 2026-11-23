@@ -181,7 +181,11 @@ export function GoogleSection(): React.JSX.Element {
               {status.sync?.error ? (
                 <small className="google-sync-error">{status.sync.error}</small>
               ) : (
-                <small>Google-Termine sind vorerst schreibgeschützt; das Hochladen von Änderungen folgt.</small>
+                <small>
+                  {status.sync?.pending
+                    ? `${status.sync.pending} Änderung${status.sync.pending === 1 ? '' : 'en'} warten auf das Hochladen.`
+                    : 'Änderungen in Google-Kalendern werden automatisch hochgeladen.'}
+                </small>
               )}
             </div>
             <div className="settings-control">

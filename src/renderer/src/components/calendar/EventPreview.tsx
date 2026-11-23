@@ -114,7 +114,7 @@ export function EventPreview(): React.JSX.Element | null {
           <li className="pv-cal">
             <i /> {cal?.name}
             {locked && (
-              <span className="pv-locked" title="Google-Termine lassen sich hier noch nicht bearbeiten">
+              <span className="pv-locked" title="Dieser Kalender ist schreibgeschützt">
                 <Lock size={11} /> schreibgeschützt
               </span>
             )}

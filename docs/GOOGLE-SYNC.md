@@ -1,6 +1,6 @@
 # Konzept: Google-Kalender-Sync (Phase 3)
 
-Stand: 2026-11-23 · Branch `feature/google-sync` · Status: **in Arbeit** – Etappen 0–3 fertig (Google-Termine werden gelesen, noch nicht hochgeladen) · Einrichtung: [GOOGLE-SETUP.md](GOOGLE-SETUP.md)
+Stand: 2026-11-23 · Branch `feature/google-sync` · Status: **in Arbeit** – Etappen 0–4 fertig (2-Wege-Sync), Feinschliff folgt · Einrichtung: [GOOGLE-SETUP.md](GOOGLE-SETUP.md)
 
 ## Ziel
 
@@ -77,9 +77,25 @@ Push-Benachrichtigungen (Webhooks) von Google funktionieren für eine Desktop-Ap
 - Lokale Termin-ID `g:<Kalender-ID>:<Event-ID>`, deshalb ersetzen wiederholte Abrufe Termine, statt sie zu verdoppeln.
 - Wird ein Kalender ausgeschaltet, vergisst die App sein Token. Beim Wiedereinschalten folgt ein vollständiger Abruf.
 - Fehler bleiben je Kalender getrennt; vorhandene Daten bleiben erhalten, der nächste Lauf versucht es erneut.
-- **Bis Etappe 4 sind Google-Termine schreibgeschützt** (`GOOGLE_WRITE_ENABLED` in `src/shared/google.ts`).
-  Bearbeiten, Verschieben und Löschen werden mit einem Hinweis abgefangen. Mit „Kopieren“ landet ein Google-Termin
-  als eigener Termin in einem lokalen Kalender.
+- Schreibgeschützt sind nur Kalender, in denen du bei Google nur Leserechte hast. Mit „Kopieren“ landet ein Termin
+  daraus als eigener Termin in einem beschreibbaren Kalender.
+
+**Umsetzung des Hochladens** (`outbox.ts`, `write.ts`, `sync.ts`):
+- Jede Speicherung der Oberfläche liefert einen Diff. Änderungen an Terminen in beschreibbaren Google-Kalendern landen in der
+  **Outbox** (in `google-sync.json`). Mehrere Änderungen am selben Termin werden zu einem Eintrag zusammengefasst.
+  Der Eintrag merkt sich die zuletzt mit Google abgeglichene Version (`base`).
+- Ablauf jedes Syncs: **erst hochladen, dann abrufen.** Termine mit ausstehenden Änderungen überschreibt der Abruf nicht.
+- Hochgeladen wird 2,5 Sekunden nach der letzten Änderung. Tippen in einem Titel ergibt so nur einen Upload.
+- Neu angelegte Termine bekommen eine selbst gewählte Google-ID (SHA-1 der lokalen ID). Ein wiederholter Versuch nach
+  verlorener Antwort legt deshalb keinen zweiten Termin an.
+- Änderungen gehen als `PATCH` mit nur den geänderten Feldern raus. Felder, die Ember Planner nicht kennt (Teilnehmer, Videokonferenz,
+  Farbe, HTML-Beschreibung), bleiben bei Google unverändert, solange man das jeweilige Feld nicht selbst ändert.
+- Verschieben zwischen Google-Kalendern nutzt `events.move`. Vom Google- in einen lokalen Kalender bedeutet: bei Google löschen.
+- Einzelne Termine einer Serie löschen schreibt ein `EXDATE` in die Serie. Einzeln geänderte Termine bekommen kein EXDATE,
+  sonst würde Google die Änderung verwerfen.
+- **Kalender ausschalten oder lokal löschen löscht nie etwas bei Google.**
+- Offline, abgelaufene Anmeldung oder Serverfehler: Die Outbox bleibt erhalten, der nächste Lauf versucht es erneut.
+  Lehnt Google eine Änderung dreimal ab (oder sofort mit 403), wird sie verworfen und die App zeigt einen Hinweis.
 
 ## Abbildung der Daten
 
@@ -127,7 +143,7 @@ Jede Etappe ist für sich lauffähig und wird ein eigener Commit. Am Ende entste
 | 1 ✅ | **Fundament:** Main als Schiedsrichter, nummerierte Patches, `data:remote`, Undo-Historie wird angepasst | App verhält sich wie vorher, ist aber bereit für Fremdänderungen |
 | 2 ✅ | **Anmeldung:** OAuth, TokenStore, Optionen-Seite, Kalenderliste abrufen | Konto verbinden, Google-Kalender auswählen |
 | 3 ✅ | **Abruf (nur lesen):** Erst- und Folgeabgleich, Mapping, Serien + Ausnahmen, `rrule` | Google-Termine erscheinen und aktualisieren sich |
-| 4 | **Hochladen:** Outbox, etag, Konflikte, Offline | Echte 2-Wege-Synchronisation |
+| 4 ✅ | **Hochladen:** Outbox, etag, Konflikte, Offline | Echte 2-Wege-Synchronisation |
 | 5 | **Feinschliff:** Statusanzeige, Fehlertexte, Doku (FEATURES/ROADMAP) | bereit zum Mergen |
 
 ## Berührungspunkte mit dem parallelen Chat (Ideen-Sammlung)

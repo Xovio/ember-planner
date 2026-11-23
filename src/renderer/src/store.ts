@@ -244,7 +244,7 @@ export const useStore = create<State>((set, get) => {
   const locked = (id: string): boolean => {
     const data = get().data
     if (!data || !isEventLocked(data, data.events.find((e) => e.id === id))) return false
-    get().pushToast({ kind: 'info', title: 'Google-Termine lassen sich hier noch nicht bearbeiten' })
+    get().pushToast({ kind: 'info', title: 'Dieser Kalender ist schreibgeschützt' })
     return true
   }
 
