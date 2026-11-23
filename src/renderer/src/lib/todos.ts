@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { addDays, isThisYear } from 'date-fns'
-import type { Category, LocalDate, Todo, TodoList } from '@shared/types'
+import { ARCHIVE_DAYS, type Category, type LocalDate, type Todo, type TodoList } from '@shared/types'
 import { compareTodos, daysBetween, deadlineStatus, effectiveDeadline, localDate, parseLocalDate, type DeadlineStatus } from '@shared/todo'
 import { useStore, type TodoView } from '../store'
 import { fmt } from './dates'
@@ -21,7 +21,15 @@ export function useOpenTodos(): Todo[] {
   return useMemo(() => (todos ?? []).filter((t) => !t.done).sort(compareTodos), [todos])
 }
 
+/** done for more than ARCHIVE_DAYS: only shown in the archive */
+export function isArchived(t: Todo, now = Date.now()): boolean {
+  return t.done && !!t.doneAt && now - new Date(t.doneAt).getTime() > ARCHIVE_DAYS * 86400000
+}
+
 export function matchesView(t: Todo, view: TodoView, today = localDate(new Date())): boolean {
+  if (view === 'trash') return false // trashed ToDos live in data.trash
+  if (view === 'archive') return isArchived(t)
+  if (isArchived(t)) return false
   if (view === 'done') return t.done
   if (view.startsWith('list:')) return t.listId === view.slice(5)
   if (t.done) return false
@@ -49,7 +57,9 @@ export const VIEW_LABELS: Record<string, string> = {
   week: 'Nächste 7 Tage',
   overdue: 'Überfällig',
   nodate: 'Ohne Deadline',
-  done: 'Erledigt'
+  done: 'Erledigt',
+  archive: 'Archiv',
+  trash: 'Papierkorb'
 }
 
 export interface TodoGroup {

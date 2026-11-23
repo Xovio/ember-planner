@@ -1,8 +1,10 @@
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { create } from 'zustand'
 import { addDays, addMonths, addWeeks, startOfDay } from 'date-fns'
 import {
   INBOX_ID,
+  TRASH_DAYS,
+  normalizeData,
   type AppData,
   type CalendarEvent,
   type CalendarInfo,
@@ -14,6 +16,8 @@ import {
   type TodoList
 } from '@shared/types'
 import { api, isDemo } from './lib/api'
+import { holidayOn } from '@shared/holidays'
+import { daysBetween, localDate, nextRecurrence, parseLocalDate } from '@shared/todo'
 
 /* ───────────── UI types ───────────── */
 
@@ -74,7 +78,7 @@ export interface Toast {
 }
 
 /** smart views or a user list ("list:<id>") */
-export type TodoView = 'open' | 'today' | 'week' | 'overdue' | 'nodate' | 'done' | `list:${string}`
+export type TodoView = 'open' | 'today' | 'week' | 'overdue' | 'nodate' | 'done' | 'archive' | 'trash' | `list:${string}`
 
 export type NewTodo = Partial<Todo> & { title: string }
 
@@ -100,7 +104,7 @@ interface State {
   quickCreate: QuickCreateState | null
   preview: PreviewState | null
   contextMenu: ContextMenuState | null
-  overlay: { kind: 'add'; addKind: AddKind; prefill?: string } | { kind: 'palette' } | null
+  overlay: { kind: 'add'; addKind: AddKind; prefill?: string } | { kind: 'palette' } | { kind: 'help' } | null
   toasts: Toast[]
   todoView: TodoView
   todoCategory: string | null
@@ -128,6 +132,7 @@ interface State {
   closeMenu(): void
   openAdd(addKind?: AddKind, prefill?: string): void
   openPalette(): void
+  openHelp(): void
   closeOverlay(): void
 
   undo(): void
@@ -152,12 +157,21 @@ interface State {
   updateTodos(ids: string[], patch: Partial<Todo>, label: string): void
   toggleTodo(id: string): void
   toggleTodos(ids: string[], done: boolean): void
+  /** moves ToDos to the trash */
   deleteTodos(ids: string[]): void
+  restoreTodos(ids: string[]): void
+  /** removes ToDos from the trash for good (still undoable in this session) */
+  purgeTodos(ids: string[] | 'all'): void
   upsertList(l: TodoList): void
   removeList(id: string): void
   upsertCategory(c: Category): void
   removeCategory(id: string): void
   scheduleTodo(todoId: string, start: Date, end: Date): void
+
+  /** replace all data (restore / import) – one undo step */
+  replaceData(next: AppData, label: string): void
+  /** add imported ToDos to the inbox */
+  importTodos(todos: NewTodo[], label: string): void
 
   pushToast(t: Omit<Toast, 'id'>): void
   dismissToast(id: string): void
@@ -213,6 +227,17 @@ export const useStore = create<State>((set, get) => {
 
   const stamp = (): string => new Date().toISOString()
 
+  /** after undo/redo the selected item may be gone */
+  const dropStaleSelection = (): void => {
+    const { selection, data } = get()
+    if (!selection || !data) return
+    const exists =
+      selection.kind === 'event'
+        ? data.events.some((e) => e.id === selection.id)
+        : data.todos.some((t) => t.id === selection.id) || data.trash.some((t) => t.id === selection.id)
+    if (!exists) get().clearSelection()
+  }
+
   return {
     data: null,
     page: 'plan',
@@ -234,6 +259,11 @@ export const useStore = create<State>((set, get) => {
     async init() {
       const data = await api.load()
       set({ data, view: data.settings.defaultView })
+      // empty the trash of entries older than TRASH_DAYS (not undoable: they expired)
+      const cutoff = new Date(Date.now() - TRASH_DAYS * 86400000).toISOString()
+      if (data.trash.some((t) => (t.deletedAt ?? '') < cutoff)) {
+        mutate((d) => ({ ...d, trash: d.trash.filter((t) => (t.deletedAt ?? '') >= cutoff) }), { history: false })
+      }
       if (isDemo) applyDemoParams()
     },
 
@@ -281,6 +311,7 @@ export const useStore = create<State>((set, get) => {
     openAdd: (addKind = 'auto', prefill) =>
       set({ overlay: { kind: 'add', addKind, prefill }, quickCreate: null, preview: null, contextMenu: null }),
     openPalette: () => set({ overlay: { kind: 'palette' }, quickCreate: null, preview: null, contextMenu: null }),
+    openHelp: () => set({ overlay: { kind: 'help' }, quickCreate: null, preview: null, contextMenu: null }),
     closeOverlay: () => set({ overlay: null }),
 
     /* ── history ── */
@@ -293,6 +324,7 @@ export const useStore = create<State>((set, get) => {
       set({ data: entry.data })
       persist(entry.data)
       syncHistoryFlags()
+      dropStaleSelection()
       get().pushToast({ kind: 'info', title: `Rückgängig: ${entry.label}` })
     },
     redo() {
@@ -304,6 +336,7 @@ export const useStore = create<State>((set, get) => {
       set({ data: entry.data })
       persist(entry.data)
       syncHistoryFlags()
+      dropStaleSelection()
       get().pushToast({ kind: 'info', title: `Wiederholt: ${entry.label}` })
     },
 
@@ -475,16 +508,51 @@ export const useStore = create<State>((set, get) => {
     toggleTodos(ids, done) {
       const set_ = new Set(ids)
       const ts = stamp()
+      const today = localDate(new Date())
       const first = get().data?.todos.find((t) => t.id === ids[0])
+      // completing a recurring ToDo creates its next instance (same undo step)
+      const spawned: Todo[] = []
+      if (done) {
+        for (const t of get().data?.todos ?? []) {
+          if (!set_.has(t.id) || t.done) continue
+          const next = nextRecurrence(t, today)
+          if (!next) continue
+          spawned.push({
+            ...t,
+            ...next,
+            id: uid(),
+            done: false,
+            doneAt: undefined,
+            linkedEventId: undefined,
+            subtasks: t.subtasks.map((s) => ({ ...s, id: uid(), done: false })),
+            createdAt: ts,
+            updatedAt: ts
+          })
+        }
+      }
+      const nextDay = spawned.length === 1 ? (spawned[0].softDeadline ?? spawned[0].hardDeadline) : undefined
+      const base = ids.length > 1 ? `${ids.length} ToDos ${done ? 'erledigt' : 'wieder geöffnet'}` : `„${first?.title}“ ${done ? 'erledigt' : 'wieder geöffnet'}`
       mutate(
         (d) => ({
           ...d,
-          todos: d.todos.map((t) =>
-            set_.has(t.id) ? { ...t, done, doneAt: done ? ts : undefined, updatedAt: ts } : t
-          )
+          todos: [
+            ...d.todos.map((t) =>
+              set_.has(t.id)
+                ? {
+                    ...t,
+                    done,
+                    doneAt: done ? ts : undefined,
+                    // the series lives on in the new instance
+                    ...(done && t.recurrence && !t.done ? { recurrence: null } : {}),
+                    updatedAt: ts
+                  }
+                : t
+            ),
+            ...spawned
+          ]
         }),
         {
-          label: ids.length > 1 ? `${ids.length} ToDos ${done ? 'erledigt' : 'wieder geöffnet'}` : `„${first?.title}“ ${done ? 'erledigt' : 'wieder geöffnet'}`,
+          label: nextDay ? `${base} · nächstes Mal ${deadlineText(nextDay, today)}` : base,
           undoToast: done
         }
       )
@@ -492,15 +560,56 @@ export const useStore = create<State>((set, get) => {
 
     deleteTodos(ids) {
       const set_ = new Set(ids)
+      const ts = stamp()
       const first = get().data?.todos.find((t) => t.id === ids[0])
       mutate(
         (d) => ({
           ...d,
           todos: d.todos.filter((t) => !set_.has(t.id)),
+          trash: [
+            ...d.todos.filter((t) => set_.has(t.id)).map((t) => ({ ...t, linkedEventId: undefined, deletedAt: ts })),
+            ...d.trash
+          ],
           events: d.events.map((e) => (e.todoId && set_.has(e.todoId) ? { ...e, todoId: undefined } : e))
         }),
-        { label: ids.length > 1 ? `${ids.length} ToDos gelöscht` : `„${first?.title}“ gelöscht`, undoToast: true }
+        {
+          label: ids.length > 1 ? `${ids.length} ToDos im Papierkorb` : `„${first?.title}“ im Papierkorb`,
+          undoToast: true
+        }
       )
+      const sel = get().selection
+      if (sel?.kind === 'todo' && set_.has(sel.id)) get().clearSelection()
+      set({ picked: get().picked.filter((p) => !set_.has(p)) })
+    },
+
+    restoreTodos(ids) {
+      const set_ = new Set(ids)
+      const first = get().data?.trash.find((t) => t.id === ids[0])
+      mutate(
+        (d) => {
+          const lists = new Set(d.lists.map((l) => l.id))
+          const back = d.trash
+            .filter((t) => set_.has(t.id))
+            // the list may have been deleted meanwhile
+            .map((t) => ({ ...t, deletedAt: undefined, listId: lists.has(t.listId) ? t.listId : INBOX_ID }))
+          return { ...d, todos: [...d.todos, ...back], trash: d.trash.filter((t) => !set_.has(t.id)) }
+        },
+        {
+          label: ids.length > 1 ? `${ids.length} ToDos wiederhergestellt` : `„${first?.title}“ wiederhergestellt`,
+          undoToast: true
+        }
+      )
+      set({ picked: get().picked.filter((p) => !set_.has(p)) })
+    },
+
+    purgeTodos(ids) {
+      const trash = get().data?.trash ?? []
+      const set_ = new Set(ids === 'all' ? trash.map((t) => t.id) : ids)
+      if (!set_.size) return
+      mutate((d) => ({ ...d, trash: d.trash.filter((t) => !set_.has(t.id)) }), {
+        label: ids === 'all' ? 'Papierkorb geleert' : set_.size > 1 ? `${set_.size} ToDos endgültig gelöscht` : `„${trash.find((t) => set_.has(t.id))?.title}“ endgültig gelöscht`,
+        undoToast: true
+      })
       const sel = get().selection
       if (sel?.kind === 'todo' && set_.has(sel.id)) get().clearSelection()
       set({ picked: get().picked.filter((p) => !set_.has(p)) })
@@ -584,6 +693,27 @@ export const useStore = create<State>((set, get) => {
       )
     },
 
+    replaceData(next, label) {
+      mutate(() => normalizeData(next), { label, undoToast: true })
+      set({ selection: null, picked: [], rightTab: get().rightTab === 'details' ? 'todos' : get().rightTab })
+    },
+
+    importTodos(list, label) {
+      const ts = stamp()
+      const todos: Todo[] = list.map((t) => ({
+        id: uid(),
+        listId: INBOX_ID,
+        priority: 0,
+        done: false,
+        createdAt: ts,
+        updatedAt: ts,
+        ...t,
+        subtasks: (t.subtasks ?? []).map((s) => ({ ...s, id: uid() }))
+      }))
+      if (!todos.length) return
+      mutate((d) => ({ ...d, todos: [...d.todos, ...todos] }), { label, undoToast: true })
+    },
+
     /* ── toasts ── */
     pushToast(t) {
       const id = uid()
@@ -655,6 +785,14 @@ function applyDemoParams(): void {
   }
 }
 
+/** "morgen", "am Sa, 28. Nov." */
+function deadlineText(d: string, today: string): string {
+  const diff = daysBetween(today, d)
+  if (diff === 1) return 'morgen'
+  const date = parseLocalDate(d)
+  return `am ${date.toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' })}`
+}
+
 /** next half hour */
 export function roundUp(d: Date, step = 30): Date {
   const r = new Date(d)
@@ -672,6 +810,13 @@ export function useVisibleEvents(): CalendarEvent[] {
     const visible = new Set(data.calendars.filter((c) => c.visible).map((c) => c.id))
     return data.events.filter((e) => visible.has(e.calendarId))
   }, [data])
+}
+
+/** holiday name for a day, or undefined when holidays are hidden */
+export function useHolidays(): (d: Date) => string | undefined {
+  const show = useStore((s) => s.data?.settings.showHolidays)
+  const region = useStore((s) => s.data?.settings.holidayRegion ?? 'DE')
+  return useCallback((d: Date) => (show ? holidayOn(localDate(d), region) : undefined), [show, region])
 }
 
 export function useCalendarMap(): Map<string, CalendarInfo> {

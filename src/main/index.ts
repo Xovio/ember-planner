@@ -1,9 +1,16 @@
-import { app, BrowserWindow, ipcMain, Menu, Tray, shell } from 'electron'
-import { join } from 'path'
+import { app, BrowserWindow, dialog, ipcMain, Menu, Tray, shell } from 'electron'
+import { readFileSync, writeFileSync } from 'fs'
+import { basename, join } from 'path'
 import { DataStore } from './store'
 import { ReminderScheduler } from './reminders'
+import { Backups } from './backup'
 import { createAppIcon } from './icon'
 import type { AppData, TitleBarTheme } from '@shared/types'
+
+interface FileFilter {
+  name: string
+  extensions: string[]
+}
 
 const APP_ID = 'de.ember.planner'
 const startHidden = process.argv.includes('--hidden')
@@ -12,7 +19,11 @@ let win: BrowserWindow | null = null
 let tray: Tray | null = null
 let store: DataStore
 let reminders: ReminderScheduler
+let backups: Backups
 let quitting = false
+
+// separate data folder, e.g. for testing without touching the real data
+if (process.env['EMBER_USER_DATA']) app.setPath('userData', process.env['EMBER_USER_DATA'])
 
 if (!app.requestSingleInstanceLock()) {
   app.quit()
@@ -34,6 +45,29 @@ function init(): void {
     reminders.poke()
     return true
   })
+  backups = new Backups(store)
+  backups.start()
+  ipcMain.handle('backup:list', () => backups.list())
+  ipcMain.handle('backup:create', () => backups.create(true))
+  ipcMain.handle('backup:read', (_e, file: string) => backups.read(file))
+  ipcMain.handle('backup:open-folder', () => {
+    if (backups.list().length === 0) backups.create(true)
+    return shell.openPath(backups.dir)
+  })
+
+  ipcMain.handle('file:save', async (_e, name: string, content: string, filters: FileFilter[]) => {
+    const res = await dialog.showSaveDialog(win!, { defaultPath: join(app.getPath('documents'), name), filters })
+    if (res.canceled || !res.filePath) return null
+    writeFileSync(res.filePath, content, 'utf8')
+    return res.filePath
+  })
+  ipcMain.handle('file:open', async (_e, filters: FileFilter[]) => {
+    const res = await dialog.showOpenDialog(win!, { properties: ['openFile'], filters })
+    const path = res.filePaths[0]
+    if (res.canceled || !path) return null
+    return { name: basename(path), content: readFileSync(path, 'utf8') }
+  })
+
   ipcMain.on('window:theme', (_e, t: TitleBarTheme) => {
     if (process.platform === 'win32' && win) {
       win.setTitleBarOverlay({ color: t.color, symbolColor: t.symbolColor, height: 40 })
@@ -141,6 +175,7 @@ function quit(): void {
 app.on('before-quit', () => {
   quitting = true
   reminders?.stop()
+  backups?.stop()
   store?.flush()
 })
 

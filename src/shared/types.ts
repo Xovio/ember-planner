@@ -114,9 +114,18 @@ export interface Todo {
   done: boolean
   doneAt?: ISODateTime
   source?: { kind: 'obsidian'; vault: string; file: string; line: number }
+  /** repeating ToDo: completing it creates the next instance (exdates unused) */
+  recurrence?: Recurrence | null
+  /** set while the ToDo lies in `AppData.trash` */
+  deletedAt?: ISODateTime
   createdAt: ISODateTime
   updatedAt: ISODateTime
 }
+
+/** days a deleted ToDo stays in the trash */
+export const TRASH_DAYS = 30
+/** done ToDos older than this many days move to the archive view */
+export const ARCHIVE_DAYS = 14
 
 export type CalendarViewKind = 'day' | 'week' | 'month' | 'agenda'
 
@@ -137,6 +146,10 @@ export interface Settings {
   deadlineReminderHour: number
   /** show the ToDo panel next to the calendar */
   showTodoPanel: boolean
+  /** show public holidays in the calendar (computed, never stored as events) */
+  showHolidays: boolean
+  /** 'DE' = nationwide only, 'DE-BY' etc. = with state holidays */
+  holidayRegion: string
 }
 
 export interface AppData {
@@ -146,6 +159,8 @@ export interface AppData {
   lists: TodoList[]
   categories: Category[]
   todos: Todo[]
+  /** deleted ToDos, restorable for TRASH_DAYS; kept apart so no view or reminder sees them */
+  trash: Todo[]
   settings: Settings
 }
 
@@ -179,7 +194,9 @@ export const DEFAULT_SETTINGS: Settings = {
   todoCalendarId: 'personal',
   deadlineReminders: true,
   deadlineReminderHour: 9,
-  showTodoPanel: true
+  showTodoPanel: true,
+  showHolidays: false,
+  holidayRegion: 'DE'
 }
 
 export const INBOX_ID = 'inbox'
@@ -205,6 +222,7 @@ export function createDefaultData(): AppData {
       { id: 'cat-home', name: 'Haushalt', color: 'green' }
     ],
     todos: [],
+    trash: [],
     settings: { ...DEFAULT_SETTINGS }
   }
 }
@@ -222,6 +240,7 @@ export function normalizeData(raw: Partial<AppData> | null | undefined): AppData
     lists,
     categories: raw.categories ?? base.categories,
     todos: (raw.todos ?? []).map((t) => ({ ...t, subtasks: t.subtasks ?? [], priority: t.priority ?? 0 })),
+    trash: raw.trash ?? [],
     settings: { ...DEFAULT_SETTINGS, ...(raw.settings ?? {}) }
   }
 }

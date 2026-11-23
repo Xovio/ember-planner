@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
-import { CornerDownLeft, Flag, Hourglass, Plus, Tag, Timer, List } from 'lucide-react'
+import { CornerDownLeft, Flag, Hourglass, Plus, Repeat, Tag, Timer, List } from 'lucide-react'
 import { CALENDAR_COLORS } from '@shared/types'
 import { uid, useStore } from '../../store'
 import { parseQuickAdd } from '../../lib/quickAdd'
+import { recurrenceLabel } from '@shared/todo'
 import { deadlineLabel, formatEstimate, PRIORITY_LABEL } from '../../lib/todos'
 
 export function QuickAdd({ compact, autoFocus }: { compact?: boolean; autoFocus?: boolean }): React.JSX.Element {
@@ -34,13 +35,14 @@ export function QuickAdd({ compact, autoFocus }: { compact?: boolean; autoFocus?
       priority: parsed.priority,
       categoryId,
       estimateMin: parsed.estimateMin,
+        recurrence: parsed.recurrence,
       ...(parsed.listId ? { listId: parsed.listId } : {})
     })
     setText('')
   }
 
   const hasTokens =
-    parsed.hardDeadline || parsed.softDeadline || parsed.priority || cat || parsed.newCategory || list || parsed.estimateMin
+    parsed.hardDeadline || parsed.softDeadline || parsed.priority || cat || parsed.newCategory || list || parsed.estimateMin || parsed.recurrence
 
   return (
     <div className={`quickadd ${compact ? 'compact' : ''} ${focused ? 'focused' : ''}`}>
@@ -93,6 +95,11 @@ export function QuickAdd({ compact, autoFocus }: { compact?: boolean; autoFocus?
           {parsed.estimateMin && (
             <span className="qa-chip">
               <Timer size={12} /> {formatEstimate(parsed.estimateMin)}
+            </span>
+          )}
+          {parsed.recurrence && (
+            <span className="qa-chip">
+              <Repeat size={12} /> {recurrenceLabel(parsed.recurrence)}
             </span>
           )}
         </div>

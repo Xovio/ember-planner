@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
 import { addDays, addMinutes } from 'date-fns'
-import { CalendarPlus, CheckSquare, Clock, CornerDownLeft, Flag, Hourglass, List, Sparkles, Tag, Timer } from 'lucide-react'
+import { CalendarPlus, CheckSquare, Clock, CornerDownLeft, Flag, Hourglass, List, Repeat, Sparkles, Tag, Timer } from 'lucide-react'
 import { CALENDAR_COLORS } from '@shared/types'
-import { parseLocalDate } from '@shared/todo'
+import { parseLocalDate, recurrenceLabel } from '@shared/todo'
 import { uid, useStore, type AddKind } from '../store'
 import { calVar } from '../lib/theme'
 import { fmt, fromLocal } from '../lib/dates'
@@ -60,6 +60,7 @@ export function UniversalAdd({ initialKind, prefill }: { initialKind: AddKind; p
         priority: td.priority,
         categoryId,
         estimateMin: td.estimateMin,
+        recurrence: td.recurrence,
         ...(td.listId ? { listId: td.listId } : {})
       })
       pushToast({ kind: 'undo', title: `ToDo „${td.title}“ angelegt` })
@@ -156,6 +157,11 @@ export function UniversalAdd({ initialKind, prefill }: { initialKind: AddKind; p
                   {td.estimateMin && (
                     <span className="qa-chip">
                       <Timer size={12} /> {formatEstimate(td.estimateMin)}
+                    </span>
+                  )}
+                  {td.recurrence && (
+                    <span className="qa-chip">
+                      <Repeat size={12} /> {recurrenceLabel(td.recurrence)}
                     </span>
                   )}
                 </div>

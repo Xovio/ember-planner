@@ -1,8 +1,9 @@
 import { useEffect, useMemo } from 'react'
-import { CheckCheck, Keyboard } from 'lucide-react'
-import type { Priority } from '@shared/types'
+import { Archive, CheckCheck, Keyboard, RotateCcw, Trash2, X } from 'lucide-react'
+import { ARCHIVE_DAYS, TRASH_DAYS, type Priority } from '@shared/types'
 import { useStore } from '../store'
 import { calVar } from '../lib/theme'
+import { fmt } from '../lib/dates'
 import { VIEW_LABELS, groupTodos, matchesView } from '../lib/todos'
 import { QuickAdd } from '../components/todos/QuickAdd'
 import { TodoItem } from '../components/todos/TodoItem'
@@ -28,6 +29,7 @@ export function TodosPage(): React.JSX.Element {
   const list = isList ? data.lists.find((l) => l.id === view.slice(5)) : undefined
   const title = list?.name ?? VIEW_LABELS[view]
   const openCount = visible.filter((t) => !t.done).length
+  const quiet = view === 'done' || view === 'archive' || view === 'trash'
 
   useListKeyboard(ordered)
 
@@ -40,7 +42,8 @@ export function TodosPage(): React.JSX.Element {
         <div className="sidebar-foot">
           <div className="shortcut-hint wrap">
             <Keyboard size={13} /> <kbd>↑</kbd>
-            <kbd>↓</kbd> wählen · <kbd>␣</kbd> erledigt · <kbd>Entf</kbd> löschen · <kbd>1</kbd>–<kbd>3</kbd> Priorität · Strg/Shift+Klick: mehrere
+            <kbd>↓</kbd> wählen · <kbd>␣</kbd> erledigt · <kbd>Entf</kbd> Papierkorb · <kbd>1</kbd>–<kbd>3</kbd> Priorität
+            · Strg/Shift+Klick: mehrere · <kbd>?</kbd> alle Kürzel
           </div>
         </div>
       </aside>
@@ -53,7 +56,13 @@ export function TodosPage(): React.JSX.Element {
               {title}
             </h1>
             <p className="muted">
-              {view === 'done' ? `${visible.length} erledigt` : `${openCount} offen`}
+              {view === 'trash'
+                ? `${data.trash.length} gelöscht · wird nach ${TRASH_DAYS} Tagen endgültig entfernt`
+                : view === 'archive'
+                  ? `${visible.length} archiviert · erledigte ToDos wandern nach ${ARCHIVE_DAYS} Tagen hierher`
+                  : view === 'done'
+                    ? `${visible.length} erledigt`
+                    : `${openCount} offen`}
               {category && (
                 <>
                   {' '}
@@ -67,31 +76,44 @@ export function TodosPage(): React.JSX.Element {
           </div>
         </header>
 
-        {view !== 'done' && <QuickAdd />}
-        <BulkBar ids={ordered} />
+        {!quiet && <QuickAdd />}
+        {view === 'trash' ? (
+          <TrashList />
+        ) : (
+          <>
+            <BulkBar ids={ordered} />
 
-        <div className="todo-groups">
-          {groups.length === 0 && (
-            <div className="empty-state">
-              <CheckCheck size={34} strokeWidth={1.4} />
-              <h3>{view === 'done' ? 'Noch nichts erledigt' : 'Alles erledigt'}</h3>
-              <p>{view === 'done' ? 'Abgehakte ToDos erscheinen hier.' : 'Hier ist gerade nichts offen.'}</p>
+            <div className="todo-groups">
+              {groups.length === 0 && view === 'archive' && (
+                <div className="empty-state">
+                  <Archive size={34} strokeWidth={1.4} />
+                  <h3>Archiv ist leer</h3>
+                  <p>Erledigte ToDos landen nach {ARCHIVE_DAYS} Tagen hier.</p>
+                </div>
+              )}
+              {groups.length === 0 && view !== 'archive' && (
+                <div className="empty-state">
+                  <CheckCheck size={34} strokeWidth={1.4} />
+                  <h3>{view === 'done' ? 'Noch nichts erledigt' : 'Alles erledigt'}</h3>
+                  <p>{view === 'done' ? 'Abgehakte ToDos erscheinen hier.' : 'Hier ist gerade nichts offen.'}</p>
+                </div>
+              )}
+              {groups.map((g) => (
+                <section key={g.id} className={`todo-group g-${g.id}`}>
+                  <h2>
+                    {g.label}
+                    <span>{g.items.length}</span>
+                  </h2>
+                  <div className="todo-list">
+                    {g.items.map((t) => (
+                      <TodoItem key={t.id} todo={t} showList={!isList} draggable orderedIds={ordered} />
+                    ))}
+                  </div>
+                </section>
+              ))}
             </div>
-          )}
-          {groups.map((g) => (
-            <section key={g.id} className={`todo-group g-${g.id}`}>
-              <h2>
-                {g.label}
-                <span>{g.items.length}</span>
-              </h2>
-              <div className="todo-list">
-                {g.items.map((t) => (
-                  <TodoItem key={t.id} todo={t} showList={!isList} draggable orderedIds={ordered} />
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
+          </>
+        )}
       </section>
 
       {selection && <RightPanel tabs={false} />}
@@ -131,7 +153,8 @@ function useListKeyboard(ordered: string[]): void {
         const todos = st.data!.todos.filter((x) => targets.includes(x.id))
         st.toggleTodos(targets, !todos.every((x) => x.done))
       } else if ((k === 'Delete' || k === 'Backspace') && targets.length) st.deleteTodos(targets)
-      else if (/^[0-3]$/.test(k) && targets.length) st.updateTodos(targets, { priority: Number(k) as Priority }, 'Priorität geändert')
+      else if (/^[0-3]$/.test(k) && targets.length)
+        st.updateTodos(targets, { priority: Number(k) as Priority }, 'Priorität geändert')
       else handled = false
 
       if (handled) {
@@ -142,4 +165,67 @@ function useListKeyboard(ordered: string[]): void {
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
   }, [ordered])
+}
+
+/** Papierkorb: restore or remove for good – both undoable with Strg+Z. */
+function TrashList(): React.JSX.Element {
+  const trash = useStore((s) => s.data!.trash)
+  const lists = useStore((s) => s.data!.lists)
+  const restore = useStore((s) => s.restoreTodos)
+  const purge = useStore((s) => s.purgeTodos)
+
+  if (trash.length === 0) {
+    return (
+      <div className="empty-state">
+        <Trash2 size={34} strokeWidth={1.4} />
+        <h3>Papierkorb ist leer</h3>
+        <p>Gelöschte ToDos bleiben {TRASH_DAYS} Tage hier und lassen sich wiederherstellen.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="trash">
+      <div className="trash-bar">
+        <button className="btn btn-ghost sm" onClick={() => restore(trash.map((t) => t.id))}>
+          <RotateCcw size={14} /> Alle wiederherstellen
+        </button>
+        <button className="btn btn-ghost sm danger-text" onClick={() => purge('all')}>
+          <Trash2 size={14} /> Papierkorb leeren
+        </button>
+      </div>
+      <div className="todo-list">
+        {trash.map((t) => {
+          const list = lists.find((l) => l.id === t.listId)
+          const deleted = t.deletedAt ? new Date(t.deletedAt) : new Date()
+          const expires = new Date(deleted.getTime() + TRASH_DAYS * 86400000)
+          return (
+            <div className="trash-row" key={t.id}>
+              <Trash2 size={15} className="trash-icon" />
+              <div className="todo-main">
+                <span className={`todo-title ${t.done ? 'is-done' : ''}`}>{t.title || '(Ohne Titel)'}</span>
+                <div className="todo-meta">
+                  <span className="meta-plain">
+                    gelöscht {fmt(deleted, "d. MMM 'um' HH:mm")} · {list?.name ?? 'Eingang'} · entfernt am{' '}
+                    {fmt(expires, 'd. MMM')}
+                  </span>
+                </div>
+              </div>
+              <button className="btn btn-ghost sm" onClick={() => restore([t.id])}>
+                <RotateCcw size={14} /> Wiederherstellen
+              </button>
+              <button
+                className="icon-btn sm danger"
+                title="Endgültig löschen"
+                aria-label="Endgültig löschen"
+                onClick={() => purge([t.id])}
+              >
+                <X size={15} />
+              </button>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }

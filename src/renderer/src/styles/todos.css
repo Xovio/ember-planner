@@ -956,3 +956,56 @@ body.dragging-todo .tg-cols {
     grid-template-columns: 110px 1fr;
   }
 }
+
+/* ───────────── Archive & trash ───────────── */
+.nav-row.nav-divided {
+  margin-top: 8px;
+  position: relative;
+}
+.nav-row.nav-divided::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: -5px;
+  border-top: 1px solid var(--border);
+}
+.nav-row.quiet {
+  color: var(--text-3);
+}
+.trash {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 0 24px;
+}
+.trash-bar {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.danger-text {
+  color: var(--danger);
+}
+.trash-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+}
+.trash-row:hover {
+  background: var(--surface-2);
+}
+.trash-row .trash-icon {
+  color: var(--text-3);
+  flex: none;
+}
+.trash-row .todo-main {
+  flex: 1;
+  min-width: 0;
+}
+.trash-row .todo-title.is-done {
+  text-decoration: line-through;
+  color: var(--text-3);
+}

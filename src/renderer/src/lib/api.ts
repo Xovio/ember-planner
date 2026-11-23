@@ -1,5 +1,17 @@
 import { createDemoData } from './demo'
-import { normalizeData,type AppData, type ReminderPayload, type TitleBarTheme } from '@shared/types'
+import { normalizeData, type AppData, type ReminderPayload, type TitleBarTheme } from '@shared/types'
+
+export interface FileFilter {
+  name: string
+  extensions: string[]
+}
+
+export interface BackupInfo {
+  file: string
+  at: string
+  size: number
+  auto: boolean
+}
 
 export interface PlannerApi {
   kind: 'electron' | 'browser'
@@ -7,6 +19,13 @@ export interface PlannerApi {
   load(): Promise<AppData>
   save(data: AppData): Promise<boolean>
   setTitleBarTheme(t: TitleBarTheme): void
+  listBackups(): Promise<BackupInfo[]>
+  createBackup(): Promise<BackupInfo | null>
+  readBackup(file: string): Promise<string>
+  openBackupFolder(): Promise<string>
+  /** returns the saved path, or null when cancelled */
+  saveFile(name: string, content: string, filters: FileFilter[]): Promise<string | null>
+  openFile(filters: FileFilter[]): Promise<{ name: string; content: string } | null>
   onReminder(cb: (p: ReminderPayload) => void): () => void
   onOpenEvent(cb: (eventId: string) => void): () => void
   onOpenTodo(cb: (todoId: string) => void): () => void
@@ -47,6 +66,40 @@ const browserApi: PlannerApi = {
     return true
   },
   setTitleBarTheme() {},
+  // backups need the desktop app
+  async listBackups() {
+    return []
+  },
+  async createBackup() {
+    return null
+  },
+  async readBackup() {
+    throw new Error('Nur in der Desktop-App')
+  },
+  async openBackupFolder() {
+    return ''
+  },
+  async saveFile(name, content) {
+    const url = URL.createObjectURL(new Blob([content], { type: 'text/plain;charset=utf-8' }))
+    const a = Object.assign(document.createElement('a'), { href: url, download: name })
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    return name
+  },
+  openFile(filters) {
+    return new Promise((resolve) => {
+      const input = Object.assign(document.createElement('input'), {
+        type: 'file',
+        accept: filters.flatMap((f) => f.extensions.map((e) => `.${e}`)).join(',')
+      })
+      input.onchange = async () => {
+        const file = input.files?.[0]
+        resolve(file ? { name: file.name, content: await file.text() } : null)
+      }
+      input.oncancel = () => resolve(null)
+      input.click()
+    })
+  },
   onReminder: noop,
   onOpenEvent: noop,
   onOpenTodo: noop,

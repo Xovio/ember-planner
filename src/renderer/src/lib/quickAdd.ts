@@ -1,5 +1,5 @@
 import { addDays, addWeeks } from 'date-fns'
-import type { Category, LocalDate, Priority, TodoList } from '@shared/types'
+import type { Category, LocalDate, Priority, Recurrence, RecurrenceFreq, TodoList } from '@shared/types'
 import { localDate, parseTasksLine } from '@shared/todo'
 
 export interface QuickAddResult {
@@ -12,7 +12,28 @@ export interface QuickAddResult {
   newCategory?: string
   listId?: string
   estimateMin?: number
+  recurrence?: Recurrence
 }
+
+const REC_WORDS: Record<string, RecurrenceFreq> = {
+  täglich: 'daily',
+  tag: 'daily',
+  tage: 'daily',
+  wöchentlich: 'weekly',
+  woche: 'weekly',
+  wochen: 'weekly',
+  monatlich: 'monthly',
+  monat: 'monthly',
+  monate: 'monthly',
+  jährlich: 'yearly',
+  jahr: 'yearly',
+  jahre: 'yearly'
+}
+const REC_DAYS = ['montag', 'dienstag', 'mittwoch', 'donnerstag', 'freitag', 'samstag', 'sonntag']
+
+/** "täglich", "jede Woche", "alle 2 Wochen", "jeden Montag", "jeden Mo" */
+const REC_RE =
+  /(^|\s)(täglich|wöchentlich|monatlich|jährlich|jede[nsr]?\s+(tag|woche|monat|jahr)|alle\s+(\d+)\s+(tage|wochen|monate|jahre)|jeden\s+(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|mo|di|mi|do|fr|sa|so)\.?)(?=$|[\s,;!])/iu
 
 const WEEKDAYS: Record<string, number> = {
   montag: 1,
@@ -137,6 +158,19 @@ export function parseQuickAdd(
     return pre
   })
 
+  // recurrence
+  text = text.replace(REC_RE, (_m, pre: string, all: string, unit?: string, n?: string, units?: string, day?: string) => {
+    if (day) {
+      const d = day.toLowerCase()
+      const idx = REC_DAYS.findIndex((x) => x.startsWith(d))
+      res.recurrence = { freq: 'weekly', interval: 1, byWeekday: [idx] }
+    } else {
+      const word = (unit ?? units ?? all).toLowerCase()
+      res.recurrence = { freq: REC_WORDS[word], interval: n ? Math.max(1, Number(n)) : 1 }
+    }
+    return pre
+  })
+
   // short weekdays are accepted after a deadline prefix: "bis Fr", "~Mi", "ca. Do"
   text = text.replace(
     /(^|\s)(bis\s+|spätestens\s+|~\s*|ca\.?\s+|etwa\s+|weich\s+)(mo|di|mi|do|fr|sa|so)\.?(?=$|[\s,;!])/giu,
@@ -155,6 +189,13 @@ export function parseQuickAdd(
     else if (!soft && !res.hardDeadline) res.hardDeadline = date
     else break
     text = text.replace(m[0], m[1])
+  }
+
+  // "jeden Montag" without a deadline: the next Monday becomes the wish day
+  const wd = res.recurrence?.byWeekday?.[0]
+  if (wd !== undefined && !res.hardDeadline && !res.softDeadline) {
+    const diff = ((wd + 1) % 7 - today.getDay() + 7) % 7 || 7
+    res.softDeadline = localDate(addDays(today, diff))
   }
 
   res.title = text.replace(/\s+/g, ' ').trim()
@@ -177,7 +218,7 @@ export interface EventParse {
 const TIME_RE =
   /(^|\s)(um\s+|ab\s+|von\s+)?(\d{1,2})(?:[:.](\d{2}))?(\s*uhr)?(?:\s*(?:-|–|bis)\s*(\d{1,2})(?:[:.](\d{2}))?(\s*uhr)?)?(?=$|[\s,;])/iu
 const DURATION_RE = /(^|\s)(\d+(?:[.,]\d+)?)\s?(h|std\.?|stunden?|min\.?|m)(?=$|[\s,;])/iu
-const PLAIN_DATE_RE = new RegExp(`(^|\s)(?:am\s+)?${DATE_EXPR}(?=$|[\s,;!])`, 'iu')
+const PLAIN_DATE_RE = new RegExp(`(^|\\s)(?:am\\s+)?${DATE_EXPR}(?=$|[\\s,;!])`, 'iu')
 
 const hhmm = (h: number, m: number): string => `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`
 
@@ -228,7 +269,7 @@ export function parseEventInput(
 
   const d = text.match(PLAIN_DATE_RE)
   if (d) {
-    const date = resolveDate(d[2])
+    const date = resolveDate(d[2], today)
     if (date) {
       res.date = date
       text = text.replace(d[0], d[1])

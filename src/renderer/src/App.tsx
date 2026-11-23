@@ -11,6 +11,7 @@ import { EventPreview } from './components/calendar/EventPreview'
 import { ContextMenu } from './components/ui/ContextMenu'
 import { UniversalAdd } from './components/UniversalAdd'
 import { CommandPalette } from './components/CommandPalette'
+import { ShortcutHelp } from './components/ShortcutHelp'
 import { CalendarPage } from './pages/CalendarPage'
 import { TodayPage } from './pages/TodayPage'
 import { TodosPage } from './pages/TodosPage'
@@ -87,6 +88,7 @@ export function App(): React.JSX.Element {
       {preview && <EventPreview key={preview.eventId + (preview.occurrenceStart ?? '')} />}
       {overlay?.kind === 'add' && <UniversalAdd initialKind={overlay.addKind} prefill={overlay.prefill} />}
       {overlay?.kind === 'palette' && <CommandPalette />}
+      {overlay?.kind === 'help' && <ShortcutHelp />}
       <ContextMenu />
       <Toasts />
     </div>
@@ -171,11 +173,12 @@ function useKeyboardShortcuts(): void {
         },
         b: () => st.togglePanel(),
         '/': () => st.openPalette(),
+        '?': () => st.openHelp(),
         arrowleft: () => onPlan && st.step(-1),
         arrowright: () => onPlan && st.step(1)
       }
       // on the ToDo page, letters belong to the list (j/k etc.); keep only safe ones
-      if (st.page === 'todos' && !['n', 't', 'b', '/'].includes(k)) return
+      if (st.page === 'todos' && !['n', 't', 'b', '/', '?'].includes(k)) return
       const fn = map[k]
       if (fn) {
         e.preventDefault()

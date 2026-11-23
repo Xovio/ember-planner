@@ -2088,3 +2088,104 @@ input[type='time'].input {
     gap: 6px;
   }
 }
+
+/* ───────────── Options → Daten ───────────── */
+.settings-control.wrap {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.btn.sm svg {
+  margin-right: 2px;
+}
+.backup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 0 12px;
+  border-bottom: 1px solid var(--grid-line);
+}
+.backup-row {
+  display: grid;
+  grid-template-columns: 18px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.backup-row:hover {
+  background: var(--surface-2);
+}
+.backup-row svg {
+  color: var(--text-3);
+}
+.backup-row em {
+  font-style: normal;
+  color: var(--text-3);
+}
+.backup-row small {
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.settings-note {
+  margin: 4px 8px 0;
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+/* ───────────── Holidays (computed, read-only) ───────────── */
+.month-dayhead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.month-dayhead .month-daynum {
+  flex: none;
+  white-space: nowrap;
+}
+.holiday-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 550;
+  color: var(--accent-text);
+}
+.month-cell.holiday {
+  background-image: linear-gradient(var(--accent-softer), var(--accent-softer));
+}
+.tg-dayhead {
+  flex-wrap: wrap;
+}
+.tg-holiday {
+  flex-basis: 100%;
+  text-align: center;
+  font-size: 10.5px;
+  font-weight: 550;
+  color: var(--accent-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 4px;
+}
+.mini-day.holiday:not(.today) {
+  color: var(--accent-text);
+  font-weight: 650;
+}
+.agenda-dlabel .holiday-label {
+  margin-top: 2px;
+}
+.cal-check.holiday-check {
+  --c: var(--text-3);
+  border-style: dashed;
+}
+.cal-check.holiday-check.on {
+  border-style: solid;
+}
+.callist-region {
+  font-size: 11px;
+  color: var(--text-3);
+}

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { addDays, isSameMonth, isToday } from 'date-fns'
 import { expandAll } from '@shared/recurrence'
-import { useCalendarMap, useStore, useVisibleEvents } from '../../store'
+import { useCalendarMap, useHolidays, useStore, useVisibleEvents } from '../../store'
 import { calVar } from '../../lib/theme'
 import { WEEKDAY_SHORT, fmt, monthGridRange, toLocalDate, toLocalTime } from '../../lib/dates'
 import { DeadlineChip } from '../todos/TodoItem'
@@ -15,6 +15,7 @@ export function MonthGrid(): React.JSX.Element {
   const cursor = useStore((s) => s.cursor)
   const events = useVisibleEvents()
   const calendars = useCalendarMap()
+  const holiday = useHolidays()
   const setQuickCreate = useStore((s) => s.setQuickCreate)
   const selectEvent = useStore((s) => s.selectEvent)
   const openMenu = useStore((s) => s.openMenu)
@@ -65,7 +66,7 @@ export function MonthGrid(): React.JSX.Element {
           return (
             <div
               key={d.toISOString()}
-              className={`month-cell ${isSameMonth(d, cursor) ? '' : 'outside'} ${isToday(d) ? 'today' : ''} ${
+              className={`month-cell ${isSameMonth(d, cursor) ? '' : 'outside'} ${isToday(d) ? 'today' : ''} ${holiday(d) ? 'holiday' : ''} ${
                 dropDay === toLocalDate(d) ? 'drop' : ''
               }`}
               onClick={(e) => {
@@ -91,9 +92,16 @@ export function MonthGrid(): React.JSX.Element {
                 if (dropOnDay(e, d)) e.preventDefault()
               }}
             >
-              <button className="month-daynum" onClick={() => goDay(d)} title="Tagesansicht öffnen">
-                {d.getDate() === 1 ? fmt(d, 'd. MMM') : d.getDate()}
-              </button>
+              <div className="month-dayhead">
+                <button className="month-daynum" onClick={() => goDay(d)} title="Tagesansicht öffnen">
+                  {d.getDate() === 1 ? fmt(d, 'd. MMM') : d.getDate()}
+                </button>
+                {holiday(d) && (
+                  <span className="holiday-label" title={`Feiertag: ${holiday(d)}`}>
+                    {holiday(d)}
+                  </span>
+                )}
+              </div>
               <div className="month-chips">
                 {shownDl.map(({ todo, kind }) => (
                   <DeadlineChip key={todo.id + kind} todo={todo} kind={kind} />

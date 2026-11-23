@@ -16,13 +16,14 @@ damit eine spätere Obsidian-Anbindung nahtlos passt.
 
 - **Eine Arbeitsfläche** – Kalender in der Mitte, Filter links, rechts eine Spalte mit *ToDos*, *Heute* und *Details*
 - **Kalender** – Tag, Woche, Monat, Agenda · Wiederholungen · mehrere Erinnerungen mit Windows-Benachrichtigung und Gong · Tray
-- **ToDos** – Listen, Kategorien, Prioritäten, Unteraufgaben, Zeitschätzung, harte 📅 und weiche ⏳ Deadlines, sortiert nach der frühesten Deadline
+- **ToDos** – Listen, Kategorien, Prioritäten, Unteraufgaben, Zeitschätzung, harte 📅 und weiche ⏳ Deadlines, sortiert nach der frühesten Deadline · wiederkehrend · Archiv und Papierkorb
 - **Einplanen per Drag & Drop** – ToDo ins Raster ziehen = Zeitblock in Länge der Schätzung · in den Monat ziehen = Wunschtag
 - **Eine Eingabe für alles** (`N`) – „Zahnarzt Do 14 Uhr 1h“ wird ein Termin, „Karte zeichnen bis Fr ~Mi #dnd !! 2h“ ein ToDo
 - **Befehlspalette** (`Strg+K`) – Termine, ToDos und Befehle durchsuchen
 - **Rückgängig statt Rückfragen** – `Strg+Z` / `Strg+Y` für alles, keine „Wirklich löschen?“-Dialoge
 - **Übersicht** – Wochenauslastung, Deadline-Radar, Kategorien und Aktivitäts-Heatmap
 - **Themes** – „Ember“ (dunkel) und „Rosé“ (hell), weitere Styles folgen
+- **Daten in eigener Hand** – tägliche Sicherung, Export als JSON / ICS / Markdown, Import mit Rückgängig, Feiertage nach Bundesland
 
 Alle Funktionen im Detail: **[docs/FEATURES.md](docs/FEATURES.md)**
 
@@ -52,6 +53,7 @@ npm run dev
 | `npm run build` / `npm run start` | Produktions-Bundle bauen / starten |
 | `npm run web` | Nur die Oberfläche im Browser (http://localhost:5199) – mit `?demo` und Beispieldaten |
 | `npm run typecheck` | TypeScript prüfen |
+| `npm test` | Automatisierte Tests (Vitest) |
 
 <details>
 <summary>Electron startet nicht („Electron failed to install correctly“)?</summary>
@@ -68,7 +70,8 @@ Falls `node_modules\electron\dist\electron.exe` danach immer noch fehlt, das her
 `node_modules\electron\path.txt` den Text `electron.exe` eintragen.
 </details>
 
-Die Daten liegen in `%APPDATA%\Ember Planner\data.json`.
+Die Daten liegen in `%APPDATA%\Ember Planner\data.json`, tägliche Sicherungen in `%APPDATA%\Ember Planner\Backups`.
+Export, Import und Wiederherstellen: *Optionen → Daten*.
 
 ## Bedienung in Kürze
 
@@ -79,7 +82,8 @@ Die Daten liegen in `%APPDATA%\Ember Planner\data.json`.
 | `Strg+Z` / `Strg+Y` | Rückgängig / Wiederholen |
 | `T` · `D` `W` `M` `A` · `←` `→` | Heute · Ansicht · blättern |
 | `H` · `B` | Seitenspalte „Heute“ · Seitenspalte ein/aus |
-| `Entf` | Ausgewählten Termin / ToDo löschen |
+| `Entf` | Ausgewählten Termin löschen / ToDo in den Papierkorb |
+| `?` | Alle Tastenkürzel anzeigen |
 | ToDo-Seite: `↑` `↓`, `Leertaste`, `0`–`3` | wählen, abhaken, Priorität · Strg/Shift+Klick = Mehrfachauswahl |
 
 **Maus:** Klick ins Raster → Schnell-Anlegen · Klick auf Termin → Vorschau · Doppelklick → Details · Rechtsklick → Menü ·
@@ -94,6 +98,7 @@ ToDo ins Raster ziehen → einplanen · Deadline-Markierung ziehen → Deadline 
 | `#name` · `@liste` | Kategorie (wird angelegt, falls neu) · Liste |
 | `!` / `!!` / `!!!` | Priorität niedrig / mittel / hoch |
 | `30m`, `90min`, `2h` | Zeitschätzung |
+| `täglich`, `jede Woche`, `alle 2 Wochen`, `monatlich`, `jeden Mo` | wiederkehrendes ToDo |
 | `📅 2026-11-30 ⏳ 2026-11-27 ⏫` | Obsidian-Tasks-Syntax geht auch |
 
 ## Technik

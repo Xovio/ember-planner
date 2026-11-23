@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { AlertTriangle, CalendarRange, CheckCheck, CircleDashed, Inbox, Layers, Pencil, Plus, Sun } from 'lucide-react'
+import { AlertTriangle, Archive, CalendarRange, CheckCheck, CircleDashed, Inbox, Layers, Pencil, Plus, Sun, Trash2 } from 'lucide-react'
 import { CALENDAR_COLORS, INBOX_ID, type Category, type TodoList } from '@shared/types'
 import { uid, useStore, type TodoView } from '../../store'
 import { calVar } from '../../lib/theme'
@@ -13,18 +13,25 @@ export const SMART_VIEWS: { id: TodoView; icon: typeof Inbox }[] = [
   { id: 'week', icon: CalendarRange },
   { id: 'overdue', icon: AlertTriangle },
   { id: 'nodate', icon: CircleDashed },
-  { id: 'done', icon: CheckCheck }
+  { id: 'done', icon: CheckCheck },
+  { id: 'archive', icon: Archive },
+  { id: 'trash', icon: Trash2 }
 ]
+
+/** archive and trash only on the ToDo page, below a divider */
+const QUIET_VIEWS: TodoView[] = ['archive', 'trash']
 
 export function useTodoCounts(): Record<string, number> {
   const todos = useStore((s) => s.data!.todos)
+  const trash = useStore((s) => s.data!.trash)
   const lists = useStore((s) => s.data!.lists)
   return useMemo(() => {
     const c: Record<string, number> = {}
     for (const v of SMART_VIEWS) c[v.id] = todos.filter((t) => matchesView(t, v.id)).length
+    c.trash = trash.length
     for (const l of lists) c[`list:${l.id}`] = todos.filter((t) => t.listId === l.id && !t.done).length
     return c
-  }, [todos, lists])
+  }, [todos, trash, lists])
 }
 
 export function SmartViews({ only, onPick }: { only?: TodoView[]; onPick?: () => void }): React.JSX.Element {
@@ -36,7 +43,9 @@ export function SmartViews({ only, onPick }: { only?: TodoView[]; onPick?: () =>
       {SMART_VIEWS.filter((v) => !only || only.includes(v.id)).map(({ id, icon: Icon }) => (
         <button
           key={id}
-          className={`nav-row ${view === id ? 'on' : ''} ${id === 'overdue' && counts[id] ? 'alert' : ''}`}
+          className={`nav-row ${view === id ? 'on' : ''} ${id === 'overdue' && counts[id] ? 'alert' : ''} ${
+            id === QUIET_VIEWS[0] ? 'nav-divided' : ''
+          } ${QUIET_VIEWS.includes(id) ? 'quiet' : ''}`}
           onClick={() => {
             setView(id)
             onPick?.()

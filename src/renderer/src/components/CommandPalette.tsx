@@ -14,6 +14,7 @@ import {
   Settings,
   Sun,
   Undo2,
+  Keyboard,
   type LucideIcon
 } from 'lucide-react'
 import { expandEvent } from '@shared/recurrence'
@@ -69,6 +70,8 @@ export function CommandPalette(): React.JSX.Element {
       { id: 'panel', group: 'Befehle', label: 'Seitenspalte ein-/ausblenden', hint: 'B', icon: PanelRight, run: go(() => st().togglePanel()) },
       { id: 'undo', group: 'Befehle', label: 'Rückgängig', hint: 'Strg Z', icon: Undo2, run: go(() => st().undo()) },
       { id: 'redo', group: 'Befehle', label: 'Wiederholen', hint: 'Strg Y', icon: Redo2, run: go(() => st().redo()) },
+      { id: 'holidays', group: 'Befehle', label: 'Feiertage ein-/ausblenden', icon: CalendarDays, run: go(() => st().updateSettings({ showHolidays: !st().data?.settings.showHolidays })) },
+      { id: 'help', group: 'Befehle', label: 'Tastenkürzel anzeigen', hint: '?', icon: Keyboard, run: () => st().openHelp() },
       ...THEMES.map((t) => ({
         id: `theme-${t.id}`,
         group: 'Befehle' as const,

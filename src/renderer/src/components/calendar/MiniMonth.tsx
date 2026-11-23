@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { addDays, addMonths, isSameDay, isSameMonth, isToday, isWithinInterval, startOfWeek, endOfWeek } from 'date-fns'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { expandAll } from '@shared/recurrence'
-import { useStore, useVisibleEvents } from '../../store'
+import { useHolidays, useStore, useVisibleEvents } from '../../store'
 import { WEEK, WEEKDAY_SHORT, fmt, monthGridRange, toLocalDate } from '../../lib/dates'
 
 export function MiniMonth(): React.JSX.Element {
@@ -10,6 +10,7 @@ export function MiniMonth(): React.JSX.Element {
   const view = useStore((s) => s.view)
   const setCursor = useStore((s) => s.setCursor)
   const events = useVisibleEvents()
+  const holiday = useHolidays()
   const [month, setMonth] = useState(cursor)
 
   useEffect(() => setMonth(cursor), [cursor])
@@ -58,8 +59,10 @@ export function MiniMonth(): React.JSX.Element {
                 isSameMonth(d, month) ? '' : 'outside',
                 isToday(d) ? 'today' : '',
                 inWeek ? 'in-week' : '',
-                selected ? 'selected' : ''
+                selected ? 'selected' : '',
+                holiday(d) ? 'holiday' : ''
               ].join(' ')}
+              title={holiday(d)}
               onClick={() => setCursor(d)}
             >
               {d.getDate()}
