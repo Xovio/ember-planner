@@ -1,0 +1,120 @@
+/*
+ * Theme tokens. A new style = one more [data-theme="…"] block with the same variables.
+ * Calendar palette (--cal-*) and heat ramp (--heat-*) were checked with the dataviz
+ * palette validator against each theme's surface (CVD + contrast).
+ */
+
+:root,
+[data-theme='ember'] {
+  color-scheme: dark;
+
+  --bg: #15100e;
+  --surface-1: #1b1412;
+  --surface-2: #231a17;
+  --surface-3: #2e221e;
+  --surface-raised: #261c19;
+  --border: #33261f;
+  --border-strong: #4a3830;
+  --grid-line: #2a201c;
+  --grid-line-half: #211915;
+
+  --text-1: #f3e9e5;
+  --text-2: #c4b0a8;
+  --text-3: #8a766e;
+  --text-on-accent: #fff6f4;
+
+  --accent: #e5484d;
+  --accent-hover: #f05a5c;
+  --accent-soft: rgba(229, 72, 77, 0.16);
+  --accent-softer: rgba(229, 72, 77, 0.08);
+  --accent-text: #ff8b83;
+  --accent-muted: #6e3533;
+  --now: #ff5a4f;
+  --focus: rgba(255, 110, 100, 0.55);
+
+  --danger: #ff6b6b;
+  --warn: #f5b34a;
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --glow: radial-gradient(1200px 500px at 85% -10%, rgba(229, 72, 77, 0.14), transparent 60%),
+    radial-gradient(900px 400px at -10% 110%, rgba(217, 89, 38, 0.08), transparent 60%);
+
+  --cal-red: #e66767;
+  --cal-blue: #3987e5;
+  --cal-orange: #d95926;
+  --cal-aqua: #199e70;
+  --cal-yellow: #c98500;
+  --cal-violet: #9085e9;
+  --cal-magenta: #d55181;
+  --cal-green: #0ca30c;
+  --event-mix: 24%;
+
+  --heat-empty: #352823;
+  --heat-1: #8c3330;
+  --heat-2: #b83a36;
+  --heat-3: #e8524a;
+  --heat-4: #ff7f70;
+  --heat-5: #ffb3a8;
+}
+
+[data-theme='rose'] {
+  color-scheme: light;
+
+  --bg: #f6efec;
+  --surface-1: #fbf7f5;
+  --surface-2: #f3e9e5;
+  --surface-3: #ebdcd6;
+  --surface-raised: #ffffff;
+  --border: #eadbd4;
+  --border-strong: #d9c3ba;
+  --grid-line: #eee2dd;
+  --grid-line-half: #f4ebe7;
+
+  --text-1: #2a1714;
+  --text-2: #6b524b;
+  --text-3: #9a8079;
+  --text-on-accent: #ffffff;
+
+  --accent: #d93a3f;
+  --accent-hover: #c52f35;
+  --accent-soft: rgba(217, 58, 63, 0.12);
+  --accent-softer: rgba(217, 58, 63, 0.06);
+  --accent-text: #b52a30;
+  --accent-muted: #f0c4c0;
+  --now: #e0332f;
+  --focus: rgba(217, 58, 63, 0.45);
+
+  --danger: #c62828;
+  --warn: #a35f00;
+  --shadow: 0 12px 40px rgba(90, 30, 20, 0.14), 0 2px 8px rgba(90, 30, 20, 0.08);
+  --glow: radial-gradient(1200px 500px at 85% -10%, rgba(217, 58, 63, 0.1), transparent 60%),
+    radial-gradient(900px 400px at -10% 110%, rgba(235, 104, 52, 0.07), transparent 60%);
+
+  --cal-red: #e34948;
+  --cal-blue: #2a78d6;
+  --cal-orange: #eb6834;
+  --cal-aqua: #1baf7a;
+  --cal-yellow: #eda100;
+  --cal-violet: #6250d6;
+  --cal-magenta: #e87ba4;
+  --cal-green: #008300;
+  --event-mix: 18%;
+
+  --heat-empty: #f0e4df;
+  --heat-1: #ec8a80;
+  --heat-2: #e0625a;
+  --heat-3: #c9403a;
+  --heat-4: #9e2d2a;
+  --heat-5: #721f1d;
+}
+
+:root {
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --titlebar-h: 40px;
+  --rail-w: 64px;
+  --sidebar-w: 248px;
+  --hour-h: 52px;
+  --font: 'Inter Variable', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
