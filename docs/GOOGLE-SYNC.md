@@ -1,6 +1,6 @@
 # Konzept: Google-Kalender-Sync (Phase 3)
 
-Stand: 2026-11-23 · Branch `feature/google-sync` · Status: **in Arbeit** – Etappen 0 und 1 fertig
+Stand: 2026-11-23 · Branch `feature/google-sync` · Status: **in Arbeit** – Etappen 0–2 fertig · Einrichtung: [GOOGLE-SETUP.md](GOOGLE-SETUP.md)
 
 ## Ziel
 
@@ -48,7 +48,11 @@ mutate() ──data:save──────────▶ DataStore  ── Diff
 - OAuth-Client vom Typ **Desktop-App** im eigenen Google-Cloud-Projekt; die App bekommt dafür eine Einrichtungsanleitung
 - Anmeldung im **System-Browser**, Rückleitung an `http://127.0.0.1:<zufälliger Port>`, abgesichert mit PKCE
 - Refresh-Token verschlüsselt mit Electrons `safeStorage` (unter Windows DPAPI) in einer **eigenen Datei**, nie in `data.json`
-- Scopes so eng wie möglich: Kalenderliste lesen und Termine schreiben. Die genaue Auswahl prüfen wir beim Bauen.
+- Scopes: `calendar.calendarlist.readonly` (Kalenderliste lesen) und `calendar.events` (Termine in allen Kalendern
+  lesen und schreiben). Den vollen `calendar`-Scope (Kalender löschen und freigeben) brauchen wir nicht.
+- Hat man bei der Anmeldung ein Häkchen entfernt, erkennt die App das an der Token-Antwort und zeigt einen Hinweis.
+- Umsetzung: `src/main/google/oauth.ts` (PKCE, Loopback-Server, Token-Endpunkt) und `src/main/google/account.ts`
+  (verschlüsselte Datei `google-auth.bin` im userData-Ordner, Token-Erneuerung, API-Aufrufe mit deutschen Fehlermeldungen)
 - ⚠️ Steht das Cloud-Projekt im Status **„Testing“**, laufen Refresh-Tokens nach **7 Tagen** ab.
   Für dauerhaften Betrieb stellt man es auf „In Produktion“. Eine Verifizierung braucht es dafür nicht;
   Google zeigt dann bei der Anmeldung nur einen Hinweis „nicht verifizierte App“.
@@ -88,7 +92,10 @@ unverändert, solange man sie nicht bewusst ersetzt.
 ## Oberfläche
 
 - **Optionen → Google-Konto:** Einrichtungsanleitung, Client-ID eintragen, „Mit Google verbinden“, Konto trennen
-- **Kalenderliste:** Google-Kalender erscheinen in der linken Leiste mit eigenem Abschnitt; pro Kalender Sync an/aus
+- **Kalenderliste:** Google-Kalender erscheinen in der linken Leiste mit eigenem Abschnitt; pro Kalender Sync an/aus.
+  Lokale Kalender-ID ist `g:<Google-ID>`, damit ein Kalender beim erneuten Einschalten seine Einstellungen behält.
+  Name, Farbe und Sichtbarkeit lassen sich lokal ändern und werden nicht von Google überschrieben.
+- **Trennen** widerruft das Token bei Google und entfernt die Google-Kalender samt Terminen aus der App
 - **Status:** dezentes Symbol in der Titelleiste (synchron · läuft · offline · Fehler) mit Tooltip „zuletzt vor 2 Min.“
 - Schreibgeschützte Termine zeigen ein Schloss-Symbol
 
@@ -100,7 +107,7 @@ Jede Etappe ist für sich lauffähig und wird ein eigener Commit. Am Ende entste
 |---|---|---|
 | 0 ✅ | **Tests einrichten** (Vitest) | Tests für Wiederholungslogik und das spätere Mapping |
 | 1 ✅ | **Fundament:** Main als Schiedsrichter, nummerierte Patches, `data:remote`, Undo-Historie wird angepasst | App verhält sich wie vorher, ist aber bereit für Fremdänderungen |
-| 2 | **Anmeldung:** OAuth, TokenStore, Optionen-Seite, Kalenderliste abrufen | Konto verbinden, Google-Kalender auswählen |
+| 2 ✅ | **Anmeldung:** OAuth, TokenStore, Optionen-Seite, Kalenderliste abrufen | Konto verbinden, Google-Kalender auswählen |
 | 3 | **Abruf (nur lesen):** Erst- und Folgeabgleich, Mapping, Serien + Ausnahmen, `rrule` | Google-Termine erscheinen und aktualisieren sich |
 | 4 | **Hochladen:** Outbox, etag, Konflikte, Offline | Echte 2-Wege-Synchronisation |
 | 5 | **Feinschliff:** Statusanzeige, Fehlertexte, Doku (FEATURES/ROADMAP) | bereit zum Mergen |

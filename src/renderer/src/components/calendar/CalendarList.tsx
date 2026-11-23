@@ -8,6 +8,31 @@ export function CalendarList(): React.JSX.Element {
   const calendars = useStore((s) => s.data!.calendars)
   const toggle = useStore((s) => s.toggleCalendar)
   const [editing, setEditing] = useState<CalendarInfo | null>(null)
+  const local = calendars.filter((c) => c.external?.provider !== 'google')
+  const google = calendars.filter((c) => c.external?.provider === 'google')
+
+  const renderRow = (c: CalendarInfo): React.JSX.Element =>
+    editing?.id === c.id ? (
+      <CalendarEditForm key={c.id} value={editing} onDone={() => setEditing(null)} />
+    ) : (
+      <div key={c.id} className="callist-row">
+        <button
+          className={`cal-check ${c.visible ? 'on' : ''}`}
+          style={{ '--c': calVar(c.color) } as React.CSSProperties}
+          onClick={() => toggle(c.id)}
+          aria-pressed={c.visible}
+          aria-label={`${c.name} ${c.visible ? 'ausblenden' : 'einblenden'}`}
+        >
+          {c.visible && <Check size={12} strokeWidth={3} />}
+        </button>
+        <span className="callist-name" onClick={() => toggle(c.id)}>
+          {c.name}
+        </span>
+        <button className="icon-btn sm ghost-hover" onClick={() => setEditing(c)} aria-label="Bearbeiten">
+          <Pencil size={13} />
+        </button>
+      </div>
+    )
 
   return (
     <div className="callist">
@@ -30,32 +55,19 @@ export function CalendarList(): React.JSX.Element {
         </button>
       </div>
 
-      {calendars.map((c) =>
-        editing?.id === c.id ? (
-          <CalendarEditForm key={c.id} value={editing} onDone={() => setEditing(null)} />
-        ) : (
-          <div key={c.id} className="callist-row">
-            <button
-              className={`cal-check ${c.visible ? 'on' : ''}`}
-              style={{ '--c': calVar(c.color) } as React.CSSProperties}
-              onClick={() => toggle(c.id)}
-              aria-pressed={c.visible}
-              aria-label={`${c.name} ${c.visible ? 'ausblenden' : 'einblenden'}`}
-            >
-              {c.visible && <Check size={12} strokeWidth={3} />}
-            </button>
-            <span className="callist-name" onClick={() => toggle(c.id)}>
-              {c.name}
-            </span>
-            <button className="icon-btn sm ghost-hover" onClick={() => setEditing(c)} aria-label="Bearbeiten">
-              <Pencil size={13} />
-            </button>
-          </div>
-        )
-      )}
+      {local.map(renderRow)}
 
       {editing && !calendars.some((c) => c.id === editing.id) && (
         <CalendarEditForm value={editing} onDone={() => setEditing(null)} isNew />
+      )}
+
+      {google.length > 0 && (
+        <>
+          <div className="section-head">
+            <span>Google</span>
+          </div>
+          {google.map(renderRow)}
+        </>
       )}
     </div>
   )

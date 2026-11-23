@@ -1,8 +1,10 @@
-import { app, BrowserWindow, ipcMain, Menu, Tray, shell } from 'electron'
+import { app, BrowserWindow, ipcMain, Menu, Tray, safeStorage, shell } from 'electron'
 import { join } from 'path'
 import { DataStore } from './store'
 import { ReminderScheduler } from './reminders'
 import { createAppIcon } from './icon'
+import { GoogleAccount } from './google/account'
+import { registerGoogleIpc } from './google/ipc'
 import type { AppData, LoadResult, TitleBarTheme } from '@shared/types'
 
 const APP_ID = 'de.ember.planner'
@@ -52,6 +54,18 @@ function init(): void {
     }
   )
   reminders.start()
+
+  const google = new GoogleAccount({
+    dir: app.getPath('userData'),
+    box: {
+      available: () => safeStorage.isEncryptionAvailable(),
+      encrypt: (plain) => safeStorage.encryptString(plain),
+      decrypt: (data) => safeStorage.decryptString(data)
+    },
+    openBrowser: (url) => void shell.openExternal(url),
+    onStatus: (status) => win?.webContents.send('google:status', status)
+  })
+  registerGoogleIpc(store, google)
 
   store.subscribe({
     onRemoteChange(change) {

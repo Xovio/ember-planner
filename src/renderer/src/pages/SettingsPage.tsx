@@ -5,6 +5,7 @@ import { THEMES } from '../lib/theme'
 import { REMINDER_PRESETS, reminderLabel } from '../lib/dates'
 import { api } from '../lib/api'
 import { playChime } from '../lib/chime'
+import { GoogleSection } from '../components/settings/GoogleSection'
 
 export function SettingsPage(): React.JSX.Element {
   const s = useStore((st) => st.data!.settings)
@@ -99,6 +100,8 @@ export function SettingsPage(): React.JSX.Element {
           </select>
         </Row>
       </section>
+
+      <GoogleSection />
 
       <section className="settings-section">
         <h2>Erinnerungen</h2>

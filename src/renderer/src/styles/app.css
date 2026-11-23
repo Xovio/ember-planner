@@ -2088,3 +2088,90 @@ input[type='time'].input {
     gap: 6px;
   }
 }
+
+/* ───────────── Settings: Google ───────────── */
+.settings-note {
+  color: var(--text-2);
+  font-size: 13px;
+  padding: 10px 0;
+}
+.settings-note a {
+  color: var(--accent-text);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.google-error {
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  padding: 9px 12px;
+  margin: 6px 0 10px;
+  font-size: 13px;
+  color: var(--text-1);
+}
+.google-error strong {
+  color: var(--danger);
+}
+.google-setup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--grid-line);
+}
+.google-field {
+  display: grid;
+  grid-template-columns: 130px 1fr;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+}
+.google-actions {
+  display: flex;
+  gap: 8px;
+  padding-left: 142px;
+}
+.google-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0 4px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.google-cal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.google-cal-list label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  font-size: 13px;
+  cursor: pointer;
+}
+.google-cal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.google-cal-name {
+  flex: 1;
+}
+.google-cal-name em {
+  color: var(--text-3);
+  font-style: normal;
+}
+.google-cal-role {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-3);
+  font-size: 12px;
+}
+.spin {
+  animation: spin 0.9s linear infinite;
+}

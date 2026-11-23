@@ -1,6 +1,7 @@
 import { createDemoData } from './demo'
 import { normalizeData, type AppData, type LoadResult, type ReminderPayload, type TitleBarTheme } from '@shared/types'
 import type { RemoteChange } from '@shared/patch'
+import type { GoogleApi } from '@shared/google'
 
 export interface PlannerApi {
   kind: 'electron' | 'browser'
@@ -15,6 +16,8 @@ export interface PlannerApi {
   onOpenEvent(cb: (eventId: string) => void): () => void
   onOpenTodo(cb: (todoId: string) => void): () => void
   onNewEvent(cb: () => void): () => void
+  /** only in the desktop app */
+  google?: GoogleApi
 }
 
 declare global {

@@ -53,6 +53,10 @@ export interface CalendarInfo {
   name: string
   color: CalendarColor
   visible: boolean
+  /** events can't be changed here (e.g. a subscribed Google calendar) */
+  readOnly?: boolean
+  /** reminders the provider applies to events that use its defaults */
+  defaultReminders?: number[]
   external?: ExternalRef
 }
 
