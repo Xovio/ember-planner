@@ -31,7 +31,7 @@ export interface SessionRule {
 const PREP = /prep|vorbereit/i
 
 /** sessions that ended in (since, now] */
-function pastSessions(events: CalendarEvent[], rule: SessionRule, since: Date, now: Date) {
+export function pastSessions(events: CalendarEvent[], rule: SessionRule, since: Date, now: Date) {
   const kw = rule.keyword.trim().toLowerCase()
   const pool = events.filter(
     (e) =>

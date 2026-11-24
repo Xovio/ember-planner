@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { addDays, addMinutes } from 'date-fns'
-import { AlignLeft, CalendarClock, Copy, Flag, Hourglass, List, ListChecks, Plus, Repeat, Signal, Tag, Timer, Trash2, X } from 'lucide-react'
-import type { Priority, Recurrence, RecurrenceFreq, Todo } from '@shared/types'
+import { AlignLeft, CalendarClock, Coins, Copy, Flag, Hourglass, List, ListChecks, Plus, Repeat, Signal, Tag, Timer, Trash2, X } from 'lucide-react'
+import type { Difficulty, Priority, Recurrence, RecurrenceFreq, Todo } from '@shared/types'
+import { DIFFICULTY_LABEL, todoMinutes, todoReward } from '@shared/character'
 import { localDate, nextRecurrence, parseLocalDate, toTasksLine } from '@shared/todo'
 import { roundUp, uid, useStore } from '../../store'
 import { calVar } from '../../lib/theme'
@@ -94,6 +95,20 @@ export function TodoDetails({ id }: { id: string }): React.JSX.Element {
                 {label}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className="field" title="Schwierigkeit bestimmt mit der Dauer, wie viele Coins und wie viel Erfahrung es gibt">
+          <Coins size={16} className="field-icon" />
+          <div className="difficulty-row">
+          <div className="segmented small">
+            {DIFFICULTY_LABEL.map((label, d) => (
+              <button key={label} className={(todo.difficulty ?? 1) === d ? 'on' : ''} onClick={() => set({ difficulty: d as Difficulty })}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <span className="field-hint">≈ {todoReward(todo.difficulty, todoMinutes(todo, data.events)).coins} Coins</span>
           </div>
         </div>
 

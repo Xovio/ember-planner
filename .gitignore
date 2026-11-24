@@ -4,3 +4,6 @@ dist/
 dist-web/
 *.log
 .vite/
+
+# Recherche-Notizen
+research_notes/

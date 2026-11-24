@@ -17,6 +17,7 @@ import {
   type Todo,
   type TodoList,
   type PointsLedger,
+  type Character,
   type WeeklyGoal
 } from '@shared/types'
 import { applyPatch, type RemoteChange } from '@shared/patch'
@@ -26,6 +27,8 @@ import { holidayOn } from '@shared/holidays'
 import { daysBetween, localDate, nextRecurrence, parseLocalDate } from '@shared/todo'
 import { detachOccurrence, endSeriesBefore, splitSeries } from '@shared/series'
 import { goalEvent, markFilled, slotsToFill, weekKey } from '@shared/goals'
+import { attrLevel, attrXp, coinBalance } from '@shared/character'
+import { itemById } from '@shared/wardrobe'
 import {
   isPlaceholderId,
   placeholderEvent,
@@ -245,6 +248,15 @@ interface State {
   fillGoalSlots(now?: Date): void
   /** silent: the points ledger after reconciling */
   setPoints(points: PointsLedger): void
+
+  /* character */
+  updateCharacter(patch: Partial<Character>, label?: string): void
+  /** spends coins; false when too few or locked */
+  buyItem(id: string): boolean
+  /** put on an owned item, or take off an optional slot (null) */
+  equip(slot: string, id: string | null): void
+  /** silent: rewards after reconciling */
+  setRewards(rewards: Character['rewards']): void
 
   /** replace all data (restore / import) – one undo step */
   replaceData(next: AppData, label: string): void
@@ -1196,6 +1208,48 @@ export const useStore = create<State>((set, get) => {
 
     setPoints(points) {
       mutate((d) => ({ ...d, points }), { history: false })
+    },
+
+    /* ── character ── */
+    updateCharacter(patch, label) {
+      mutate((d) => ({ ...d, character: { ...d.character, ...patch } }), label ? { label } : { label: 'Charakter geändert', coalesce: 'character' })
+    },
+
+    buyItem(id) {
+      const ch = get().data?.character
+      const it = itemById(id)
+      if (!ch || !it || ch.owned.includes(id)) return false
+      if (coinBalance(ch) < it.price) return false
+      if (it.unlock && attrLevel(attrXp(ch)[it.unlock.attr]).level < it.unlock.level) return false
+      mutate(
+        (d) => ({
+          ...d,
+          character: {
+            ...d.character,
+            owned: [...d.character.owned, id],
+            spent: d.character.spent + it.price,
+            outfit: { ...d.character.outfit, [it.slot]: id }
+          }
+        }),
+        { label: `${it.name} gekauft`, undoToast: true }
+      )
+      return true
+    },
+
+    equip(slot, id) {
+      mutate(
+        (d) => {
+          const outfit = { ...d.character.outfit }
+          if (id) outfit[slot] = id
+          else delete outfit[slot]
+          return { ...d, character: { ...d.character, outfit } }
+        },
+        { label: 'Outfit geändert', coalesce: 'outfit' }
+      )
+    },
+
+    setRewards(rewards) {
+      mutate((d) => ({ ...d, character: { ...d.character, rewards } }), { history: false })
     },
 
     replaceData(next, label) {

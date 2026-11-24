@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import type { AppTimeLog } from '@shared/apptime'
 import { reconcilePoints, type SessionRule } from '@shared/points'
+import { ATTRS, reconcileRewards } from '@shared/character'
 import { guessCampaign } from '@shared/session'
 import type { AppData } from '@shared/types'
 import { useStore } from '../store'
@@ -33,14 +34,31 @@ export function usePointsSync(): void {
       const st = useStore.getState()
       const data = st.data
       if (!data) return
-      const next = reconcilePoints(data, { now: new Date(), session: sessionRule(data), prep })
-      if (next === data.points) return
+      const opts = { now: new Date(), session: sessionRule(data), prep }
+      const rewards = reconcileRewards(data, opts)
+      let cheered = false
+      if (rewards !== data.character.rewards) {
+        if (ready) {
+          const fresh = Object.entries(rewards).filter(([k]) => !(k in data.character.rewards)).map(([, r]) => r)
+          const coins = fresh.reduce((s, r) => s + r.coins, 0)
+          const xp = new Map<string, number>()
+          for (const r of fresh) if (r.attr) xp.set(r.attr, (xp.get(r.attr) ?? 0) + r.xp)
+          const attrs = [...xp].map(([a, v]) => `${ATTRS.find((x) => x.id === a)?.name} +${v}`).join(' · ')
+          if (coins > 0) {
+            st.pushToast({ kind: 'info', title: `+${coins} Coins`, body: attrs || undefined })
+            cheered = true
+          }
+        }
+        st.setRewards(rewards)
+      }
+      const next = reconcilePoints(useStore.getState().data!, opts)
+      if (next === useStore.getState().data!.points) return
       // a small cheer for new points, but not for what was caught up on start
       if (ready) {
         const gained = Object.entries(next.entries)
           .filter(([k]) => !(k in data.points.entries))
           .reduce((s, [, e]) => s + e.points, 0)
-        if (gained > 0) st.pushToast({ kind: 'info', title: `+${gained} Punkte` })
+        if (gained > 0 && !cheered) st.pushToast({ kind: 'info', title: `+${gained} Punkte` })
       }
       st.setPoints(next)
     }
@@ -52,7 +70,7 @@ export function usePointsSync(): void {
       if (!s.data || s.data === prev.data) return
       const d = s.data
       const p = prev.data
-      if (!p || d.todos !== p.todos || d.events !== p.events || d.goals !== p.goals) schedule()
+      if (!p || d.todos !== p.todos || d.events !== p.events || d.goals !== p.goals || d.categories !== p.categories) schedule()
       if (!p) setTimeout(() => (ready = true), 1500)
     })
     const offPrep = api.appTime?.onUpdate((s) => {

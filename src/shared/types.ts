@@ -143,6 +143,8 @@ export interface WeeklyGoal {
   /** blocks struck for a week ("not this week"): week → number struck */
   struck?: Record<string, number>
   archived?: boolean
+  /** attribute that grows with each block; absent = guessed from the title */
+  attribute?: AttrId | null
   createdAt: ISODateTime
   updatedAt: ISODateTime
 }
@@ -153,6 +155,44 @@ export interface GoalSlot {
   /** "HH:mm" */
   time: string
   durationMin: number
+}
+
+export type Difficulty = 0 | 1 | 2 | 3
+
+export type AttrId = 'fitness' | 'stamina' | 'mind' | 'creativity' | 'order' | 'social'
+
+/** one award: coins and, if any, XP for one attribute; keyed like the points ledger so nothing counts twice */
+export interface Reward {
+  at: ISODateTime
+  coins: number
+  attr?: AttrId
+  xp: number
+  label: string
+}
+
+/** look = identity, always free; outfit = bought items */
+export interface AvatarLook {
+  skin: number
+  hair: string
+  hairColor: string
+  eyes: string
+  /** body width 0 (slim) … 2 (round) */
+  build: number
+  glasses: boolean
+  hearingAid: boolean
+}
+
+export interface Character {
+  /** false until the creator was finished once */
+  created: boolean
+  name: string
+  look: AvatarLook
+  /** slot → item id ("top" → "hoodie-coral") */
+  outfit: Record<string, string>
+  owned: string[]
+  spent: number
+  since: ISODateTime
+  rewards: Record<string, Reward>
 }
 
 export type PointKind = 'todo' | 'goal' | 'goal-week' | 'session' | 'prep'
@@ -218,6 +258,8 @@ export interface Category {
   id: string
   name: string
   color: CalendarColor
+  /** which character attribute grows when ToDos of this category are done; absent = guessed from the name */
+  attribute?: AttrId | null
 }
 
 export interface Subtask {
@@ -238,6 +280,8 @@ export interface Todo {
   /** ⏳ in Obsidian Tasks format */
   softDeadline?: LocalDate
   estimateMin?: number
+  /** 0 leicht · 1 mittel · 2 schwer · 3 episch – drives coins and attribute XP (priority stays urgency) */
+  difficulty?: Difficulty
   linkedEventId?: string
   notes?: string
   done: boolean
@@ -362,6 +406,7 @@ export interface AppData {
   boards: Board[]
   goals: WeeklyGoal[]
   points: PointsLedger
+  character: Character
   settings: Settings
 }
 
@@ -413,6 +458,19 @@ export const DEFAULT_SETTINGS: Settings = {
 
 export const INBOX_ID = 'inbox'
 
+export function defaultCharacter(): Character {
+  return {
+    created: false,
+    name: '',
+    look: { skin: 3, hair: 'bob', hairColor: 'ginger', eyes: 'plum', build: 1, glasses: false, hearingAid: false },
+    outfit: { top: 'hoodie-coral', bottom: 'pants-navy', shoes: 'sneakers-cream' },
+    owned: ['hoodie-coral', 'pants-navy', 'sneakers-cream'],
+    spent: 0,
+    since: new Date().toISOString(),
+    rewards: {}
+  }
+}
+
 export function createDefaultData(): AppData {
   return {
     version: 1,
@@ -440,6 +498,7 @@ export function createDefaultData(): AppData {
     boards: [],
     goals: [],
     points: { since: new Date().toISOString(), entries: {} },
+    character: defaultCharacter(),
     settings: { ...DEFAULT_SETTINGS }
   }
 }
@@ -463,6 +522,7 @@ export function normalizeData(raw: Partial<AppData> | null | undefined): AppData
     boards: (raw.boards ?? []).map((b) => ({ ...b, notes: b.notes ?? [], frames: b.frames ?? [], edges: b.edges ?? [] })),
     goals: raw.goals ?? [],
     points: raw.points?.since ? { since: raw.points.since, entries: raw.points.entries ?? {} } : base.points,
+    character: raw.character ? { ...base.character, ...raw.character, look: { ...base.character.look, ...raw.character.look } } : base.character,
     settings: { ...DEFAULT_SETTINGS, ...(raw.settings ?? {}) }
   }
 }
