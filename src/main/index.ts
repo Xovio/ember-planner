@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu, Tray, safeStorage, shell } from 'electron'
+import { app, BrowserWindow, dialog, ipcMain, Menu, powerMonitor, Tray, safeStorage, shell } from 'electron'
 import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { basename, dirname, join } from 'path'
 import { DataStore } from './store'
@@ -13,6 +13,9 @@ import { registerDiscordIpc } from './discord/ipc'
 import { DiscordSync } from './discord/sync'
 import { autoUpdater } from 'electron-updater'
 import { Updater } from './updater'
+import { AppTimeTracker } from './apptime'
+import { registerLauncherIpc } from './launcher'
+import { PREP_WIDGET_ID, prepConfig } from '@shared/apptime'
 import type { GoogleStatus } from '@shared/google'
 import type { DiscordStatus } from '@shared/discord'
 import type { AppData, LoadResult, TitleBarTheme } from '@shared/types'
@@ -35,6 +38,7 @@ let backups: Backups
 let googleSync: GoogleSync | null = null
 let discordSync: DiscordSync | null = null
 let updater: Updater | null = null
+let appTime: AppTimeTracker | null = null
 let quitting = false
 
 // separate data folder, e.g. for testing without touching the real data
@@ -179,6 +183,19 @@ function init(): void {
   ipcMain.handle('update:install', () => updater!.install())
   updater.start()
 
+  appTime = new AppTimeTracker({
+    dir: app.getPath('userData'),
+    config: () => prepConfig(store.get().settings.widgetConfig?.[PREP_WIDGET_ID]),
+    idleSeconds: () =>
+      powerMonitor.getSystemIdleState(60) === 'locked' ? Infinity : powerMonitor.getSystemIdleTime(),
+    onUpdate: (state) => win?.webContents.send('apptime:update', state)
+  })
+  ipcMain.handle('apptime:get', () => appTime!.state)
+  ipcMain.handle('apptime:processes', () => appTime!.processes())
+  appTime.start()
+
+  registerLauncherIpc(() => win)
+
   createWindow()
   createTray()
 }
@@ -277,6 +294,7 @@ app.on('before-quit', () => {
   googleSync?.stop()
   discordSync?.stop()
   updater?.stop()
+  appTime?.stop()
   store?.flush()
 })
 

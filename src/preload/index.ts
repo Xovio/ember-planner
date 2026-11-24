@@ -1,10 +1,12 @@
-import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
+import { contextBridge, ipcRenderer, webUtils, type IpcRendererEvent } from 'electron'
 import type { AppData, LoadResult, ReminderPayload, TitleBarTheme } from '@shared/types'
 import type { RemoteChange } from '@shared/patch'
 import type { GoogleApi, GoogleCalendarEntry, GoogleStatus } from '@shared/google'
 import type { AnnounceOptions, DiscordApi, DiscordGuildEntry, DiscordStatus } from '@shared/discord'
 import type { BackupInfo } from '../main/backup'
 import type { UpdateApi, UpdateInfo } from '@shared/update'
+import type { AppTimeApi, AppTimeState } from '@shared/apptime'
+import type { LauncherApi } from '@shared/launcher'
 
 interface FileFilter {
   name: string
@@ -47,6 +49,19 @@ const updates: UpdateApi = {
   onStatus: (cb: (s: UpdateInfo) => void) => listen('update:status', cb)
 }
 
+const appTime: AppTimeApi = {
+  get: () => ipcRenderer.invoke('apptime:get'),
+  processes: () => ipcRenderer.invoke('apptime:processes'),
+  onUpdate: (cb: (s: AppTimeState) => void) => listen('apptime:update', cb)
+}
+
+const launcher: LauncherApi = {
+  open: (targets: string[]) => ipcRenderer.invoke('launcher:open', targets),
+  icon: (target: string) => ipcRenderer.invoke('launcher:icon', target),
+  pick: () => ipcRenderer.invoke('launcher:pick'),
+  pathOf: (file: File) => webUtils.getPathForFile(file)
+}
+
 function listen<T>(channel: string, cb: (payload: T) => void): () => void {
   const handler = (_e: IpcRendererEvent, payload: T): void => cb(payload)
   ipcRenderer.on(channel, handler)
@@ -78,7 +93,9 @@ const api = {
   onNewEvent: (cb: () => void) => listen('event:new', cb),
   google,
   discord,
-  updates
+  updates,
+  appTime,
+  launcher
 }
 
 export type ElectronApi = typeof api

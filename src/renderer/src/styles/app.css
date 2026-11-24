@@ -2639,3 +2639,216 @@ input[type='time'].input {
   font-size: 12px;
   color: var(--text-3);
 }
+
+/* prep tracker */
+.prep-figure strong {
+  font-size: 26px;
+  color: var(--accent);
+}
+.prep-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.prep-sum {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+}
+.prep-apps {
+  list-style: none;
+  display: grid;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+.prep-apps li {
+  display: grid;
+  grid-template-columns: minmax(90px, auto) 1fr auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.prep-name {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.prep-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--c);
+  flex: none;
+}
+.prep-dot.on {
+  background: var(--c);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 25%, transparent);
+}
+.prep-bar,
+.prep-goal-bar {
+  height: 8px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.prep-bar span,
+.prep-goal-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--c, var(--accent));
+  transition: width 0.4s ease;
+}
+.prep-time {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+  min-width: 72px;
+  text-align: right;
+}
+.prep-goal {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.prep-goal strong {
+  color: var(--text-2);
+}
+.prep-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.prep-min {
+  width: 64px;
+}
+.prep-settings-sub {
+  font-size: 13px;
+  margin-top: 6px;
+}
+.prep-app-row {
+  display: grid;
+  grid-template-columns: 120px 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+/* launcher */
+.launch-card.drop {
+  outline: 2px dashed var(--accent);
+  outline-offset: -4px;
+}
+.launch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 8px;
+}
+.launch-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+.launch-tile:hover {
+  background: var(--accent-softer);
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+}
+.launch-tile:active {
+  transform: scale(0.97);
+}
+.launch-tile.drop {
+  border-color: var(--accent);
+  border-style: dashed;
+}
+.launch-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: var(--text-2);
+}
+.launch-icon img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+.launch-name {
+  font-size: 12px;
+  line-height: 1.25;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.launch-badge {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 99px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 650;
+  line-height: 17px;
+}
+.launch-add {
+  border-style: dashed;
+  color: var(--text-3);
+}
+.launch-empty {
+  margin-top: 10px;
+}
+.launch-edit {
+  display: grid;
+  gap: 6px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.launch-edit-head,
+.launch-add-target {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.launch-edit-head .input,
+.launch-add-target .input {
+  flex: 1;
+  min-width: 0;
+}
+.launch-targets {
+  list-style: none;
+  display: grid;
+  gap: 2px;
+}
+.launch-targets li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.launch-targets li span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
