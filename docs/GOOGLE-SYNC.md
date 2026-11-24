@@ -93,6 +93,12 @@ Push-Benachrichtigungen (Webhooks) von Google funktionieren für eine Desktop-Ap
 - Verschieben zwischen Google-Kalendern nutzt `events.move`. Vom Google- in einen lokalen Kalender bedeutet: bei Google löschen.
 - Einzelne Termine einer Serie löschen schreibt ein `EXDATE` in die Serie. Einzeln geänderte Termine bekommen kein EXDATE,
   sonst würde Google die Änderung verwerfen.
+- Einen Termin der Serie in der App einzeln ändern („nur dieser“, auch per Ziehen) legt lokal einen Termin mit `seriesId` +
+  `originalStart` an; hochgeladen wird er als `PATCH` auf die Instanz der Serie (`<serien-id>_<ursprünglicher Beginn in UTC>`,
+  ganztägig `<serien-id>_<JJJJMMTT>`) mit `status: confirmed` – so holt auch ein Wiederherstellen eine abgesagte Instanz zurück.
+- „Diesen und folgende“ kürzt die Serie (`UNTIL` bzw. `COUNT`) und legt ab dem Termin eine neue Serie an. Einzeln geänderte
+  Termine danach werden dabei zu eigenen Terminen, weil Google sie mit dem gekürzten Teil der Serie verwirft.
+- Termine aus dem Papierkorb bekommen beim Wiederherstellen neue IDs und werden bei Google neu angelegt.
 - **Kalender ausschalten oder lokal löschen löscht nie etwas bei Google.**
 - Offline, abgelaufene Anmeldung oder Serverfehler: Die Outbox bleibt erhalten, der nächste Lauf versucht es erneut.
   Lehnt Google eine Änderung dreimal ab (oder sofort mit 403), wird sie verworfen und die App zeigt einen Hinweis.
