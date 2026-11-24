@@ -97,7 +97,7 @@ export function todoMenu(ids: string[]): MenuItem[] {
       }))
     },
     { separator: true },
-    { label: 'Löschen', hint: 'Entf', danger: true, action: () => st.deleteTodos(ids) }
+    { label: 'In den Papierkorb', hint: 'Entf', danger: true, action: () => st.deleteTodos(ids) }
   ]
   return items
 }

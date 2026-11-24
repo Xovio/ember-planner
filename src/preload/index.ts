@@ -2,6 +2,12 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type { AppData, LoadResult, ReminderPayload, TitleBarTheme } from '@shared/types'
 import type { RemoteChange } from '@shared/patch'
 import type { GoogleApi, GoogleCalendarEntry, GoogleStatus } from '@shared/google'
+import type { BackupInfo } from '../main/backup'
+
+interface FileFilter {
+  name: string
+  extensions: string[]
+}
 
 const google: GoogleApi = {
   status: () => ipcRenderer.invoke('google:status'),
@@ -31,6 +37,14 @@ const api = {
   save: (data: AppData, baseSeq: number): Promise<boolean> => ipcRenderer.invoke('data:save', data, baseSeq),
   onRemoteChange: (cb: (c: RemoteChange) => void) => listen('data:remote', cb),
   setTitleBarTheme: (t: TitleBarTheme): void => ipcRenderer.send('window:theme', t),
+  listBackups: (): Promise<BackupInfo[]> => ipcRenderer.invoke('backup:list'),
+  createBackup: (): Promise<BackupInfo> => ipcRenderer.invoke('backup:create'),
+  readBackup: (file: string): Promise<string> => ipcRenderer.invoke('backup:read', file),
+  openBackupFolder: (): Promise<string> => ipcRenderer.invoke('backup:open-folder'),
+  saveFile: (name: string, content: string, filters: FileFilter[]): Promise<string | null> =>
+    ipcRenderer.invoke('file:save', name, content, filters),
+  openFile: (filters: FileFilter[]): Promise<{ name: string; content: string } | null> =>
+    ipcRenderer.invoke('file:open', filters),
   onReminder: (cb: (p: ReminderPayload) => void) => listen('reminder:fired', cb),
   onOpenEvent: (cb: (eventId: string) => void) => listen('event:open', cb),
   onOpenTodo: (cb: (todoId: string) => void) => listen('todo:open', cb),

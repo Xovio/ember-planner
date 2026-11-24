@@ -19,6 +19,7 @@ Wohin sich Ember Planner entwickeln soll. Was schon da ist: [Funktionen & Umfang
 | 1 | Grundgerüst, Kalender, Erinnerungen, Tray, Themes, Übersicht | ✅ fertig |
 | 2 | ToDos mit harten/weichen Deadlines, Listen, Kategorien, Einplanen per Drag & Drop, Deadline-Widgets | ✅ fertig |
 | 2.5 | UX-Überarbeitung: eine Arbeitsfläche, Popups, Detailspalte, Schnelleingabe, Befehlspalette, Undo, Kontextmenüs | ✅ fertig |
+| 2.6 | Schnelle Gewinne: wiederkehrende ToDos, Feiertage, Tastenkürzel-Übersicht, Export/Import, automatische Backups, Archiv & Papierkorb, automatisierte Tests | ✅ fertig |
 | 3 | Google-Kalender-Sync (2-Wege, OAuth) | ✅ fertig |
 | 4 | Obsidian-Anbindung & Claude-Integration | geplant – Konzept vorher gemeinsam festlegen |
 | 5 | Verteilung: Installer, Auto-Update | geplant |
@@ -71,7 +72,7 @@ Ideen:
 - Eisenhower-Matrix (dringend × wichtig) als Widget und Ansicht
 - „Vorschlag einplanen“: freie Lücken vor der Deadline anhand der Zeitschätzung vorschlagen – nur auf Klick
 - Tagesritual: morgendliche Planung („Was schaffe ich heute?“) und Tagesabschluss („Was schiebe ich?“)
-- Wiederkehrende ToDos (z. B. wöchentlich Wohnung aufräumen)
+- ~~Wiederkehrende ToDos (z. B. wöchentlich Wohnung aufräumen)~~ ✅ 2.6
 - Gewohnheiten-Tracker mit Serien
 - Pufferzeiten und Arbeitszeiten pro Wochentag; Warnung bei überbuchten Tagen
 - Fokus-Modus / Pomodoro für einen Zeitblock
@@ -81,27 +82,29 @@ Ideen:
 - Mehrtägige Termine als durchgehende Balken in Woche und Monat
 - Zeitzonen und zweite Zeitzone in der Wochenansicht
 - Jahresansicht und Mehr-Wochen-Ansicht
-- Feiertage (Deutschland/Bundesland) als einblendbarer Kalender
+- ~~Feiertage (Deutschland/Bundesland) als einblendbarer Kalender~~ ✅ 2.6
 - Termin-Vorlagen (z. B. „DnD-Session“ mit Dauer, Ort, Erinnerung)
 
 **ToDos**
 - Projekte mit Unter-Listen und Fortschritt
 - Abhängigkeiten („erst nach …“)
 - Anhänge und Links
-- Archiv und Papierkorb mit Wiederherstellen
+- ~~Archiv und Papierkorb mit Wiederherstellen~~ ✅ 2.6 (für ToDos)
+- Papierkorb auch für Termine – jetzt möglich, da der Google-Sync steht; Wiederherstellen muss dort sauber ankommen
 - Filter speichern (z. B. „DnD, nächste 14 Tage, Priorität hoch“)
 
 **Oberfläche**
 - Weitere Styles (z. B. „Glut“, „Pergament“ für die Kampagnen-Stimmung, hoher Kontrast)
 - Frei anordenbares Dashboard (Widgets ziehen, ein-/ausblenden)
 - Kompakt- und Komfort-Dichte
-- Tastenkürzel-Übersicht (`?`) und anpassbare Kürzel
+- ~~Tastenkürzel-Übersicht (`?`)~~ ✅ 2.6 · anpassbare Kürzel
 - Englische Übersetzung
 
 **Technik**
-- Automatisierte Tests (Wiederholungslogik, Schnelleingabe-Parser, Tasks-Format)
+- ~~Automatisierte Tests (Wiederholungslogik, Schnelleingabe-Parser, Tasks-Format)~~ ✅ 2.6 · Oberflächen-Tests (z. B. Playwright) fehlen noch
 - SQLite statt JSON für große Datenmengen
-- Export/Import (JSON, ICS, Markdown im Tasks-Format) und automatische Backups
+- ~~Export/Import (JSON, ICS, Markdown im Tasks-Format) und automatische Backups~~ ✅ 2.6 · ICS-Datei-Import siehe Phase 3 (optional)
+- Wiederkehrende ToDos: Ende der Serie (am Datum / nach N) in der Oberfläche einstellbar – die Logik kann es schon
 - Verschlüsselte Sicherung in der Cloud (optional)
 
 ## Mitmachen

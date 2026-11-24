@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { addMinutes } from 'date-fns'
-import { AlignLeft, CalendarClock, Copy, Flag, Hourglass, List, ListChecks, Plus, Signal, Tag, Timer, Trash2, X } from 'lucide-react'
-import type { Priority, Todo } from '@shared/types'
-import { localDate, toTasksLine } from '@shared/todo'
+import { AlignLeft, CalendarClock, Copy, Flag, Hourglass, List, ListChecks, Plus, Repeat, Signal, Tag, Timer, Trash2, X } from 'lucide-react'
+import type { Priority, Recurrence, RecurrenceFreq, Todo } from '@shared/types'
+import { localDate, nextRecurrence, parseLocalDate, toTasksLine } from '@shared/todo'
 import { roundUp, uid, useStore } from '../../store'
 import { calVar } from '../../lib/theme'
 import { ESTIMATE_PRESETS, PRIORITY_LABEL, formatEstimate } from '../../lib/todos'
-import { fmt, fromLocal, toLocalTime } from '../../lib/dates'
+import { WEEKDAY_SHORT, fmt, fromLocal, toLocalTime } from '../../lib/dates'
 import { TodoCheck } from '../todos/TodoItem'
 import { DatePicker } from '../ui/DatePicker'
 
@@ -40,7 +40,7 @@ export function TodoDetails({ id }: { id: string }): React.JSX.Element {
       <div className="details-toolbar">
         <span className="drawer-kicker">ToDo · {list?.name}</span>
         <span style={{ flex: 1 }} />
-        <button className="icon-btn sm danger" title="Löschen (Entf)" onClick={() => del([todo.id])}>
+        <button className="icon-btn sm danger" title="In den Papierkorb (Entf)" onClick={() => del([todo.id])}>
           <Trash2 size={14} />
         </button>
         <button className="icon-btn sm" onClick={clear} title="Schließen (Esc)" aria-label="Schließen">
@@ -83,6 +83,8 @@ export function TodoDetails({ id }: { id: string }): React.JSX.Element {
             </span>
           </div>
         </div>
+
+        <TodoRepeat todo={todo} onChange={(recurrence) => set({ recurrence }, 'rec')} />
 
         <div className="field">
           <Signal size={16} className="field-icon" />
@@ -239,6 +241,87 @@ export function TodoDetails({ id }: { id: string }): React.JSX.Element {
         </div>
 
         <p className="details-foot">Änderungen werden sofort gespeichert · Strg+Z macht sie rückgängig</p>
+      </div>
+    </div>
+  )
+}
+
+const REPEAT_UNITS: Record<RecurrenceFreq, [string, string]> = {
+  daily: ['Tag', 'Tage'],
+  weekly: ['Woche', 'Wochen'],
+  monthly: ['Monat', 'Monate'],
+  yearly: ['Jahr', 'Jahre']
+}
+
+/** Repeat rule of a ToDo: completing it creates the next instance. */
+function TodoRepeat({ todo, onChange }: { todo: Todo; onChange: (r: Recurrence | null) => void }): React.JSX.Element {
+  const rec = todo.recurrence
+  const next = rec && !todo.done ? nextRecurrence(todo) : null
+  const nextDay = next?.softDeadline ?? next?.hardDeadline
+
+  return (
+    <div className="field">
+      <Repeat size={16} className="field-icon" />
+      <div className="field-stack">
+        <select
+          className="input"
+          value={rec?.freq ?? 'none'}
+          onChange={(e) => {
+            const v = e.target.value
+            if (v === 'none') return onChange(null)
+            const freq = v as RecurrenceFreq
+            onChange({ interval: rec?.interval ?? 1, freq, ...(freq === 'weekly' ? { byWeekday: rec?.byWeekday } : {}) })
+          }}
+        >
+          <option value="none">Wiederholt sich nicht</option>
+          <option value="daily">Täglich</option>
+          <option value="weekly">Wöchentlich</option>
+          <option value="monthly">Monatlich</option>
+          <option value="yearly">Jährlich</option>
+        </select>
+        {rec && (
+          <div className="rec-box">
+            <div className="rec-line">
+              Alle
+              <input
+                type="number"
+                min={1}
+                max={99}
+                className="input xs"
+                value={rec.interval}
+                onChange={(e) => onChange({ ...rec, interval: Math.max(1, Number(e.target.value) || 1) })}
+              />
+              {REPEAT_UNITS[rec.freq][rec.interval === 1 ? 0 : 1]}
+            </div>
+            {rec.freq === 'weekly' && (
+              <div className="weekday-picker">
+                {WEEKDAY_SHORT.map((w, i) => {
+                  const on = rec.byWeekday?.includes(i)
+                  return (
+                    <button
+                      key={w}
+                      className={on ? 'on' : ''}
+                      title={on ? undefined : 'Nur an bestimmten Wochentagen'}
+                      onClick={() => {
+                        const cur = new Set(rec.byWeekday ?? [])
+                        if (on) cur.delete(i)
+                        else cur.add(i)
+                        onChange({ ...rec, byWeekday: cur.size ? [...cur].sort() : undefined })
+                      }}
+                    >
+                      {w}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+            <span className="field-hint">
+              {nextDay
+                ? `Beim Abhaken entsteht das nächste ToDo – fällig ${fmt(parseLocalDate(nextDay), 'EEE, d. MMM')}.`
+                : 'Beim Abhaken entsteht das nächste ToDo.'}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   )

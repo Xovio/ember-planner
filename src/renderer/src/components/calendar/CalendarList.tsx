@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Check, CloudAlert, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react'
+import { Check, CloudAlert, Pencil, Plus, RefreshCw, Settings2, Trash2 } from 'lucide-react'
 import { CALENDAR_COLORS, type CalendarColor, type CalendarInfo } from '@shared/types'
 import { uid, useStore } from '../../store'
 import { COLOR_NAMES, calVar } from '../../lib/theme'
@@ -9,6 +9,11 @@ import { lastSyncLabel, useGoogleStatus, useTick } from '../../lib/googleStatus'
 export function CalendarList(): React.JSX.Element {
   const calendars = useStore((s) => s.data!.calendars)
   const toggle = useStore((s) => s.toggleCalendar)
+  const showHolidays = useStore((s) => s.data!.settings.showHolidays)
+  const region = useStore((s) => s.data!.settings.holidayRegion)
+  const updateSettings = useStore((s) => s.updateSettings)
+  const setPage = useStore((s) => s.setPage)
+  const toggleHolidays = (): void => updateSettings({ showHolidays: !showHolidays })
   const [editing, setEditing] = useState<CalendarInfo | null>(null)
   const local = calendars.filter((c) => c.external?.provider !== 'google')
   const google = calendars.filter((c) => c.external?.provider === 'google')
@@ -62,6 +67,28 @@ export function CalendarList(): React.JSX.Element {
       {editing && !calendars.some((c) => c.id === editing.id) && (
         <CalendarEditForm value={editing} onDone={() => setEditing(null)} isNew />
       )}
+
+      <div className="callist-row">
+        <button
+          className={`cal-check holiday-check ${showHolidays ? 'on' : ''}`}
+          onClick={toggleHolidays}
+          aria-pressed={showHolidays}
+          aria-label={`Feiertage ${showHolidays ? 'ausblenden' : 'einblenden'}`}
+        >
+          {showHolidays && <Check size={12} strokeWidth={3} />}
+        </button>
+        <span className="callist-name" onClick={toggleHolidays}>
+          Feiertage <span className="callist-region">{region.replace('DE-', '')}</span>
+        </span>
+        <button
+          className="icon-btn sm ghost-hover"
+          onClick={() => setPage('settings')}
+          aria-label="Bundesland wählen"
+          title="Bundesland wählen"
+        >
+          <Settings2 size={13} />
+        </button>
+      </div>
 
       {google.length > 0 && (
         <>

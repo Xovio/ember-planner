@@ -1,6 +1,6 @@
-import { CalendarClock, Check, Flag, Hourglass, ListChecks, MoreHorizontal, Sun, Sunrise, CalendarArrowUp, Timer } from 'lucide-react'
+import { CalendarClock, Check, Flag, Hourglass, ListChecks, MoreHorizontal, Sun, Sunrise, CalendarArrowUp, Repeat, Timer } from 'lucide-react'
 import type { Todo } from '@shared/types'
-import { deadlineStatus, localDate } from '@shared/todo'
+import { deadlineStatus, localDate, recurrenceLabel } from '@shared/todo'
 import { useStore } from '../../store'
 import { calVar } from '../../lib/theme'
 import { deadlineLabel, formatEstimate, useCategoryMap, useListMap } from '../../lib/todos'
@@ -150,6 +150,11 @@ export function TodoItem({
             <span className="cat-tag" style={{ '--c': calVar(cat.color) } as React.CSSProperties}>
               <i />
               {cat.name}
+            </span>
+          )}
+          {todo.recurrence && (
+            <span className="meta-plain" title={recurrenceLabel(todo.recurrence)} aria-label={recurrenceLabel(todo.recurrence)}>
+              <Repeat size={12} />
             </span>
           )}
           {event && (

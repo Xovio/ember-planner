@@ -6,6 +6,8 @@ import { THEMES } from '../lib/theme'
 import { REMINDER_PRESETS, reminderLabel } from '../lib/dates'
 import { api } from '../lib/api'
 import { playChime } from '../lib/chime'
+import { DataSection } from '../components/DataSection'
+import { HOLIDAY_REGIONS } from '@shared/holidays'
 import { GoogleSection } from '../components/settings/GoogleSection'
 
 export function SettingsPage(): React.JSX.Element {
@@ -87,6 +89,16 @@ export function SettingsPage(): React.JSX.Element {
             ))}
           </select>
         </Row>
+        <Row label="Feiertage" hint="Gesetzliche Feiertage im Kalender anzeigen – nur zur Info, es entstehen keine Termine">
+          <Switch checked={s.showHolidays} onChange={(v) => update({ showHolidays: v })} />
+          <select className="input" value={s.holidayRegion} onChange={(e) => update({ holidayRegion: e.target.value, showHolidays: true })}>
+            {HOLIDAY_REGIONS.map((r) => (
+              <option key={r.id} value={r.id}>
+                {r.name}
+              </option>
+            ))}
+          </select>
+        </Row>
         <Row label="Tag beginnt um" hint="Dorthin scrollt die Tages- und Wochenansicht">
           <select
             className="input"
@@ -161,6 +173,8 @@ export function SettingsPage(): React.JSX.Element {
           <Switch checked={s.launchAtLogin} onChange={(v) => update({ launchAtLogin: v })} />
         </Row>
       </section>
+
+      <DataSection />
     </div>
   )
 }

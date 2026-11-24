@@ -39,7 +39,7 @@ export function BulkBar({ ids: visible }: { ids: string[] }): React.JSX.Element 
       >
         <MoreHorizontal size={15} />
       </button>
-      <button title="Löschen" className="danger" onClick={() => deleteTodos(ids)}>
+      <button title="In den Papierkorb" className="danger" onClick={() => deleteTodos(ids)}>
         <Trash2 size={15} />
       </button>
       <span style={{ flex: 1 }} />

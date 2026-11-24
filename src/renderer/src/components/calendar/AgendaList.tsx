@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { addDays, isToday, isTomorrow, startOfDay } from 'date-fns'
 import { MapPin, Repeat, Bell, CalendarPlus } from 'lucide-react'
 import { expandAll, type Occurrence } from '@shared/recurrence'
-import { useCalendarMap, useStore, useVisibleEvents } from '../../store'
+import { useCalendarMap, useHolidays, useStore, useVisibleEvents } from '../../store'
 import { calVar } from '../../lib/theme'
 import { fmt, toLocalTime } from '../../lib/dates'
 import { clickOccurrence } from './TimeGrid'
@@ -14,6 +14,7 @@ export function AgendaList(): React.JSX.Element {
   const cursor = useStore((s) => s.cursor)
   const events = useVisibleEvents()
   const calendars = useCalendarMap()
+  const holiday = useHolidays()
   const openAdd = useStore((s) => s.openAdd)
   const selectEvent = useStore((s) => s.selectEvent)
   const openMenu = useStore((s) => s.openMenu)
@@ -31,8 +32,12 @@ export function AgendaList(): React.JSX.Element {
         if (!o.event.allDay) break
       }
     }
+    // holidays get their own day even without events
+    for (let d = start; d < addDays(start, DAYS); d = addDays(d, 1)) {
+      if (holiday(d) && !map.has(d.toISOString())) map.set(d.toISOString(), { day: d, items: [] })
+    }
     return [...map.values()].sort((a, b) => a.day.getTime() - b.day.getTime())
-  }, [cursor, events])
+  }, [cursor, events, holiday])
 
   if (groups.length === 0) {
     return (
@@ -56,6 +61,7 @@ export function AgendaList(): React.JSX.Element {
             <span className="agenda-dlabel">
               <strong>{isToday(day) ? 'Heute' : isTomorrow(day) ? 'Morgen' : fmt(day, 'EEEE')}</strong>
               <span>{fmt(day, 'MMMM yyyy')}</span>
+              {holiday(day) && <span className="holiday-label">{holiday(day)}</span>}
             </span>
           </div>
           <div className="agenda-items">

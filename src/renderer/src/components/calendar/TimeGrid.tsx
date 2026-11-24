@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { addDays, addMinutes, isSameDay, isToday } from 'date-fns'
 import { Repeat, Bell, SquareCheck } from 'lucide-react'
 import { expandAll, type Occurrence } from '@shared/recurrence'
-import { useCalendarMap, useStore, useVisibleEvents, type Anchor } from '../../store'
+import { useCalendarMap, useHolidays, useStore, useVisibleEvents, type Anchor } from '../../store'
 import { calVar } from '../../lib/theme'
 import { fmt, minutesSinceMidnight, snap, toLocalTime } from '../../lib/dates'
 import { layoutDay, type Segment } from './layout'
@@ -63,6 +63,7 @@ export const acceptsDayDrop = (e: React.DragEvent): boolean =>
 export function TimeGrid({ days }: { days: Date[] }): React.JSX.Element {
   const events = useVisibleEvents()
   const calendars = useCalendarMap()
+  const holiday = useHolidays()
   const settings = useStore((s) => s.data!.settings)
   const setQuickCreate = useStore((s) => s.setQuickCreate)
   const quickCreate = useStore((s) => s.quickCreate)
@@ -245,15 +246,16 @@ export function TimeGrid({ days }: { days: Date[] }): React.JSX.Element {
         {days.map((d) => (
           <button
             key={d.toISOString()}
-            className={`tg-dayhead ${isToday(d) ? 'today' : ''}`}
+            className={`tg-dayhead ${isToday(d) ? 'today' : ''} ${holiday(d) ? 'holiday' : ''}`}
             onClick={() => {
               setCursor(d)
               setView('day')
             }}
-            title="Tagesansicht öffnen"
+            title={holiday(d) ? `Feiertag: ${holiday(d)} – Tagesansicht öffnen` : 'Tagesansicht öffnen'}
           >
             <span className="tg-dow">{fmt(d, 'EEE')}</span>
             <span className="tg-dnum">{fmt(d, 'd')}</span>
+            {holiday(d) && <span className="tg-holiday">{holiday(d)}</span>}
           </button>
         ))}
       </div>
