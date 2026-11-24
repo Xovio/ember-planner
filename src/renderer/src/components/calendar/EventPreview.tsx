@@ -68,6 +68,9 @@ export function EventPreview(): React.JSX.Element | null {
             <button className="btn btn-danger sm" onClick={() => del(ev.id, 'one', pv.occurrenceStart)}>
               Nur diesen
             </button>
+            <button className="btn btn-danger-outline sm" onClick={() => del(ev.id, 'following', pv.occurrenceStart)}>
+              Diesen und folgende
+            </button>
             <button className="btn btn-danger-outline sm" onClick={() => del(ev.id, 'all')}>
               Ganze Serie
             </button>

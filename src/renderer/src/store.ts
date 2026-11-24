@@ -11,6 +11,7 @@ import {
   type CalendarInfo,
   type CalendarViewKind,
   type Category,
+  type EventTemplate,
   type ReminderPayload,
   type Settings,
   type Todo,
@@ -21,6 +22,8 @@ import { isCalendarLocked } from '@shared/google'
 import { api, isDemo } from './lib/api'
 import { holidayOn } from '@shared/holidays'
 import { daysBetween, localDate, nextRecurrence, parseLocalDate } from '@shared/todo'
+import { detachOccurrence, endSeriesBefore, splitSeries } from '@shared/series'
+import { templateFromEvent, templateKey } from '@shared/templates'
 
 /* ───────────── UI types ───────────── */
 
@@ -147,9 +150,25 @@ interface State {
 
   createEvent(ev: Partial<CalendarEvent> & { start: string; end: string }, opts?: { select?: boolean }): string
   updateEvent(id: string, patch: Partial<CalendarEvent>, coalesce?: string): void
-  deleteEvent(id: string, scope: 'all' | 'one', occurrenceStart?: string): void
+  deleteEvent(id: string, scope: 'all' | 'one' | 'following', occurrenceStart?: string): void
+  /**
+   * Splits a series for editing: 'one' makes the occurrence an own event, 'following' starts a new
+   * series there. Selects and returns the id to edit from now on.
+   */
+  editOccurrence(id: string, occurrenceStart: string, scope: 'one' | 'following'): string
+  /** brings events back from the trash (a series with its changed occurrences) */
+  restoreEvents(ids: string[]): void
+  /** removes events from the trash for good (still undoable in this session) */
+  purgeEvents(ids: string[] | 'all'): void
+  /** moves a single occurrence of a series (only this one) */
+  moveOccurrence(id: string, occurrenceStart: string, start: Date, end: Date): void
   duplicateEvent(id: string): void
   moveEvent(id: string, start: Date, end: Date): void
+
+  /** saves an event as a template and returns its id */
+  saveAsTemplate(eventId: string): string
+  upsertTemplate(t: EventTemplate): void
+  removeTemplate(id: string): void
 
   upsertCalendar(c: CalendarInfo): void
   removeCalendar(id: string): void
@@ -309,8 +328,16 @@ export const useStore = create<State>((set, get) => {
       set({ data, view: data.settings.defaultView })
       // empty the trash of entries older than TRASH_DAYS (not undoable: they expired)
       const cutoff = new Date(Date.now() - TRASH_DAYS * 86400000).toISOString()
-      if (data.trash.some((t) => (t.deletedAt ?? '') < cutoff)) {
-        mutate((d) => ({ ...d, trash: d.trash.filter((t) => (t.deletedAt ?? '') >= cutoff) }), { history: false })
+      const expired = (x: { deletedAt?: string }): boolean => (x.deletedAt ?? '') < cutoff
+      if (data.trash.some(expired) || data.eventTrash.some(expired)) {
+        mutate(
+          (d) => ({
+            ...d,
+            trash: d.trash.filter((t) => !expired(t)),
+            eventTrash: d.eventTrash.filter((e) => !expired(e))
+          }),
+          { history: false }
+        )
       }
       if (isDemo) applyDemoParams()
     },
@@ -433,8 +460,20 @@ export const useStore = create<State>((set, get) => {
       const ev = get().data?.events.find((e) => e.id === id)
       if (!ev || locked(id)) return
       const title = ev.title || '(Ohne Titel)'
+      const series = !!ev.recurrence && !!occurrenceStart
       mutate(
         (d) => {
+          if (scope === 'following' && series) {
+            const events = endSeriesBefore(d.events, id, occurrenceStart!, stamp())
+            const ids = new Set(events.map((e) => e.id))
+            return {
+              ...d,
+              events,
+              todos: d.todos.map((t) =>
+                t.linkedEventId && !ids.has(t.linkedEventId) ? { ...t, linkedEventId: undefined } : t
+              )
+            }
+          }
           if (scope === 'one' && occurrenceStart && ev.recurrence) {
             return {
               ...d,
@@ -449,20 +488,139 @@ export const useStore = create<State>((set, get) => {
               )
             }
           }
+          // into the trash, a series together with its changed occurrences
+          const ts = stamp()
+          const gone = d.events.filter((e) => e.id === id || (ev.recurrence && e.seriesId === id))
+          const goneIds = new Set(gone.map((e) => e.id))
           return {
             ...d,
-            events: d.events.filter((e) => e.id !== id),
-            todos: d.todos.map((t) => (t.linkedEventId === id ? { ...t, linkedEventId: undefined } : t))
+            events: d.events.filter((e) => !goneIds.has(e.id)),
+            eventTrash: [...gone.map((e) => ({ ...e, deletedAt: ts })), ...d.eventTrash],
+            todos: d.todos.map((t) =>
+              t.linkedEventId && goneIds.has(t.linkedEventId) ? { ...t, linkedEventId: undefined } : t
+            )
           }
         },
         {
-          label: scope === 'one' && ev.recurrence ? `„${title}“ (ein Termin) gelöscht` : `„${title}“ gelöscht`,
+          label:
+            scope === 'one' && series
+              ? `„${title}“ (ein Termin) gelöscht`
+              : scope === 'following' && series
+                ? `„${title}“ ab diesem Termin gelöscht`
+                : `„${title}“ im Papierkorb`,
           undoToast: true
         }
       )
       const sel = get().selection
       if (sel?.kind === 'event' && sel.id === id) get().clearSelection()
       set({ preview: null })
+    },
+
+    restoreEvents(ids) {
+      const data = get().data
+      if (!data) return
+      // a restored series brings its changed occurrences along
+      const pick = new Set(ids)
+      for (const e of data.eventTrash) if (e.seriesId && pick.has(e.seriesId)) pick.add(e.id)
+      const back = data.eventTrash.filter((e) => pick.has(e.id))
+      if (!back.length) return
+      const first = back.find((e) => e.id === ids[0]) ?? back[0]
+      // new ids: at Google the old events are gone (or about to be), so they are uploaded as new ones
+      const newId = new Map(back.map((e) => [e.id, uid()]))
+      const ts = stamp()
+      mutate(
+        (d) => {
+          const live = new Set(d.events.map((e) => e.id))
+          const todos = new Map(d.todos.map((t) => [t.id, t]))
+          const relink = new Map<string, string>()
+          const restored = back.map((e) => {
+            const id = newId.get(e.id)!
+            const seriesId = e.seriesId ? (newId.get(e.seriesId) ?? (live.has(e.seriesId) ? e.seriesId : undefined)) : undefined
+            const todo = e.todoId ? todos.get(e.todoId) : undefined
+            const keepTodo = !!todo && !todo.linkedEventId && !relink.has(todo.id)
+            if (keepTodo) relink.set(todo.id, id)
+            return {
+              ...e,
+              id,
+              calendarId: writableCalendarId(d, e.calendarId),
+              external: undefined,
+              deletedAt: undefined,
+              seriesId,
+              originalStart: seriesId ? e.originalStart : undefined,
+              todoId: keepTodo ? e.todoId : undefined,
+              updatedAt: ts
+            }
+          })
+          return {
+            ...d,
+            // the series first, so it reaches Google before its changed occurrences
+            events: [...d.events, ...restored.filter((e) => !e.seriesId), ...restored.filter((e) => e.seriesId)],
+            eventTrash: d.eventTrash.filter((e) => !pick.has(e.id)),
+            todos: relink.size
+              ? d.todos.map((t) => (relink.has(t.id) ? { ...t, linkedEventId: relink.get(t.id), updatedAt: ts } : t))
+              : d.todos
+          }
+        },
+        {
+          label: ids.length > 1 ? `${ids.length} Termine wiederhergestellt` : `„${first.title || '(Ohne Titel)'}“ wiederhergestellt`,
+          undoToast: true
+        }
+      )
+    },
+
+    purgeEvents(ids) {
+      const trash = get().data?.eventTrash ?? []
+      const pick = new Set(ids === 'all' ? trash.map((e) => e.id) : ids)
+      for (const e of trash) if (e.seriesId && pick.has(e.seriesId)) pick.add(e.id)
+      if (!pick.size) return
+      const first = trash.find((e) => e.id === (ids === 'all' ? '' : ids[0]))
+      mutate((d) => ({ ...d, eventTrash: d.eventTrash.filter((e) => !pick.has(e.id)) }), {
+        label:
+          ids === 'all'
+            ? 'Termine im Papierkorb gelöscht'
+            : ids.length > 1
+              ? `${ids.length} Termine endgültig gelöscht`
+              : `„${first?.title || '(Ohne Titel)'}“ endgültig gelöscht`,
+        undoToast: true
+      })
+    },
+
+    editOccurrence(id, occurrenceStart, scope) {
+      const ev = get().data?.events.find((e) => e.id === id)
+      if (!ev?.recurrence || locked(id)) return id
+      const title = ev.title || '(Ohne Titel)'
+      let target = id
+      mutate(
+        (d) => {
+          if (scope === 'one') {
+            target = uid()
+            return { ...d, events: detachOccurrence(d.events, id, occurrenceStart, target, stamp()) }
+          }
+          const r = splitSeries(d.events, id, occurrenceStart, uid(), stamp(), uid)
+          target = r.id
+          return r.events === d.events ? d : { ...d, events: r.events }
+        },
+        {
+          label: scope === 'one' ? `„${title}“: Termin aus der Serie gelöst` : `„${title}“: Serie ab hier geteilt`
+        }
+      )
+      if (target !== id) get().selectEvent(target, scope === 'following' ? occurrenceStart : undefined)
+      return target
+    },
+
+    moveOccurrence(id, occurrenceStart, start, end) {
+      if (locked(id)) return
+      const title = get().data?.events.find((e) => e.id === id)?.title || '(Ohne Titel)'
+      mutate(
+        (d) => ({
+          ...d,
+          events: detachOccurrence(d.events, id, occurrenceStart, uid(), stamp(), {
+            start: start.toISOString(),
+            end: end.toISOString()
+          })
+        }),
+        { label: `„${title}“ verschoben (nur dieser Termin)`, undoToast: true }
+      )
     },
 
     duplicateEvent(id) {
@@ -494,6 +652,38 @@ export const useStore = create<State>((set, get) => {
         }),
         { label: 'Termin verschoben' }
       )
+    },
+
+    /* ── event templates ── */
+    saveAsTemplate(eventId) {
+      const ev = get().data?.events.find((e) => e.id === eventId)
+      if (!ev) return ''
+      const t = templateFromEvent(ev, uid())
+      mutate((d) => ({ ...d, templates: [...d.templates, t] }), { label: `Vorlage „${t.name}“ gespeichert` })
+      get().pushToast({
+        kind: 'undo',
+        title: `Vorlage „${t.name}“ gespeichert`,
+        body: `In der Schnelleingabe mit /${templateKey(t)} · verwalten unter Optionen`
+      })
+      return t.id
+    },
+    upsertTemplate(t) {
+      mutate(
+        (d) => ({
+          ...d,
+          templates: d.templates.some((x) => x.id === t.id)
+            ? d.templates.map((x) => (x.id === t.id ? t : x))
+            : [...d.templates, t]
+        }),
+        { label: 'Vorlage bearbeitet', coalesce: `tpl:${t.id}` }
+      )
+    },
+    removeTemplate(id) {
+      const t = get().data?.templates.find((x) => x.id === id)
+      mutate((d) => ({ ...d, templates: d.templates.filter((x) => x.id !== id) }), {
+        label: `Vorlage „${t?.name}“ gelöscht`,
+        undoToast: true
+      })
     },
 
     /* ── calendars & settings ── */

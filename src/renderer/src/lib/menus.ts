@@ -110,7 +110,20 @@ export function eventMenu(eventId: string, occurrenceStart?: string): MenuItem[]
   const todo = ev.todoId ? data.todos.find((t) => t.id === ev.todoId) : undefined
   const items: MenuItem[] = [
     { label: 'Bearbeiten', hint: 'Doppelklick', action: () => st.selectEvent(eventId, occurrenceStart) },
+    ...(ev.recurrence && occurrenceStart
+      ? [
+          { label: 'Nur diesen Termin bearbeiten', action: () => st.editOccurrence(eventId, occurrenceStart, 'one') },
+          {
+            label: 'Diesen und folgende bearbeiten',
+            action: () => st.editOccurrence(eventId, occurrenceStart, 'following')
+          }
+        ]
+      : []),
+    ...(ev.seriesId && data.events.some((e) => e.id === ev.seriesId)
+      ? [{ label: 'Zur Serie', action: () => st.selectEvent(ev.seriesId!) }]
+      : []),
     { label: 'Duplizieren', action: () => st.duplicateEvent(eventId) },
+    { label: 'Als Vorlage speichern', action: () => st.saveAsTemplate(eventId) },
     ...(todo ? [{ label: todo.done ? 'ToDo wieder öffnen' : 'ToDo abhaken', action: () => st.toggleTodo(todo.id) }] : []),
     {
       label: 'Kalender',
@@ -126,6 +139,11 @@ export function eventMenu(eventId: string, occurrenceStart?: string): MenuItem[]
   if (ev.recurrence && occurrenceStart) {
     items.push(
       { label: 'Nur diesen Termin löschen', danger: true, action: () => st.deleteEvent(eventId, 'one', occurrenceStart) },
+      {
+        label: 'Diesen und folgende löschen',
+        danger: true,
+        action: () => st.deleteEvent(eventId, 'following', occurrenceStart)
+      },
       { label: 'Ganze Serie löschen', danger: true, action: () => st.deleteEvent(eventId, 'all') }
     )
   } else {

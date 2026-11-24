@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { addDays } from 'date-fns'
-import { Clock, Maximize2 } from 'lucide-react'
+import { addDays, addMinutes } from 'date-fns'
+import { BookMarked, Clock, Maximize2 } from 'lucide-react'
 import { isCalendarLocked } from '@shared/google'
+import type { EventTemplate } from '@shared/types'
 import { useStore } from '../../store'
 import { calVar } from '../../lib/theme'
 import { fmt, fromLocal, toLocalDate, toLocalTime } from '../../lib/dates'
@@ -21,7 +22,22 @@ export function QuickCreate(): React.JSX.Element | null {
   const [times, setTimes] = useState(() =>
     qc ? { s: toLocalTime(new Date(qc.start)), e: toLocalTime(new Date(qc.end)) } : { s: '', e: '' }
   )
+  const templates = useStore((s) => s.data!.templates)
+  const [tpl, setTpl] = useState<EventTemplate | null>(null)
   if (!qc) return null
+
+  /** a template fills title, calendar and length; place, notes and reminders follow on save */
+  const applyTemplate = (t: EventTemplate): void => {
+    const on = tpl?.id !== t.id
+    setTpl(on ? t : null)
+    if (!on) return
+    if (!title.trim() || title === tpl?.title) setTitle(t.title || t.name)
+    if (calendars.some((c) => c.id === t.calendarId)) setCalendarId(t.calendarId)
+    if (!qc.allDay && !t.allDay) {
+      const s = fromLocal(toLocalDate(new Date(qc.start)), times.s)
+      setTimes({ ...times, e: toLocalTime(addMinutes(s, t.durationMin)) })
+    }
+  }
 
   const start = new Date(qc.start)
   const day = toLocalDate(start)
@@ -33,7 +49,14 @@ export function QuickCreate(): React.JSX.Element | null {
     return { start: s.toISOString(), end: e.toISOString() }
   }
   const save = (more = false): void => {
-    createEvent({ title: title.trim(), calendarId, allDay: qc.allDay, ...range() }, { select: more })
+    const extra = tpl
+      ? {
+          reminders: [...tpl.reminders],
+          ...(tpl.location ? { location: tpl.location } : {}),
+          ...(tpl.notes ? { notes: tpl.notes } : {})
+        }
+      : {}
+    createEvent({ title: title.trim(), calendarId, allDay: qc.allDay, ...range(), ...extra }, { select: more })
   }
 
   return (
@@ -90,6 +113,22 @@ export function QuickCreate(): React.JSX.Element | null {
             </button>
           ))}
         </div>
+        {templates.length > 0 && (
+          <div className="qc-templates" role="group" aria-label="Vorlagen">
+            <BookMarked size={13} />
+            {templates.map((t) => (
+              <button
+                key={t.id}
+                className={`qc-tpl ${tpl?.id === t.id ? 'on' : ''}`}
+                aria-pressed={tpl?.id === t.id}
+                onClick={() => applyTemplate(t)}
+                title={[t.title || t.name, t.location].filter(Boolean).join(' · ')}
+              >
+                {t.name}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="qc-actions">
           <button
             className="btn btn-ghost sm"

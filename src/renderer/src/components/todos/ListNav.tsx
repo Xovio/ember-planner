@@ -24,14 +24,16 @@ const QUIET_VIEWS: TodoView[] = ['archive', 'trash']
 export function useTodoCounts(): Record<string, number> {
   const todos = useStore((s) => s.data!.todos)
   const trash = useStore((s) => s.data!.trash)
+  // changed occurrences travel with their series and are not counted on their own
+  const eventTrash = useStore((s) => s.data!.eventTrash.filter((e) => !e.seriesId).length)
   const lists = useStore((s) => s.data!.lists)
   return useMemo(() => {
     const c: Record<string, number> = {}
     for (const v of SMART_VIEWS) c[v.id] = todos.filter((t) => matchesView(t, v.id)).length
-    c.trash = trash.length
+    c.trash = trash.length + eventTrash
     for (const l of lists) c[`list:${l.id}`] = todos.filter((t) => t.listId === l.id && !t.done).length
     return c
-  }, [todos, trash, lists])
+  }, [todos, trash, eventTrash, lists])
 }
 
 export function SmartViews({ only, onPick }: { only?: TodoView[]; onPick?: () => void }): React.JSX.Element {

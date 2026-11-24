@@ -89,8 +89,26 @@ export interface CalendarEvent {
   seriesId?: string
   /** single occurrence that was changed: its start in the series (the series has it as exdate) */
   originalStart?: ISODateTime
+  /** set while the event lies in `AppData.eventTrash` */
+  deletedAt?: ISODateTime
   createdAt: ISODateTime
   updatedAt: ISODateTime
+}
+
+/** reusable presets for new events, e.g. "DnD-Session" (Fr 19:00, 4 h, Kalender DnD, Ort Discord) */
+export interface EventTemplate {
+  id: string
+  name: string
+  /** title of new events (falls back to the name) */
+  title: string
+  calendarId: string
+  allDay: boolean
+  /** usual start "HH:mm"; used when no time is given */
+  startTime?: string
+  durationMin: number
+  location?: string
+  notes?: string
+  reminders: number[]
 }
 
 export type Priority = 0 | 1 | 2 | 3
@@ -226,6 +244,9 @@ export interface AppData {
   todos: Todo[]
   /** deleted ToDos, restorable for TRASH_DAYS; kept apart so no view or reminder sees them */
   trash: Todo[]
+  /** deleted events (series together with their changed occurrences), restorable for TRASH_DAYS */
+  eventTrash: CalendarEvent[]
+  templates: EventTemplate[]
   boards: Board[]
   settings: Settings
 }
@@ -296,6 +317,8 @@ export function createDefaultData(): AppData {
     ],
     todos: [],
     trash: [],
+    eventTrash: [],
+    templates: [],
     boards: [],
     settings: { ...DEFAULT_SETTINGS }
   }
@@ -315,6 +338,8 @@ export function normalizeData(raw: Partial<AppData> | null | undefined): AppData
     categories: raw.categories ?? base.categories,
     todos: (raw.todos ?? []).map((t) => ({ ...t, subtasks: t.subtasks ?? [], priority: t.priority ?? 0 })),
     trash: raw.trash ?? [],
+    eventTrash: raw.eventTrash ?? [],
+    templates: raw.templates ?? [],
     boards: (raw.boards ?? []).map((b) => ({ ...b, notes: b.notes ?? [], frames: b.frames ?? [], edges: b.edges ?? [] })),
     settings: { ...DEFAULT_SETTINGS, ...(raw.settings ?? {}) }
   }

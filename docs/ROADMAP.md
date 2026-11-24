@@ -21,6 +21,7 @@ Wohin sich Ember Planner entwickeln soll. Was schon da ist: [Funktionen & Umfang
 | 2.5 | UX-Überarbeitung: eine Arbeitsfläche, Popups, Detailspalte, Schnelleingabe, Befehlspalette, Undo, Kontextmenüs | ✅ fertig |
 | 2.6 | Schnelle Gewinne: wiederkehrende ToDos, Feiertage, Tastenkürzel-Übersicht, Export/Import, automatische Backups, Archiv & Papierkorb, automatisierte Tests | ✅ fertig |
 | 2.7 | Ideen-Boards: Brainstorm-Fläche mit Zetteln, Rahmen, Pfeilen und Punkten · Zusammenfassen · Export als Obsidian-Notiz und `.canvas` | ✅ fertig |
+| 2.8 | Kleine Lücken: Serientermine einzeln bearbeiten, Serienende für ToDos, mehrtägige Balken, Papierkorb für Termine, Termin-Vorlagen | ✅ fertig |
 | 3 | Google-Kalender-Sync (2-Wege, OAuth) | ✅ fertig |
 | 4 | Obsidian-Anbindung & Claude-Integration | geplant – Konzept vorher gemeinsam festlegen |
 | 5 | Verteilung: Installer ✅ (NSIS, `npm run dist`), Auto-Update ✅ (GitHub Releases), Code-Signatur | fast fertig |
@@ -32,7 +33,7 @@ Umgesetzt – Details in [GOOGLE-SYNC.md](GOOGLE-SYNC.md), Einrichtung in [GOOGL
 Offen geblieben:
 
 - Lokalen Kalender zu Google hochladen („Kalender zu Google hochladen“)
-- Einzelne Termine einer Serie in der App verschieben/bearbeiten („nur dieser“) – das Datenmodell (`seriesId`/`originalStart`) steht
+- ~~Einzelne Termine einer Serie in der App verschieben/bearbeiten („nur dieser“)~~ ✅ 2.8
 - Serien in fremden Zeitzonen exakt expandieren, `RDATE` unterstützen
 - Optional: einmaliger Import per ICS-Datei / iCal-Adresse
 
@@ -83,19 +84,19 @@ Ideen:
 - Fokus-Modus / Pomodoro für einen Zeitblock
 
 **Kalender**
-- Einzelne Termine einer Serie verschieben/bearbeiten („nur dieser“)
-- Mehrtägige Termine als durchgehende Balken in Woche und Monat
+- ~~Einzelne Termine einer Serie verschieben/bearbeiten („nur dieser“, „diesen und folgende“)~~ ✅ 2.8
+- ~~Mehrtägige Termine als durchgehende Balken in Woche und Monat~~ ✅ 2.8
 - Zeitzonen und zweite Zeitzone in der Wochenansicht
 - Jahresansicht und Mehr-Wochen-Ansicht
 - ~~Feiertage (Deutschland/Bundesland) als einblendbarer Kalender~~ ✅ 2.6
-- Termin-Vorlagen (z. B. „DnD-Session“ mit Dauer, Ort, Erinnerung)
+- ~~Termin-Vorlagen (z. B. „DnD-Session“ mit Dauer, Ort, Erinnerung)~~ ✅ 2.8
 
 **ToDos**
 - Projekte mit Unter-Listen und Fortschritt
 - Abhängigkeiten („erst nach …“)
 - Anhänge und Links
 - ~~Archiv und Papierkorb mit Wiederherstellen~~ ✅ 2.6 (für ToDos)
-- Papierkorb auch für Termine – jetzt möglich, da der Google-Sync steht; Wiederherstellen muss dort sauber ankommen
+- ~~Papierkorb auch für Termine~~ ✅ 2.8
 - Filter speichern (z. B. „DnD, nächste 14 Tage, Priorität hoch“)
 
 **Oberfläche**
@@ -115,7 +116,7 @@ Ideen:
 - ~~Automatisierte Tests (Wiederholungslogik, Schnelleingabe-Parser, Tasks-Format)~~ ✅ 2.6 · Oberflächen-Tests (z. B. Playwright) fehlen noch
 - SQLite statt JSON für große Datenmengen
 - ~~Export/Import (JSON, ICS, Markdown im Tasks-Format) und automatische Backups~~ ✅ 2.6 · ICS-Datei-Import siehe Phase 3 (optional)
-- Wiederkehrende ToDos: Ende der Serie (am Datum / nach N) in der Oberfläche einstellbar – die Logik kann es schon
+- ~~Wiederkehrende ToDos: Ende der Serie (am Datum / nach N) in der Oberfläche einstellbar~~ ✅ 2.8
 - Verschlüsselte Sicherung in der Cloud (optional)
 
 ## Mitmachen

@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react'
 import { addDays, addMinutes } from 'date-fns'
-import { CalendarPlus, CheckSquare, Clock, CornerDownLeft, Flag, Hourglass, List, Repeat, Sparkles, Tag, Timer } from 'lucide-react'
+import { BookMarked, CalendarPlus, CheckSquare, Clock, CornerDownLeft, Flag, Hourglass, List, MapPin, Repeat, Sparkles, Tag, Timer } from 'lucide-react'
 import { CALENDAR_COLORS } from '@shared/types'
 import { parseLocalDate, recurrenceLabel } from '@shared/todo'
-import { uid, useStore, type AddKind } from '../store'
+import { uid, useStore, writableCalendars, type AddKind } from '../store'
 import { calVar } from '../lib/theme'
 import { fmt, fromLocal } from '../lib/dates'
 import { looksLikeEvent, parseEventInput, parseQuickAdd } from '../lib/quickAdd'
+import { templateKey } from '@shared/templates'
 import { PRIORITY_LABEL, deadlineLabel, formatEstimate } from '../lib/todos'
 
 /** One input for everything: with a clock time it becomes an event, otherwise a ToDo. */
@@ -22,30 +23,54 @@ export function UniversalAdd({ initialKind, prefill }: { initialKind: AddKind; p
   const [text, setText] = useState(prefill ?? '')
   const [kind, setKind] = useState<AddKind>(initialKind)
 
-  const resolved: 'event' | 'todo' = kind === 'auto' ? (looksLikeEvent(text) ? 'event' : 'todo') : kind
-  const ev = useMemo(() => parseEventInput(text, data.calendars), [text, data.calendars])
+  const ev = useMemo(
+    () => parseEventInput(text, data.calendars, new Date(), data.templates),
+    [text, data.calendars, data.templates]
+  )
+  // "/vorlage" starts from an event template: it fills in what the text leaves open
+  const tpl = ev.templateId ? data.templates.find((t) => t.id === ev.templateId) : undefined
+  const resolved: 'event' | 'todo' = kind === 'auto' ? (tpl || looksLikeEvent(text) ? 'event' : 'todo') : kind
   const td = useMemo(() => parseQuickAdd(text, data.categories, data.lists), [text, data.categories, data.lists])
   const firstVisible = data.calendars.find((c) => c.visible) ?? data.calendars[0]
-  const cal = data.calendars.find((c) => c.id === (ev.calendarId ?? firstVisible.id))!
+  const tplCal = tpl && writableCalendars(data).some((c) => c.id === tpl.calendarId) ? tpl.calendarId : undefined
+  const cal = data.calendars.find((c) => c.id === (ev.calendarId ?? tplCal ?? firstVisible.id))!
+  const evTitle = ev.title || tpl?.title || tpl?.name || ''
+  const startTime = ev.allDay ? undefined : (ev.start ?? (tpl && !tpl.allDay ? tpl.startTime : undefined))
+  const allDay = !startTime
 
   const eventRange = (): { start: Date; end: Date } => {
-    if (ev.allDay || !ev.start) {
+    if (allDay) {
       const s = parseLocalDate(ev.date)
-      return { start: s, end: addDays(s, 1) }
+      const days = tpl?.allDay ? Math.max(1, Math.round(tpl.durationMin / 1440)) : 1
+      return { start: s, end: addDays(s, days) }
     }
-    const s = fromLocal(ev.date, ev.start)
-    let e = ev.end ? fromLocal(ev.date, ev.end) : addMinutes(s, ev.durationMin ?? data.settings.defaultDurationMin)
+    const s = fromLocal(ev.date, startTime)
+    const minutes = ev.durationMin ?? tpl?.durationMin ?? data.settings.defaultDurationMin
+    let e = ev.start && ev.end ? fromLocal(ev.date, ev.end) : addMinutes(s, minutes)
     if (e <= s) e = addDays(e, 1)
     return { start: s, end: e }
   }
 
   const submit = (): void => {
     if (resolved === 'event') {
-      if (!ev.title) return
+      if (!evTitle) return
       const { start, end } = eventRange()
-      createEvent({ title: ev.title, calendarId: cal.id, allDay: ev.allDay || !ev.start, start: start.toISOString(), end: end.toISOString() })
+      createEvent({
+        title: evTitle,
+        calendarId: cal.id,
+        allDay,
+        start: start.toISOString(),
+        end: end.toISOString(),
+        ...(tpl
+          ? {
+              reminders: [...tpl.reminders],
+              ...(tpl.location ? { location: tpl.location } : {}),
+              ...(tpl.notes ? { notes: tpl.notes } : {})
+            }
+          : {})
+      })
       if (page === 'plan') setCursor(start)
-      pushToast({ kind: 'undo', title: `Termin „${ev.title}“ angelegt` })
+      pushToast({ kind: 'undo', title: `Termin „${evTitle}“ angelegt` })
     } else {
       if (!td.title) return
       let categoryId = td.categoryId
@@ -120,15 +145,25 @@ export function UniversalAdd({ initialKind, prefill }: { initialKind: AddKind; p
           <div className="spot-preview">
             {resolved === 'event' ? (
               <>
-                <strong>{ev.title || <span className="muted">Titel fehlt</span>}</strong>
+                <strong>{evTitle || <span className="muted">Titel fehlt</span>}</strong>
                 <div className="qa-chips">
+                  {tpl && (
+                    <span className="qa-chip">
+                      <BookMarked size={12} /> Vorlage: {tpl.name}
+                    </span>
+                  )}
                   <span className="qa-chip">
                     <Clock size={12} /> {fmt(start, 'EEE, d. MMM')}
-                    {ev.allDay || !ev.start ? ' · ganztägig' : ` · ${fmt(start, 'HH:mm')}–${fmt(end, 'HH:mm')}`}
+                    {allDay ? ' · ganztägig' : ` · ${fmt(start, 'HH:mm')}–${fmt(end, 'HH:mm')}`}
                   </span>
                   <span className="qa-chip" style={{ '--c': calVar(cal.color) } as React.CSSProperties}>
                     <i className="qa-dot" /> {cal.name}
                   </span>
+                  {tpl?.location && (
+                    <span className="qa-chip">
+                      <MapPin size={12} /> {tpl.location}
+                    </span>
+                  )}
                 </div>
               </>
             ) : (
@@ -174,6 +209,14 @@ export function UniversalAdd({ initialKind, prefill }: { initialKind: AddKind; p
               <strong>Termin</strong> – mit Uhrzeit: <code>Zahnarzt Do 14 Uhr</code> <code>Session 28.11. 19-23 Uhr #dnd</code>{' '}
               <code>Urlaub Montag ganztägig</code>
             </div>
+            {data.templates.length > 0 && (
+              <div>
+                <strong>Vorlage</strong> – mit <code>/</code>:{' '}
+                {data.templates.slice(0, 4).map((t) => (
+                  <code key={t.id}>/{templateKey(t)} Fr</code>
+                ))}
+              </div>
+            )}
             <div>
               <strong>ToDo</strong> – sonst: <code>Karte zeichnen bis Fr ~Mi #dnd !! 2h</code> <code>@projekte</code>
             </div>

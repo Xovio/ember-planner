@@ -31,6 +31,15 @@ export function changedFields(base: CalendarEvent, cur: CalendarEvent): GField[]
 }
 
 const pad = (n: number): string => String(n).padStart(2, '0')
+
+/**
+ * Google id of one occurrence of a series: `<seriesId>_<original start>`, the start in UTC
+ * (`20261124T090000Z`) or, for all-day series, as a date (`20261124`).
+ */
+export function instanceId(seriesGoogleId: string, originalStart: string, allDay: boolean): string {
+  const d = new Date(originalStart)
+  return `${seriesGoogleId}_${allDay ? icalDate(d) : icalUtc(d)}`
+}
 /** wall-clock time of an instant in the machine zone, iCalendar style */
 const icalLocal = (d: Date): string =>
   `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`

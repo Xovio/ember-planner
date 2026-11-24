@@ -15,7 +15,7 @@ damit eine spätere Obsidian-Anbindung nahtlos passt.
 ## Highlights
 
 - **Eine Arbeitsfläche** – Kalender in der Mitte, Filter links, rechts eine Spalte mit *ToDos*, *Heute* und *Details*
-- **Kalender** – Tag, Woche, Monat, Agenda · Wiederholungen · mehrere Erinnerungen mit Windows-Benachrichtigung und Gong · Tray
+- **Kalender** – Tag, Woche, Monat, Agenda · Wiederholungen (auch einzelne Termine einer Serie ändern) · Vorlagen · Papierkorb · mehrere Erinnerungen mit Windows-Benachrichtigung und Gong · Tray
 - **ToDos** – Listen, Kategorien, Prioritäten, Unteraufgaben, Zeitschätzung, harte 📅 und weiche ⏳ Deadlines, sortiert nach der frühesten Deadline · wiederkehrend · Archiv und Papierkorb
 - **Einplanen per Drag & Drop** – ToDo ins Raster ziehen = Zeitblock in Länge der Schätzung · in den Monat ziehen = Wunschtag
 - **Eine Eingabe für alles** (`N`) – „Zahnarzt Do 14 Uhr 1h“ wird ein Termin, „Karte zeichnen bis Fr ~Mi #dnd !! 2h“ ein ToDo

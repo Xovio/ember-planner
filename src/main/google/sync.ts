@@ -8,7 +8,7 @@ import { GoogleApiError, type GoogleAccount } from './account'
 import { eventFromGoogle, patchFromGoogle, type GEvent } from './mapping'
 import { GoogleAuthError } from './oauth'
 import { Outbox, type OutboxEntry } from './outbox'
-import { ALL_FIELDS, changedFields, googleBody, googleIdFor } from './write'
+import { ALL_FIELDS, changedFields, googleBody, googleIdFor, instanceId } from './write'
 
 const INTERVAL_MS = 5 * 60_000
 /** a focus triggers a sync only if the last one is older than this */
@@ -297,7 +297,23 @@ export class GoogleSync {
     }
 
     const gcal = curCal.external!.id
-    const ctx = { tz: this.tz, overrideStarts: this.overrideStarts(data.events, cur!.id) }
+    const ctx = { tz: this.tz, overrideStarts: this.overrideStarts(data.events, cur!) }
+
+    // an occurrence changed here ("nur dieser"): Google already has it as an instance of the series
+    const master = !base && !cur!.external && cur!.seriesId && cur!.originalStart
+      ? data.events.find((e) => e.id === cur!.seriesId)
+      : undefined
+    if (master && master.calendarId === cur!.calendarId) {
+      const iid = instanceId(master.external?.id ?? googleIdFor(master.id), cur!.originalStart!, master.allDay)
+      const g = await this.send(
+        `${this.calendarPath(gcal)}/${encodeURIComponent(iid)}`,
+        'PATCH',
+        // confirmed: brings back an occurrence that was cancelled before (e.g. restored from the trash)
+        { ...googleBody(cur!, ALL_FIELDS, { ...ctx, patch: true }), status: 'confirmed' }
+      )
+      this.remember(cur!.id, g, gcal)
+      return
+    }
 
     if (!base) {
       const gid = cur!.external?.id ?? googleIdFor(cur!.id)
@@ -356,8 +372,13 @@ export class GoogleSync {
   }
 
   /** starts of single occurrences of a series that exist as own changed events */
-  private overrideStarts(events: CalendarEvent[], seriesId: string): Set<string> {
-    return new Set(events.filter((e) => e.seriesId === seriesId && e.originalStart).map((e) => e.originalStart!))
+  private overrideStarts(events: CalendarEvent[], series: CalendarEvent): Set<string> {
+    // only occurrences that live at Google as instances of this series (same calendar)
+    return new Set(
+      events
+        .filter((e) => e.seriesId === series.id && e.originalStart && e.calendarId === series.calendarId)
+        .map((e) => e.originalStart!)
+    )
   }
 
   /* ───────────── pull ───────────── */

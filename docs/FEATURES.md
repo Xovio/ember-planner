@@ -1,6 +1,6 @@
 # Funktionen & Umfang
 
-Stand: Version 0.2 (24. November 2026: Auto-Update, Google-Sync, Schnelle Gewinne 2.6, Ideen-Boards 2.7, Windows-Installer). Was die App heute kann, wo ihre Grenzen liegen und was bewusst noch fehlt.
+Stand: Version 0.2 (24. November 2026: Serientermine einzeln, Termin-Vorlagen, Papierkorb für Termine, Auto-Update, Google-Sync, Schnelle Gewinne 2.6, Ideen-Boards 2.7, Windows-Installer). Was die App heute kann, wo ihre Grenzen liegen und was bewusst noch fehlt.
 Ausblick und Ideen stehen in der [Roadmap](ROADMAP.md).
 
 ## Aufbau der Oberfläche
@@ -18,13 +18,22 @@ Die linke Leiste filtert die ToDo-Spalte: Ein Klick auf eine Liste oder Kategori
 ## Kalender
 
 - **Ansichten:** Tag, Woche, Monat, Agenda (6 Wochen) · Montag als Wochenstart · 24-h-Format · Kalenderwoche · Jetzt-Linie
-- **Anlegen:** Klick ins Raster → kleines Popup am Slot (Titel, Uhrzeit, Kalender) · Ziehen im Raster = Zeitraum ·
+- **Anlegen:** Klick ins Raster → kleines Popup am Slot (Titel, Uhrzeit, Kalender, Vorlage) · Ziehen im Raster = Zeitraum ·
   Doppelklick in die Ganztags-Zeile = ganztägiger Termin · Klick in eine Monatszelle = ganztägiger Termin
+- **Vorlagen:** einen Termin als Vorlage speichern (Lesezeichen-Knopf in den Details oder Rechtsklick) – Titel, Kalender,
+  übliche Uhrzeit, Dauer, Ort, Notizen und Erinnerungen. Anlegen mit `/name` in der Schnelleingabe (`/session Fr`) oder per
+  Klick auf die Vorlage im Popup; verwalten unter *Optionen → Termin-Vorlagen*
 - **Bearbeiten:** Klick → Vorschau mit Schnellaktionen · Doppelklick → Details in der Seitenspalte ·
   Verschieben per Drag & Drop · Dauer an der Unterkante ziehen · Rechtsklick-Menü (Bearbeiten, Duplizieren, Kalender, Löschen)
 - **Felder:** Titel, Kalender, ganztägig, Beginn/Ende (auch mehrtägig), Wiederholung, Erinnerungen, Ort, Notizen
-- **Wiederholung:** täglich, wöchentlich (mit Wochentagen), monatlich, jährlich · Intervall · Ende nie / am Datum / nach N Terminen ·
-  einzelne Termine einer Serie löschbar
+- **Wiederholung:** täglich, wöchentlich (mit Wochentagen), monatlich, jährlich · Intervall · Ende nie / am Datum / nach N Terminen
+- **Einzelne Termine einer Serie:** Ziehen im Raster verschiebt nur diesen Termin · in den Details (oder per Rechtsklick)
+  *Nur diesen bearbeiten* oder *Diesen und folgende* (die Serie wird dort geteilt) · löschen: nur diesen, diesen und folgende
+  oder die ganze Serie · ein einzeln geänderter Termin zeigt das an und führt mit *Zur Serie* zurück. Mit Google wird das als
+  geänderter Einzeltermin der Serie abgeglichen
+- **Mehrtägige Termine** laufen als durchgehender Balken über die Tage – ganztägige in Woche und Monat, solche mit Uhrzeit im Monat
+- **Papierkorb:** gelöschte Termine (Serien samt einzeln geänderten Terminen) bleiben 30 Tage im Papierkorb auf der Seite *ToDos*
+  und lassen sich wiederherstellen; bei Google werden sie dann neu angelegt
 - **Mehrere Kalender** mit Farben aus einer farbschwächegeprüften Palette, ein-/ausblendbar
 - **Feiertage** (Deutschland, wahlweise mit Bundesland) einblendbar in Monat, Woche, Mini-Monat und Agenda –
   nur berechnet und angezeigt, es entstehen keine Termine
@@ -43,6 +52,7 @@ Die linke Leiste filtert die ToDo-Spalte: Ein Klick auf eine Liste oder Kategori
 - **Felder:** Titel, Liste, Kategorie, Priorität (keine/niedrig/mittel/hoch), harte Deadline 📅, weiche Deadline ⏳ (Wunschtag),
   Zeitschätzung, Unteraufgaben, Notizen, verknüpfter Zeitblock
 - **Wiederkehrende ToDos:** täglich, wöchentlich (auch an bestimmten Wochentagen), monatlich, jährlich, mit Intervall.
+  Ende der Serie nie, am Datum oder nach N Mal.
   Beim Abhaken entsteht das nächste ToDo; beide Deadlines rücken mit gleichem Abstand weiter, auch wenn man spät dran war.
   Ohne Deadline wird der nächste Termin zum Wunschtag. Ein Schritt `Strg+Z` nimmt beides zurück
 - **Sortierung:** nach der frühesten Deadline; bei gleichem Tag zuerst die harte, dann Priorität
@@ -69,7 +79,8 @@ Die linke Leiste filtert die ToDo-Spalte: Ein Klick auf eine Liste oder Kategori
 ## Eingabe & Navigation
 
 - **Universelle Schnelleingabe** (`N`, `Strg+Leertaste`): mit Uhrzeit → Termin, sonst → ToDo; Live-Vorschau des Erkannten
-  - Termine: Datum (`Do`, `morgen`, `28.11.`), Uhrzeit (`14 Uhr`, `14:30`, `19-23 Uhr`), Dauer (`1h`), Kalender (`#dnd`), `ganztägig`
+  - Termine: Datum (`Do`, `morgen`, `28.11.`), Uhrzeit (`14 Uhr`, `14:30`, `19-23 Uhr`), Dauer (`1h`), Kalender (`#dnd`), `ganztägig`,
+    Vorlage (`/session`)
   - ToDos: `bis Fr` (hart), `~Mi` (weich), `#kategorie`, `@liste`, `!`–`!!!`, `2h`,
     Wiederholung (`täglich`, `jede Woche`, `alle 2 Wochen`, `monatlich`, `jeden Mo`)
 - **Befehlspalette** (`Strg+K`): Volltextsuche über Termine und ToDos, Navigation, Ansichten, Themes, Rückgängig
@@ -170,13 +181,12 @@ Technik und Entscheidungen: [GOOGLE-SYNC.md](GOOGLE-SYNC.md)
 - Nur **Windows** getestet; Installer ist nicht signiert (SmartScreen fragt beim ersten Installieren nach)
 - **Sync nur mit Google Kalender** – ToDos werden nicht zwischen Geräten abgeglichen
 - Google-Serien in einer anderen Zeitzone als der des PCs können rund um die Zeitumstellung um eine Stunde abweichen; `RDATE` wird nicht unterstützt
-- Einzelne Termine einer Serie lassen sich in der App weiterhin nur löschen, nicht einzeln verschieben (in Google geänderte werden korrekt angezeigt)
 - **Keine Obsidian-Anbindung** (nur das Format ist vorbereitet)
-- Wiederkehrende Termine: Änderungen gelten immer für die ganze Serie; einzelne Termine lassen sich nur löschen, nicht verschieben
-- Mehrtägige Termine mit Uhrzeit erscheinen pro Tag als eigenes Stück
+- Mehrtägige Termine mit Uhrzeit erscheinen in Tag und Woche pro Tag als eigenes Stück im Raster
+- Ein einzeln geänderter Termin einer Google-Serie kann nicht in einen anderen Kalender wandern (dort wird er als eigener Termin angelegt)
 - Keine Zeitzonen-Auswahl (es gilt die Systemzeitzone)
 - Kein Import von `.ics`-Dateien; Sicherungen gibt es nur in der Desktop-App, nicht im Web-Build
-- Papierkorb nur für ToDos; gelöschte Termine lassen sich nur per `Strg+Z` in derselben Sitzung zurückholen
+- Nur ganz gelöschte Termine kommen in den Papierkorb; „nur diesen“ / „diesen und folgende“ löschen macht `Strg+Z` rückgängig
 - Ideen-Boards: keine Bilder, kein Freihandzeichnen, Zettel mit fester Breite; die Zusammenfassung ordnet nur, sie formuliert
   nichts neu (das ist für die Claude-Anbindung in Phase 4 vorgesehen); kein Import von `.canvas`-Dateien
 - Feiertage, die nur in einzelnen Gemeinden gelten (z. B. Mariä Himmelfahrt in Teilen Bayerns), fehlen
