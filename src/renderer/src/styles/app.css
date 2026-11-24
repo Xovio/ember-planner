@@ -2310,3 +2310,55 @@ input[type='time'].input {
 .icon-btn.sync-problem {
   color: var(--danger);
 }
+
+/* ───────────── Multi-day bars ───────────── */
+.chip-spacer {
+  height: 22px;
+  flex: none;
+}
+.chip-span {
+  flex: none;
+}
+/* a continued bar reaches the cell edge, so neighbouring pieces read as one bar */
+.chip-span.cont-left {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  box-shadow: none;
+  padding-left: 7px;
+  width: auto;
+  margin-left: calc(-1 * var(--cell-pad-x, 5px));
+}
+.chip-span.cont-right {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  width: auto;
+  margin-right: calc(-1 * var(--cell-pad-x, 5px));
+}
+.tg-allday-cell {
+  --cell-pad-x: 3px;
+}
+.month-cell {
+  --cell-pad-x: 5px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+/* the title of a bar may run across all days of the bar in this row */
+.chip-span.head {
+  overflow: visible;
+  position: relative;
+  z-index: 2;
+}
+.chip-span.head .chip-title {
+  flex: none;
+  max-width: calc(var(--len, 1) * 100% + (var(--len, 1) - 1) * 12px);
+}
+.month-cell {
+  overflow-x: visible;
+  overflow-y: clip;
+}

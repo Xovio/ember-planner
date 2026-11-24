@@ -5,7 +5,8 @@ import { expandAll, type Occurrence } from '@shared/recurrence'
 import { useCalendarMap, useHolidays, useStore, useVisibleEvents, type Anchor } from '../../store'
 import { calVar } from '../../lib/theme'
 import { fmt, minutesSinceMidnight, snap, toLocalTime } from '../../lib/dates'
-import { layoutDay, type Segment } from './layout'
+import { isMultiDay, layoutDay, layoutSpans, type Segment } from './layout'
+import { SpanLanes } from './SpanLanes'
 import { localDate } from '@shared/todo'
 import { TODO_MIME, todoDrag } from '../../lib/dnd'
 import { DEADLINE_MIME, DeadlineChip } from '../todos/TodoItem'
@@ -91,7 +92,14 @@ export function TimeGrid({ days }: { days: Date[] }): React.JSX.Element {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [events, rangeStart.getTime(), rangeEnd.getTime()]
   )
-  const allDay = occs.filter((o) => o.event.allDay)
+  const allDayAll = occs.filter((o) => o.event.allDay)
+  // multi-day all-day events run as one bar across the days
+  const spans = useMemo(
+    () => layoutSpans(days, allDayAll.filter(isMultiDay)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [occs, days.length, rangeStart.getTime()]
+  )
+  const allDay = allDayAll.filter((o) => !isMultiDay(o))
   const timed = occs.filter((o) => !o.event.allDay)
 
   // apply the live drag preview to the dragged occurrence
@@ -294,6 +302,7 @@ export function TimeGrid({ days }: { days: Date[] }): React.JSX.Element {
               }}
               title="Doppelklick: ganztägiger Termin · ToDo hierher ziehen: Wunschtag"
             >
+              <SpanLanes pieces={spans[days.indexOf(d)]} calendars={calendars} />
               {deadlinesOn(d).map(({ todo, kind }) => (
                 <DeadlineChip key={todo.id + kind} todo={todo} kind={kind} />
               ))}

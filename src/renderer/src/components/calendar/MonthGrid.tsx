@@ -7,6 +7,8 @@ import { WEEKDAY_SHORT, fmt, monthGridRange, toLocalDate, toLocalTime } from '..
 import { DeadlineChip } from '../todos/TodoItem'
 import { acceptsDayDrop, clickOccurrence, dropOnDay } from './TimeGrid'
 import { eventMenu } from '../../lib/menus'
+import { isMultiDay, layoutSpans } from './layout'
+import { SpanLanes } from './SpanLanes'
 import type { Todo } from '@shared/types'
 
 const MAX_CHIPS = 3
@@ -26,6 +28,13 @@ export function MonthGrid(): React.JSX.Element {
 
   const { days, start, end } = useMemo(() => monthGridRange(cursor), [cursor])
   const occs = useMemo(() => expandAll(events, start, end), [events, start, end])
+  // events over several days run as bars through each week row
+  const spans = useMemo(() => {
+    const multi = occs.filter(isMultiDay)
+    const out: ReturnType<typeof layoutSpans> = []
+    for (let w = 0; w < days.length; w += 7) out.push(...layoutSpans(days.slice(w, w + 7), multi))
+    return out
+  }, [occs, days])
   const todos = useStore((s) => s.data!.todos)
   const deadlines = useMemo(() => {
     const map = new Map<string, { todo: Todo; kind: 'hard' | 'soft' }[]>()
@@ -54,15 +63,22 @@ export function MonthGrid(): React.JSX.Element {
         ))}
       </div>
       <div className="month-grid">
-        {days.map((d) => {
+        {days.map((d, di) => {
           const next = addDays(d, 1)
           const list = occs
-            .filter((o) => o.start < next && o.end > d)
+            .filter((o) => o.start < next && o.end > d && !isMultiDay(o))
             .sort((a, b) => Number(b.event.allDay) - Number(a.event.allDay) || a.start.getTime() - b.start.getTime())
           const dls = deadlines.get(toLocalDate(d)) ?? []
-          const shownDl = dls.slice(0, 2)
-          const budget = Math.max(1, MAX_CHIPS + 1 - shownDl.length)
-          const extra = list.length + dls.length - shownDl.length - budget
+          // lines: bars first (at most MAX_CHIPS lanes), then deadlines, then the day's own events
+          const lanes = spans[di]
+          const shownLanes = lanes.slice(0, MAX_CHIPS)
+          const hiddenBars = lanes.slice(MAX_CHIPS).filter(Boolean).length
+          let room = MAX_CHIPS + 1 - shownLanes.length
+          const shownDl = dls.slice(0, Math.min(2, room))
+          room -= shownDl.length
+          const rest = list.length + dls.length - shownDl.length + hiddenBars
+          const budget = rest > room ? Math.max(0, room - 1) : room
+          const extra = rest - budget
           return (
             <div
               key={d.toISOString()}
@@ -103,10 +119,11 @@ export function MonthGrid(): React.JSX.Element {
                 )}
               </div>
               <div className="month-chips">
+                <SpanLanes pieces={shownLanes} calendars={calendars} />
                 {shownDl.map(({ todo, kind }) => (
                   <DeadlineChip key={todo.id + kind} todo={todo} kind={kind} />
                 ))}
-                {list.slice(0, extra > 0 ? budget - 1 : budget).map((o) => {
+                {list.slice(0, budget).map((o) => {
                   const color = calVar(calendars.get(o.event.calendarId)?.color ?? 'red')
                   return (
                     <button
@@ -131,7 +148,7 @@ export function MonthGrid(): React.JSX.Element {
                 })}
                 {extra > 0 && (
                   <button className="month-more" onClick={() => goDay(d)}>
-                    + {extra + 1} weitere
+                    + {extra} weitere
                   </button>
                 )}
               </div>
