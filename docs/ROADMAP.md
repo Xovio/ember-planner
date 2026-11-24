@@ -49,7 +49,7 @@ Ideen:
 - **Quelle anzeigen:** ToDo zeigt Vault, Notiz und Zeile; Klick öffnet die Notiz in Obsidian (`obsidian://`-Link)
 - **Dataview-freundlich:** Tags und Felder so wählen, dass bestehende Dataview-Abfragen funktionieren
 - **DnD-Kampagnen:** Session-Notizen mit Datum werden zu Terminen; Prep-ToDos einer Session hängen am Termin;
-  Countdown-Widget „Tage bis zur nächsten Session“ mit offenen Prep-Aufgaben
+  ~~Countdown-Widget „Tage bis zur nächsten Session“ mit offenen Prep-Aufgaben~~ ✅ (Widget „Nächste Session“, erster Test der Widget-API)
 - **Discord-Events:** über einen eigenen Bot die geplanten Events ausgewählter Server (z. B. DnD-Runde) als Kalender
   einblenden – inkl. Anzahl „Interessiert“ – und Sessions aus dem Kalender per „In Discord ankündigen“ als Server-Event
   anlegen; verschiebt man die Session, wandert das Discord-Event mit. Baut auf dem Sync-Fundament aus Phase 3 auf

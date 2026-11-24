@@ -33,6 +33,12 @@ Die App nutzt die Schnittstelle zuerst selbst.
 - Gespeichert wird in `settings.overviewLayout` (`order`, `hidden`, `sizes`). Die Logik dafür steckt getestet in
   `plugins/layout.ts`. Einstellungen für Widgets, die gerade nicht angemeldet sind, bleiben erhalten, damit ein
   deaktiviertes Plugin seinen Platz behält.
+- Eigene Optionen pro Widget: `settings` im `WidgetDef` (ein Formular hinter dem Zahnrad im Anordnen-Modus) und
+  `useWidgetConfig(id, defaults)`, gespeichert in `settings.widgetConfig[id]`.
+- Erster Test mit einem neuen Widget: **Nächste Session** (`components/widgets/SessionCountdown.tsx`, Logik in
+  `src/shared/session.ts`). Countdown zur nächsten Session aus einem Kalender (Titel-Filter, Prep-Termine zählen nicht),
+  darunter die offenen Vorbereitungs-ToDos aus Kategorie oder Liste, die bis zum Session-Tag fällig sind; neue
+  Prep-ToDos bekommen den Session-Tag als Deadline.
 - Noch nicht in Stufe 1: Widgets in der Seitenleiste, Befehle für die Palette und Schnelleingabe-Syntax über die
   Registrierung. Sie kommen, sobald es dafür einen ersten Nutzer gibt.
 

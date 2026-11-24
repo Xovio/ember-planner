@@ -2530,3 +2530,102 @@ input[type='time'].input {
   gap: 6px;
   margin-top: 4px;
 }
+
+/* widget options, opened from the gear in arrange mode */
+.dash-tools .icon-btn.active {
+  color: var(--accent-text);
+  background: var(--accent-soft);
+}
+.dash-settings {
+  position: relative;
+  z-index: 3;
+  margin: 46px 8px 8px;
+  padding: 14px 16px;
+  cursor: auto;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.2);
+}
+.dash-item:has(.dash-settings) > .dash-body {
+  display: none;
+}
+.widget-settings {
+  display: grid;
+  gap: 10px;
+}
+.widget-settings label {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.widget-settings-hint {
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.45;
+}
+
+/* next D&D session */
+.session-figure strong {
+  font-size: 26px;
+  color: var(--c);
+}
+.session-event {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--c);
+  border-radius: var(--radius-md, 8px);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--c) 14%, transparent), transparent 70%);
+  text-align: left;
+  color: var(--c);
+}
+.session-event:hover {
+  border-color: var(--c);
+}
+.session-event > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.session-event strong {
+  color: var(--text);
+  font-size: 14.5px;
+}
+.session-event span span {
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.session-sub {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 650;
+}
+.session-sub span {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-3);
+}
+.session-more {
+  font-size: 12px;
+  color: var(--text-3);
+  padding: 4px 2px;
+}
+.session-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--text-3);
+}
+.session-add .input {
+  flex: 1;
+}
