@@ -5,6 +5,7 @@ import { applyTheme } from './lib/theme'
 import { playChime } from './lib/chime'
 import { TitleBar } from './components/TitleBar'
 import { NavRail } from './components/NavRail'
+import { ActivePage } from './plugins/ActivePage'
 import { Toasts } from './components/Toasts'
 import { QuickCreate } from './components/calendar/QuickCreate'
 import { EventPreview } from './components/calendar/EventPreview'
@@ -14,20 +15,12 @@ import { CommandPalette } from './components/CommandPalette'
 import { ShortcutHelp } from './components/ShortcutHelp'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { AnnounceDialog } from './components/discord/AnnounceDialog'
-import { CalendarPage } from './pages/CalendarPage'
-import { TodayPage } from './pages/TodayPage'
-import { TodosPage } from './pages/TodosPage'
-import { SettingsPage } from './pages/SettingsPage'
-import { IdeasPage } from './pages/IdeasPage'
-import { RightPanel } from './components/RightPanel'
 
 export function App(): React.JSX.Element {
   const data = useStore((s) => s.data)
-  const page = useStore((s) => s.page)
   const quickCreate = useStore((s) => s.quickCreate)
   const preview = useStore((s) => s.preview)
   const overlay = useStore((s) => s.overlay)
-  const selection = useStore((s) => s.selection)
   const theme = data?.settings.theme
 
   useEffect(() => {
@@ -79,16 +72,7 @@ export function App(): React.JSX.Element {
       <div className="app-body">
         <NavRail />
         <main className="page">
-          {page === 'plan' && <CalendarPage />}
-          {page === 'todos' && <TodosPage />}
-          {page === 'overview' && (
-            <div className="with-details">
-              <TodayPage />
-              {selection && <RightPanel tabs={false} />}
-            </div>
-          )}
-          {page === 'ideas' && <IdeasPage />}
-          {page === 'settings' && <SettingsPage />}
+          <ActivePage />
         </main>
       </div>
       {quickCreate && <QuickCreate key={quickCreate.start + quickCreate.end + String(quickCreate.allDay) + (quickCreate.placeholderOf ?? '')} />}

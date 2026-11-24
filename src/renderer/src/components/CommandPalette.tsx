@@ -4,15 +4,12 @@ import {
   CalendarDays,
   CalendarPlus,
   CheckSquare,
-  LayoutDashboard,
   Lightbulb,
-  ListTodo,
   Moon,
   PanelRight,
   Plus,
   Redo2,
   Search,
-  Settings,
   Sun,
   Undo2,
   Keyboard,
@@ -20,6 +17,7 @@ import {
 } from 'lucide-react'
 import { expandEvent } from '@shared/recurrence'
 import { useStore } from '../store'
+import { listPages } from '../plugins/registry'
 import { THEMES, calVar } from '../lib/theme'
 import { fmt } from '../lib/dates'
 
@@ -63,12 +61,8 @@ export function CommandPalette(): React.JSX.Element {
         icon: CalendarDays,
         run: go(() => st().setView(v))
       })),
-      { id: 'p-plan', group: 'Befehle', label: 'Gehe zu: Planen', icon: CalendarDays, run: go(() => st().setPage('plan')) },
-      { id: 'p-todos', group: 'Befehle', label: 'Gehe zu: ToDos', icon: ListTodo, run: go(() => st().setPage('todos')) },
-      { id: 'p-over', group: 'Befehle', label: 'Gehe zu: Übersicht', icon: LayoutDashboard, run: go(() => st().setPage('overview')) },
-      { id: 'p-ideas', group: 'Befehle', label: 'Gehe zu: Ideen', icon: Lightbulb, run: go(() => st().setPage('ideas')) },
+      ...listPages().map((p): Cmd => ({ id: `p-${p.id}`, group: 'Befehle', label: `Gehe zu: ${p.label}`, icon: p.icon, run: go(() => st().setPage(p.id)) })),
       { id: 'new-board', group: 'Befehle', label: 'Neues Brainstorm-Board', icon: Lightbulb, run: go(() => st().addBoard()) },
-      { id: 'p-set', group: 'Befehle', label: 'Gehe zu: Optionen', icon: Settings, run: go(() => st().setPage('settings')) },
       { id: 'tab-today', group: 'Befehle', label: 'Seitenspalte: Heute', hint: 'H', icon: Sun, run: go(() => (st().setPage('plan'), st().setRightTab('today'))) },
       { id: 'panel', group: 'Befehle', label: 'Seitenspalte ein-/ausblenden', hint: 'B', icon: PanelRight, run: go(() => st().togglePanel()) },
       { id: 'undo', group: 'Befehle', label: 'Rückgängig', hint: 'Strg Z', icon: Undo2, run: go(() => st().undo()) },

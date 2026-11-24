@@ -273,6 +273,19 @@ export interface Settings {
   holidayRegion: string
   /** look for new versions on GitHub and install them on quit (installed app only) */
   autoUpdate: boolean
+  /** arrangement of the widgets on the overview page */
+  overviewLayout: OverviewLayout
+}
+
+export type WidgetSize = 'half' | 'full'
+
+/** user's arrangement of registered widgets; ids that are no longer registered are ignored */
+export interface OverviewLayout {
+  /** widget ids in display order; ids missing here were never arranged and follow in default order */
+  order: string[]
+  hidden: string[]
+  /** size chosen by the user, overriding the widget's default */
+  sizes: Record<string, WidgetSize>
 }
 
 export interface AppData {
@@ -330,7 +343,8 @@ export const DEFAULT_SETTINGS: Settings = {
   showTodoPanel: true,
   showHolidays: false,
   holidayRegion: 'DE',
-  autoUpdate: true
+  autoUpdate: true,
+  overviewLayout: { order: [], hidden: [], sizes: {} }
 }
 
 export const INBOX_ID = 'inbox'
