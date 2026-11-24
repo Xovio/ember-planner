@@ -32,6 +32,7 @@ import {
   toLocalTime
 } from '../../lib/dates'
 import { DatePicker } from '../ui/DatePicker'
+import { DiscordInfo } from '../discord/DiscordInfo'
 
 const FREQ_LABEL: Record<RecurrenceFreq, [string, string]> = {
   daily: ['Tag', 'Tage'],
@@ -269,6 +270,8 @@ export function EventDetails({ id, occurrenceStart }: { id: string; occurrenceSt
           autoFocus={!ev.title}
           onChange={(e) => set({ title: e.target.value.replace(/\n/g, ' ') }, 'title')}
         />
+
+        <DiscordInfo ev={ev} occurrenceStart={occurrenceStart} />
 
         {linkedTodo && (
           <div className="linked-todo">

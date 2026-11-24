@@ -92,6 +92,7 @@ export function detachOccurrence(
     seriesId: master.id,
     originalStart: start.toISOString(),
     external: undefined,
+    discord: undefined,
     createdAt: now,
     updatedAt: now,
     ...patch
@@ -139,6 +140,7 @@ export function splitSeries(
     end: new Date(occ.getTime() + durationOf(master)).toISOString(),
     recurrence: recurrenceFrom(master, occ),
     external: undefined,
+    discord: undefined,
     todoId: undefined,
     createdAt: now,
     updatedAt: now

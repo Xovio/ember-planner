@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { addDays, isToday, isTomorrow, startOfDay } from 'date-fns'
 import { MapPin, Repeat, Bell, CalendarPlus } from 'lucide-react'
 import { expandAll, type Occurrence } from '@shared/recurrence'
+import { DiscordBadge } from '../discord/DiscordBadge'
 import { useCalendarMap, useHolidays, useStore, useVisibleEvents } from '../../store'
 import { calVar } from '../../lib/theme'
 import { fmt, toLocalTime } from '../../lib/dates'
@@ -84,7 +85,9 @@ export function AgendaList(): React.JSX.Element {
                   </span>
                   <span className="agenda-bar" />
                   <span className="agenda-main">
-                    <span className="agenda-title">{o.event.title || '(Ohne Titel)'}</span>
+                    <span className={`agenda-title ${o.event.discord?.status === 4 ? 'dc-cancelled-text' : ''}`}>
+                      {o.event.title || '(Ohne Titel)'} <DiscordBadge ev={o.event} />
+                    </span>
                     <span className="agenda-sub">
                       {cal?.name}
                       {o.event.location && (

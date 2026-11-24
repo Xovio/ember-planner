@@ -9,6 +9,7 @@ import { acceptsDayDrop, clickOccurrence, dropOnDay } from './TimeGrid'
 import { eventMenu } from '../../lib/menus'
 import { isMultiDay, layoutSpans } from './layout'
 import { SpanLanes } from './SpanLanes'
+import { DiscordBadge, discordClass } from '../discord/DiscordBadge'
 import type { Todo } from '@shared/types'
 
 const MAX_CHIPS = 3
@@ -130,7 +131,7 @@ export function MonthGrid(): React.JSX.Element {
                       key={o.key}
                       className={`chip ${o.event.allDay ? 'chip-allday' : 'chip-timed'} ${
                         selection?.kind === 'event' && selection.id === o.event.id ? 'selected' : ''
-                      }`}
+                      } ${discordClass(o.event)}`}
                       style={{ '--c': color } as React.CSSProperties}
                       onClick={(e) => clickOccurrence(o.event.id, o.start.toISOString(), e.currentTarget)}
                       onDoubleClick={() => selectEvent(o.event.id, o.start.toISOString())}
@@ -143,6 +144,7 @@ export function MonthGrid(): React.JSX.Element {
                       {!o.event.allDay && <span className="chip-dot" />}
                       {!o.event.allDay && <span className="chip-time">{toLocalTime(o.start)}</span>}
                       <span className="chip-title">{o.event.title || '(Ohne Titel)'}</span>
+                      <DiscordBadge ev={o.event} />
                     </button>
                   )
                 })}

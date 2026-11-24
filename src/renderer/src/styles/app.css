@@ -2416,3 +2416,21 @@ input[type='time'].input {
 .tpl-when {
   font-size: 12px;
 }
+
+/* ───────────── Discord (Optionen) ───────────── */
+.discord-guilds {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.discord-guild {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.discord-guild-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}

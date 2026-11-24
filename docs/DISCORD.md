@@ -1,6 +1,6 @@
 # Discord-Anbindung – Konzept
 
-**Status: abgestimmt am 24. November 2026** (Entscheidungen unten), noch nicht gebaut.
+**Status:** Lesen, Ankündigen, Mitziehen und Absagen sind gebaut (24. November 2026). Der Platzhalter für die nächste Session folgt.
 Einrichtung des Bots: [DISCORD-SETUP.md](DISCORD-SETUP.md).
 
 ## Ziel
@@ -51,7 +51,9 @@ Ein Server hat höchstens 100 geplante oder laufende Events gleichzeitig.
 - Discord-Events sehen **erkennbar anders** aus: Discord-Symbol am Titel, gestrichelter linker Rand in der Server-Farbe und
   die Anzahl Interessierter als kleines Abzeichen („👥 12“). Nur die Anzahl, keine Namen.
 - Ein angekündigter eigener Termin zeigt dasselbe Symbol und die Anzahl, behält aber das Aussehen seines Kalenders.
-- Abgesagte Events werden durchgestrichen angezeigt, bis sie vorbei sind; beendete verschwinden nicht, sie sind normale vergangene Termine.
+- Beendete Events verschwinden nicht, sie bleiben als vergangene Termine. Events anderer, die vor Beginn aus Discords Liste
+  verschwinden (abgesagt oder gelöscht), verschwinden auch im Kalender. Eigene angekündigte Termine bleiben in jedem Fall im
+  Kalender und werden als „abgesagt“ durchgestrichen, wenn das Event in Discord weg ist.
 - Erinnerungen: Events anderer bekommen die Standard-Erinnerung des Server-Kalenders (einstellbar oder abschaltbar wie bei Google-Kalendern).
 
 ## Datenmodell
@@ -70,8 +72,10 @@ Ein Server hat höchstens 100 geplante oder laufende Events gleichzeitig.
 - **Ankündigen:** In Vorschau, Details und Rechtsklick-Menü „In Discord ankündigen“ → kleiner Dialog: Server, Art
   (Sprachkanal mit Kanalauswahl oder Ort/Link), Beschreibung aus den Notizen. Erst „Ankündigen“ schickt das Event ab.
 - **Mitziehen:** Titel, Beginn, Ende, Ort und Notizen gehen nach einer Änderung (wie bei Google nach ca. 2,5 Sekunden) zu Discord.
-- **Änderungen in Discord** am angekündigten Event (z. B. du verschiebst es in Discord selbst): **die neuere Änderung gewinnt**,
-  mit Hinweis, wie beim Google-Sync.
+- **Änderungen in Discord** am angekündigten Event (z. B. du verschiebst es in Discord selbst) werden übernommen, mit Hinweis –
+  auch zu Google, wenn der Termin in einem Google-Kalender liegt. Discord liefert keinen Änderungszeitpunkt; erkannt wird eine
+  Änderung am Vergleich mit dem zuletzt abgeglichenen Stand (`synced`). Wurde dasselbe Event zwischen zwei Abgleichen auf beiden
+  Seiten geändert, gilt die Änderung aus Ember Planner (sie ist die jüngere, weil sie nach 2,5 Sekunden hochgeladen wird).
 - **Löschen:** Statt sofort zu löschen erscheint eine **Warnung** im Lösch-Hinweis: „Das Event wird auch in Discord abgesagt –
   alle Interessierten sehen die Absage.“ Erst die Bestätigung löscht den Termin und sagt das Event ab (`status: 4`).
   Das ist bewusst eine Ausnahme von „keine Rückfragen“, weil die Absage für andere sichtbar ist und sich nicht zurücknehmen lässt.

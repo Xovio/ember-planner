@@ -14,7 +14,6 @@ die Events mit ihm ab, solange die App läuft. Er liest keine Nachrichten. Die E
 
 1. Öffne das [Discord Developer Portal](https://discord.com/developers/applications) und melde dich mit deinem Discord-Konto an.
 2. Klicke oben rechts auf **New Application**, gib als Namen z. B. `Ember Planner` ein, bestätige die Bedingungen und klicke auf **Create**.
-3. Auf der Seite **General Information** steht die **Application ID**. Die brauchst du gleich.
 
 ## 2. Bot vorbereiten
 
@@ -37,7 +36,8 @@ die Events mit ihm ab, solange die App läuft. Er liest keine Nachrichten. Die E
 ## 4. In Ember Planner verbinden
 
 1. Öffne **Optionen → Discord**.
-2. Füge **Application ID** und **Token** ein und klicke auf **Verbinden**. Der Token wird verschlüsselt auf deinem PC gespeichert.
+2. Füge den **Token** ein und klicke auf **Verbinden**. Ember Planner prüft ihn bei Discord und speichert ihn verschlüsselt
+   auf deinem PC (nicht in `data.json` und nicht in Sicherungen).
 3. Klicke auf **Bot zu einem Server einladen**. Es öffnet sich Discord im Browser mit den passenden Rechten:
    - **Kanäle ansehen** und **Verbinden** – um Events in Sprachkanälen anzulegen
    - **Events erstellen** – um Events anzulegen und die eigenen zu ändern oder abzusagen
@@ -45,14 +45,14 @@ die Events mit ihm ab, solange die App läuft. Er liest keine Nachrichten. Die E
    Admin-Team des Servers schicken.
 5. Die Server erscheinen in Ember Planner. Hake an, welche als Kalender angezeigt werden sollen.
 
-Den Einladungslink kannst du auch selbst zusammensetzen (`<ID>` durch deine Application ID ersetzen):
+Den Einladungslink kannst du auch selbst zusammensetzen (`<ID>` durch die **Application ID** von der Seite
+*General Information* im Developer Portal ersetzen):
 
 ```
 https://discord.com/oauth2/authorize?client_id=<ID>&scope=bot&permissions=17592187094016
 ```
 
-Soll Ember Planner auch Events **anderer Mitglieder** ändern dürfen, braucht der Bot zusätzlich **Events verwalten**
-(`permissions=17600777028608`). Das ist nicht nötig, um deine eigenen Sessions anzukündigen.
+Mehr Rechte braucht der Bot nicht: Events anderer Mitglieder zeigt Ember Planner nur an, es ändert sie nicht.
 
 ## Trennen
 

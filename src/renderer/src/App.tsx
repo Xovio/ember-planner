@@ -12,6 +12,8 @@ import { ContextMenu } from './components/ui/ContextMenu'
 import { UniversalAdd } from './components/UniversalAdd'
 import { CommandPalette } from './components/CommandPalette'
 import { ShortcutHelp } from './components/ShortcutHelp'
+import { ConfirmDialog } from './components/ConfirmDialog'
+import { AnnounceDialog } from './components/discord/AnnounceDialog'
 import { CalendarPage } from './pages/CalendarPage'
 import { TodayPage } from './pages/TodayPage'
 import { TodosPage } from './pages/TodosPage'
@@ -55,7 +57,8 @@ export function App(): React.JSX.Element {
       api.onOpenTodo((id) => useStore.getState().selectTodo(id)),
       api.onNewEvent(() => useStore.getState().openAdd('event')),
       api.onRemoteChange((c) => useStore.getState().applyRemote(c)),
-      api.google?.onNotice((text) => useStore.getState().pushToast({ kind: 'info', title: text })) ?? (() => {})
+      api.google?.onNotice((text) => useStore.getState().pushToast({ kind: 'info', title: text })) ?? (() => {}),
+      api.discord?.onNotice((text) => useStore.getState().pushToast({ kind: 'info', title: text })) ?? (() => {})
     ]
     return () => offs.forEach((off) => off())
   }, [])
@@ -93,6 +96,8 @@ export function App(): React.JSX.Element {
       {overlay?.kind === 'add' && <UniversalAdd initialKind={overlay.addKind} prefill={overlay.prefill} />}
       {overlay?.kind === 'palette' && <CommandPalette />}
       {overlay?.kind === 'help' && <ShortcutHelp />}
+      {overlay?.kind === 'announce' && <AnnounceDialog eventId={overlay.eventId} />}
+      <ConfirmDialog />
       <ContextMenu />
       <Toasts />
     </div>
@@ -133,7 +138,7 @@ function useKeyboardShortcuts(): void {
         return
       }
       if (mod || e.altKey) return
-      if (st.overlay || st.contextMenu) return
+      if (st.overlay || st.contextMenu || st.confirm) return
 
       if (k === 'escape') {
         if (st.preview || st.quickCreate) return // popovers close themselves

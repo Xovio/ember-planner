@@ -11,6 +11,7 @@ import { HOLIDAY_REGIONS } from '@shared/holidays'
 import { GoogleSection } from '../components/settings/GoogleSection'
 import { UpdateSection } from '../components/settings/UpdateSection'
 import { TemplatesSection } from '../components/settings/TemplatesSection'
+import { DiscordSection } from '../components/settings/DiscordSection'
 
 export function SettingsPage(): React.JSX.Element {
   const s = useStore((st) => st.data!.settings)
@@ -119,6 +120,8 @@ export function SettingsPage(): React.JSX.Element {
       <TemplatesSection />
 
       <GoogleSection />
+
+      <DiscordSection />
 
       <section className="settings-section">
         <h2>Erinnerungen</h2>

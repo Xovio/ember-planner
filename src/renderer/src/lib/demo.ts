@@ -43,6 +43,16 @@ export function createDemoData(now = new Date()): AppData {
     ...extra
   })
 
+  data.calendars.push({
+    id: 'd:900',
+    name: 'Die Runde',
+    color: 'aqua',
+    visible: true,
+    readOnly: true,
+    defaultReminders: [],
+    external: { provider: 'discord', id: '900' }
+  })
+
   data.events = [
     ev('work', 'Stand-up', at(0, 9), at(0, 9, 30), { recurrence: { freq: 'weekly', interval: 1, byWeekday: [0, 2, 4] } }),
     ev('personal', 'Zahnarzt', at(0, 11), at(0, 12), { location: 'Praxis am Markt' }),
@@ -55,7 +65,23 @@ export function createDemoData(now = new Date()): AppData {
     ev('personal', 'Einkaufen', at(2, 17), at(2, 18)),
     ev('work', 'Kundentermin', at(3, 10), at(3, 11)),
     ev('dnd', 'Weltenbau: Karte der Küste', at(3, 15), at(3, 17)),
-    ev('dnd', 'DnD-Session #12', at(4, 19), at(4, 23), { location: 'Discord' }),
+    ev('dnd', 'DnD-Session #12', at(4, 19), at(4, 23), {
+      location: 'Discord',
+      discord: { guildId: '900', eventId: 'demo-d1', own: true, kind: 'voice', status: 1, userCount: 4 }
+    }),
+    // someone else's events on the Discord server
+    ev('d:900', 'One-Shot: Die Glocke von Varn', at(5, 15), at(5, 19), {
+      location: '🔊 Taverne',
+      reminders: [],
+      external: { provider: 'discord', id: 'demo-d2', calendarId: '900' },
+      discord: { guildId: '900', eventId: 'demo-d2', own: false, status: 1, userCount: 6 }
+    }),
+    ev('d:900', 'Würfelabend', at(2, 20), at(2, 22), {
+      location: '🔊 Taverne',
+      reminders: [],
+      external: { provider: 'discord', id: 'demo-d3', calendarId: '900' },
+      discord: { guildId: '900', eventId: 'demo-d3', own: false, status: 4, userCount: 2 }
+    }),
     ev('personal', 'Brunch', at(5, 11), at(5, 13)),
     ev('dnd', 'Lore-Woche: Nordreich', dayStart(2), dayStart(5), { allDay: true, reminders: [] }),
     ev('personal', 'Geburtstag Mia', dayStart(6), dayStart(7), { allDay: true, reminders: [1440], recurrence: { freq: 'yearly', interval: 1 } })

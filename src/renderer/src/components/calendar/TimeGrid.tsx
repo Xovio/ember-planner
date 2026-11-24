@@ -7,6 +7,7 @@ import { calVar } from '../../lib/theme'
 import { fmt, minutesSinceMidnight, snap, toLocalTime } from '../../lib/dates'
 import { isMultiDay, layoutDay, layoutSpans, type Segment } from './layout'
 import { SpanLanes } from './SpanLanes'
+import { DiscordBadge, discordClass } from '../discord/DiscordBadge'
 import { localDate } from '@shared/todo'
 import { TODO_MIME, todoDrag } from '../../lib/dnd'
 import { DEADLINE_MIME, DeadlineChip } from '../todos/TodoItem'
@@ -311,7 +312,7 @@ export function TimeGrid({ days }: { days: Date[] }): React.JSX.Element {
                 return (
                   <button
                     key={o.key}
-                    className={`chip chip-allday ${selection?.kind === 'event' && selection.id === o.event.id ? 'selected' : ''}`}
+                    className={`chip chip-allday ${selection?.kind === 'event' && selection.id === o.event.id ? 'selected' : ''} ${discordClass(o.event)}`}
                     style={{ '--c': calVar(cal?.color ?? 'red') } as React.CSSProperties}
                     onClick={(e) => clickOccurrence(o.event.id, o.start.toISOString(), e.currentTarget)}
                     onDoubleClick={(e) => {
@@ -449,7 +450,7 @@ function EventBlock({
     <div
       className={`event-block ${compact ? 'compact' : ''} ${dragging ? 'dragging' : ''} ${ev.recurrence ? 'recurring' : ''} ${
         todoDone !== undefined ? 'todo-block' : ''
-      } ${todoDone ? 'todo-done' : ''} ${selected ? 'selected' : ''}`}
+      } ${todoDone ? 'todo-done' : ''} ${selected ? 'selected' : ''} ${discordClass(ev)}`}
       style={
         {
           top,
@@ -465,8 +466,9 @@ function EventBlock({
     >
       <div className="eb-title">
         {todoDone !== undefined && <SquareCheck size={12} className="eb-todo-icon" />}
-        {ev.title || '(Ohne Titel)'}
+        <span className="eb-title-text">{ev.title || '(Ohne Titel)'}</span>
         {compact && <span className="eb-time-inline">{toLocalTime(occ.start)}</span>}
+        <DiscordBadge ev={ev} />
       </div>
       {!compact && (
         <div className="eb-meta">
