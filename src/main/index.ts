@@ -16,7 +16,9 @@ interface FileFilter {
   extensions: string[]
 }
 
-const APP_ID = 'de.ember.planner'
+// Taskbar identity. Must match `build.appId` so the installed shortcut and the window share one pin.
+// Dev runs get their own, otherwise Windows pins electron.exe (without the app) under the real app's id.
+const APP_ID = app.isPackaged ? 'de.ember.planner' : 'de.ember.planner.dev'
 const startHidden = process.argv.includes('--hidden')
 
 let win: BrowserWindow | null = null

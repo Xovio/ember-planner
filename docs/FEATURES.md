@@ -161,7 +161,7 @@ Technik und Entscheidungen: [GOOGLE-SYNC.md](GOOGLE-SYNC.md)
 
 ## Grenzen der aktuellen Version
 
-- Nur **Windows** getestet; kein Installer, Start aus dem Quellcode
+- Nur **Windows** getestet; Installer (`npm run dist`) ist nicht signiert und hat noch kein Auto-Update
 - **Sync nur mit Google Kalender** – ToDos werden nicht zwischen Geräten abgeglichen
 - Google-Serien in einer anderen Zeitzone als der des PCs können rund um die Zeitumstellung um eine Stunde abweichen; `RDATE` wird nicht unterstützt
 - Einzelne Termine einer Serie lassen sich in der App weiterhin nur löschen, nicht einzeln verschieben (in Google geänderte werden korrekt angezeigt)

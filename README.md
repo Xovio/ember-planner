@@ -38,6 +38,27 @@ Alle Funktionen im Detail: **[docs/FEATURES.md](docs/FEATURES.md)**
 | ![Übersicht](docs/screenshots/uebersicht.png) **Übersicht** mit Widgets | ![Befehlspalette](docs/screenshots/befehlspalette.png) **Befehlspalette** (`Strg+K`) |
 | ![Rosé](docs/screenshots/theme-rose.png) **Theme „Rosé“** | |
 
+## Als Desktop-App installieren
+
+```powershell
+npm install
+npm run dist
+```
+
+Das erzeugt `dist\Ember Planner Setup 0.1.0.exe`. Der Installer richtet die App für den aktuellen Benutzer ein
+(ohne Administratorrechte) und legt Startmenü- und Desktop-Verknüpfung an. Zum Anheften an die Taskleiste die App über das
+Startmenü starten, dann Rechtsklick auf das Taskleisten-Symbol → *An Taskleiste anheften*.
+
+- Die installierte App nutzt dieselben Daten wie `npm run dev` (`%APPDATA%\Ember Planner`).
+- Der Installer ist nicht signiert; Windows SmartScreen fragt deshalb beim ersten Start nach (*Weitere Informationen → Trotzdem ausführen*).
+- Nach Code-Änderungen: `npm run dist` erneut ausführen und den neuen Installer drüberinstallieren.
+- `npm run pack` baut nur den Ordner `dist\win-unpacked` (schneller, ohne Installer) – zum Ausprobieren.
+- Das App-Icon wird aus Code gezeichnet; `npm run icon` erzeugt daraus `build\icon.ico`.
+
+> Wer früher während `npm run dev` das Fenster angeheftet hat, hat damit `electron.exe` angeheftet – das öffnet nur das leere
+> Electron. Dieses Symbol lösen und die installierte App anheften. Entwicklungsstarts haben jetzt eine eigene
+> Taskleisten-Kennung, damit das nicht wieder passiert.
+
 ## Installation (aus dem Quellcode)
 
 Voraussetzungen: [Node.js](https://nodejs.org) 22 oder neuer, Git, Windows 10/11.
@@ -53,6 +74,7 @@ npm run dev
 |---|---|
 | `npm run dev` | Desktop-App mit Hot-Reload |
 | `npm run build` / `npm run start` | Produktions-Bundle bauen / starten |
+| `npm run dist` / `npm run pack` | Windows-Installer bauen / nur entpackte App in `dist\win-unpacked` |
 | `npm run web` | Nur die Oberfläche im Browser (http://localhost:5199) – mit `?demo` und Beispieldaten |
 | `npm run typecheck` | TypeScript prüfen |
 | `npm test` | Automatisierte Tests (Vitest) |

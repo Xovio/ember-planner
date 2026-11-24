@@ -12,7 +12,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "web": "vite --config vite.web.config.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "icon": "node --no-warnings scripts/make-icon.mts",
+    "pack": "electron-vite build && electron-builder --win dir",
+    "dist": "electron-vite build && electron-builder --win nsis"
   },
   "dependencies": {
     "date-fns": "^4.1.0",
@@ -25,6 +28,7 @@
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^5.0.0",
     "electron": "^39.0.0",
+    "electron-builder": "^26.18.0",
     "electron-vite": "^4.0.0",
     "lucide-react": "^0.540.0",
     "react": "^19.1.0",
@@ -38,5 +42,35 @@
     "electron@39.8.10": true,
     "esbuild@0.25.12": true,
     "esbuild@0.28.2": true
+  },
+  "author": "Ember Planner",
+  "build": {
+    "appId": "de.ember.planner",
+    "productName": "Ember Planner",
+    "copyright": "MIT-Lizenz",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Ember Planner",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
+    }
   }
 }
