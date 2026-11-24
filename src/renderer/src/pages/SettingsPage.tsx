@@ -11,6 +11,7 @@ import { HOLIDAY_REGIONS } from '@shared/holidays'
 import { GoogleSection } from '../components/settings/GoogleSection'
 import { UpdateSection } from '../components/settings/UpdateSection'
 import { TemplatesSection } from '../components/settings/TemplatesSection'
+import { StylePromptBuilder } from '../components/settings/StylePromptBuilder'
 import { DiscordSection } from '../components/settings/DiscordSection'
 
 export function SettingsPage(): React.JSX.Element {
@@ -53,10 +54,11 @@ export function SettingsPage(): React.JSX.Element {
           >
             <div className="theme-meta">
               <strong>Style wechseln</strong>
-              <span>durchschalten · Style-Prompt-Builder folgt</span>
+              <span>durchschalten</span>
             </div>
           </button>
         </div>
+        <StylePromptBuilder />
       </section>
 
       <section className="settings-section">
