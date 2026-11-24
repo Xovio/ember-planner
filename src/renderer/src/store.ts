@@ -21,6 +21,7 @@ import { isCalendarLocked } from '@shared/google'
 import { api, isDemo } from './lib/api'
 import { holidayOn } from '@shared/holidays'
 import { daysBetween, localDate, nextRecurrence, parseLocalDate } from '@shared/todo'
+import { detachOccurrence, endSeriesBefore, splitSeries } from '@shared/series'
 
 /* ───────────── UI types ───────────── */
 
@@ -147,7 +148,14 @@ interface State {
 
   createEvent(ev: Partial<CalendarEvent> & { start: string; end: string }, opts?: { select?: boolean }): string
   updateEvent(id: string, patch: Partial<CalendarEvent>, coalesce?: string): void
-  deleteEvent(id: string, scope: 'all' | 'one', occurrenceStart?: string): void
+  deleteEvent(id: string, scope: 'all' | 'one' | 'following', occurrenceStart?: string): void
+  /**
+   * Splits a series for editing: 'one' makes the occurrence an own event, 'following' starts a new
+   * series there. Selects and returns the id to edit from now on.
+   */
+  editOccurrence(id: string, occurrenceStart: string, scope: 'one' | 'following'): string
+  /** moves a single occurrence of a series (only this one) */
+  moveOccurrence(id: string, occurrenceStart: string, start: Date, end: Date): void
   duplicateEvent(id: string): void
   moveEvent(id: string, start: Date, end: Date): void
 
@@ -433,8 +441,20 @@ export const useStore = create<State>((set, get) => {
       const ev = get().data?.events.find((e) => e.id === id)
       if (!ev || locked(id)) return
       const title = ev.title || '(Ohne Titel)'
+      const series = !!ev.recurrence && !!occurrenceStart
       mutate(
         (d) => {
+          if (scope === 'following' && series) {
+            const events = endSeriesBefore(d.events, id, occurrenceStart!, stamp())
+            const ids = new Set(events.map((e) => e.id))
+            return {
+              ...d,
+              events,
+              todos: d.todos.map((t) =>
+                t.linkedEventId && !ids.has(t.linkedEventId) ? { ...t, linkedEventId: undefined } : t
+              )
+            }
+          }
           if (scope === 'one' && occurrenceStart && ev.recurrence) {
             return {
               ...d,
@@ -456,13 +476,56 @@ export const useStore = create<State>((set, get) => {
           }
         },
         {
-          label: scope === 'one' && ev.recurrence ? `„${title}“ (ein Termin) gelöscht` : `„${title}“ gelöscht`,
+          label:
+            scope === 'one' && series
+              ? `„${title}“ (ein Termin) gelöscht`
+              : scope === 'following' && series
+                ? `„${title}“ ab diesem Termin gelöscht`
+                : `„${title}“ gelöscht`,
           undoToast: true
         }
       )
       const sel = get().selection
       if (sel?.kind === 'event' && sel.id === id) get().clearSelection()
       set({ preview: null })
+    },
+
+    editOccurrence(id, occurrenceStart, scope) {
+      const ev = get().data?.events.find((e) => e.id === id)
+      if (!ev?.recurrence || locked(id)) return id
+      const title = ev.title || '(Ohne Titel)'
+      let target = id
+      mutate(
+        (d) => {
+          if (scope === 'one') {
+            target = uid()
+            return { ...d, events: detachOccurrence(d.events, id, occurrenceStart, target, stamp()) }
+          }
+          const r = splitSeries(d.events, id, occurrenceStart, uid(), stamp(), uid)
+          target = r.id
+          return r.events === d.events ? d : { ...d, events: r.events }
+        },
+        {
+          label: scope === 'one' ? `„${title}“: Termin aus der Serie gelöst` : `„${title}“: Serie ab hier geteilt`
+        }
+      )
+      if (target !== id) get().selectEvent(target, scope === 'following' ? occurrenceStart : undefined)
+      return target
+    },
+
+    moveOccurrence(id, occurrenceStart, start, end) {
+      if (locked(id)) return
+      const title = get().data?.events.find((e) => e.id === id)?.title || '(Ohne Titel)'
+      mutate(
+        (d) => ({
+          ...d,
+          events: detachOccurrence(d.events, id, occurrenceStart, uid(), stamp(), {
+            start: start.toISOString(),
+            end: end.toISOString()
+          })
+        }),
+        { label: `„${title}“ verschoben (nur dieser Termin)`, undoToast: true }
+      )
     },
 
     duplicateEvent(id) {

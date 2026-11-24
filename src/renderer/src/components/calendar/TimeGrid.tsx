@@ -71,6 +71,7 @@ export function TimeGrid({ days }: { days: Date[] }): React.JSX.Element {
   const selectEvent = useStore((s) => s.selectEvent)
   const openMenu = useStore((s) => s.openMenu)
   const moveEvent = useStore((s) => s.moveEvent)
+  const moveOccurrence = useStore((s) => s.moveOccurrence)
   const scheduleTodo = useStore((s) => s.scheduleTodo)
   const todos = useStore((s) => s.data!.todos)
   const setCursor = useStore((s) => s.setCursor)
@@ -139,7 +140,6 @@ export function TimeGrid({ days }: { days: Date[] }): React.JSX.Element {
     // the original (un-previewed) occurrence
     const occ = timed.find((o) => o.key === seg.occ.key) ?? seg.occ
     const el = (e.currentTarget as HTMLElement).closest('.event-block') as HTMLElement
-    if (occ.event.recurrence) return setDrag({ kind: 'click', occ, el })
     if (resize) return setDrag({ kind: 'resize', occ, el, originMin: min, minDelta: 0 })
     setDrag({ kind: 'move', occ, el, originDay: dayIdx, originMin: min, dayDelta: 0, minDelta: 0 })
   }
@@ -177,15 +177,20 @@ export function TimeGrid({ days }: { days: Date[] }): React.JSX.Element {
     }
     const click = (): void => clickOccurrence(d.occ.event.id, d.occ.start.toISOString(), d.el)
     if (d.kind === 'click') return click()
+    // dragging one occurrence of a series changes only this one
+    const move = (start: Date, end: Date): void =>
+      d.occ.event.recurrence
+        ? moveOccurrence(d.occ.event.id, d.occ.start.toISOString(), start, end)
+        : moveEvent(d.occ.event.id, start, end)
     if (d.kind === 'move') {
       if (d.dayDelta === 0 && d.minDelta === 0) return click()
       const start = addMinutes(addDays(d.occ.start, d.dayDelta), d.minDelta)
-      moveEvent(d.occ.event.id, start, new Date(start.getTime() + (d.occ.end.getTime() - d.occ.start.getTime())))
+      move(start, new Date(start.getTime() + (d.occ.end.getTime() - d.occ.start.getTime())))
       return
     }
     if (d.minDelta === 0) return click()
     const end = addMinutes(d.occ.end, d.minDelta)
-    moveEvent(d.occ.event.id, d.occ.start, end > d.occ.start ? end : addMinutes(d.occ.start, SNAP))
+    move(d.occ.start, end > d.occ.start ? end : addMinutes(d.occ.start, SNAP))
   }
 
   const todoById = useMemo(() => new Map(todos.map((t) => [t.id, t])), [todos])
@@ -462,7 +467,7 @@ function EventBlock({
         </div>
       )}
       {!compact && ev.location && height > 64 && <div className="eb-loc">{ev.location}</div>}
-      {!ev.recurrence && !seg.clippedEnd && (
+      {!seg.clippedEnd && (
         <div className="eb-resize" onPointerDown={(e) => onDown(e, true)} />
       )}
     </div>

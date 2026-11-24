@@ -141,6 +141,32 @@ describe('upload to Google', () => {
     expect(calls.filter((c) => c.method === 'POST')).toHaveLength(1)
   })
 
+  it('a single occurrence changed here patches its instance at Google, not a new event', async () => {
+    const series = gEvent('s1', { recurrence: ['RRULE:FREQ=WEEKLY'] })
+    const { store, sync, calls, ui } = setup((c) => ({ id: c.path.split('/').pop()!, etag: '"i1"' }), [series])
+    await sync.syncNow()
+    const master = store.get().events[0]
+    ui((ev) => [
+      ...ev.map((e) => (e.id === master.id ? { ...e, recurrence: { ...e.recurrence!, exdates: ['2026-12-02T08:00:00.000Z'] } } : e)),
+      local('one', {
+        title: 'Verschoben',
+        seriesId: master.id,
+        originalStart: '2026-12-02T08:00:00.000Z',
+        start: '2026-12-03T13:00:00.000Z',
+        end: '2026-12-03T14:00:00.000Z'
+      })
+    ])
+    await sync.syncNow()
+    const inst = calls.find((c) => c.path === `${calPath}/s1_20261202T080000Z`)!
+    expect(inst).toMatchObject({ method: 'PATCH', body: { summary: 'Verschoben' } })
+    expect(inst.body!.recurrence).toBeUndefined()
+    expect(calls.some((c) => c.method === 'POST')).toBe(false)
+    // the series must not get an EXDATE for it – that would cancel the changed instance
+    const masterPatch = calls.find((c) => c.path === `${calPath}/s1`)
+    if (masterPatch?.body?.recurrence) expect(masterPatch.body.recurrence).toEqual(['RRULE:FREQ=WEEKLY'])
+    expect(store.get().events.find((e) => e.id === 'one')!.external?.id).toBe('s1_20261202T080000Z')
+  })
+
   it('patches only changed fields with If-Match', async () => {
     const { sync, calls, ui } = setup(() => ({ id: 'g1', etag: '"e2"' }), [gEvent('g1')])
     await sync.syncNow() // pull the event

@@ -947,3 +947,34 @@ fieldset.details-body:disabled {
   color: var(--text-3);
   font-size: 11px;
 }
+
+/* series: edit only this occurrence / this and following */
+.series-scope {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  align-items: flex-start;
+  margin: 0 18px 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.series-scope > svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.series-scope > span {
+  flex: 1;
+  min-width: 0;
+}
+.series-scope-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+  padding-left: 22px;
+}

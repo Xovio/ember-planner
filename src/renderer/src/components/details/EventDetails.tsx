@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import type { CalendarEvent, Recurrence, RecurrenceFreq } from '@shared/types'
 import { weekdayIndex } from '@shared/recurrence'
+import { isFirstOccurrence } from '@shared/series'
 import { isCalendarLocked } from '@shared/google'
 import { isEventLocked, useStore } from '../../store'
 import { calVar } from '../../lib/theme'
@@ -125,6 +126,9 @@ export function EventDetails({ id, occurrenceStart }: { id: string; occurrenceSt
   const duplicate = useStore((s) => s.duplicateEvent)
   const toggleTodo = useStore((s) => s.toggleTodo)
   const selectTodo = useStore((s) => s.selectTodo)
+  const selectEvent = useStore((s) => s.selectEvent)
+  const editOccurrence = useStore((s) => s.editOccurrence)
+  const hasSeries = useStore((s) => !!ev?.seriesId && !!s.data?.events.some((e) => e.id === ev.seriesId))
   const clear = useStore((s) => s.clearSelection)
   const isLocked = useStore((s) => isEventLocked(s.data!, ev))
 
@@ -200,9 +204,44 @@ export function EventDetails({ id, occurrenceStart }: { id: string; occurrenceSt
           <button className="btn btn-danger sm" onClick={() => del(ev.id, 'one', occurrenceStart)}>
             Nur diesen
           </button>
+          <button className="btn btn-danger-outline sm" onClick={() => del(ev.id, 'following', occurrenceStart)}>
+            Diesen und folgende
+          </button>
           <button className="btn btn-danger-outline sm" onClick={() => del(ev.id, 'all')}>
             Ganze Serie
           </button>
+        </div>
+      )}
+
+      {rec && occurrenceStart && !isLocked && (
+        <div className="series-scope">
+          <Repeat size={14} />
+          <span>
+            Termin einer Serie am {fmt(new Date(occurrenceStart), 'EEE, d. MMM')}. Änderungen hier gelten für{' '}
+            <strong>alle</strong> Termine der Serie.
+          </span>
+          <div className="series-scope-actions">
+            <button className="btn btn-ghost sm" onClick={() => editOccurrence(ev.id, occurrenceStart, 'one')}>
+              Nur diesen bearbeiten
+            </button>
+            {!isFirstOccurrence(ev, occurrenceStart) && (
+              <button className="btn btn-ghost sm" onClick={() => editOccurrence(ev.id, occurrenceStart, 'following')}>
+                Diesen und folgende
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {ev.seriesId && (
+        <div className="series-scope">
+          <Repeat size={14} />
+          <span>Einzeln geänderter Termin einer Serie – Änderungen gelten nur für ihn.</span>
+          {hasSeries && (
+            <button className="link-btn" onClick={() => selectEvent(ev.seriesId!)}>
+              Zur Serie
+            </button>
+          )}
         </div>
       )}
 
