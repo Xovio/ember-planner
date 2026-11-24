@@ -1,6 +1,6 @@
 # Funktionen & Umfang
 
-Stand: Version 0.1 (24. November 2026: Google-Sync, Schnelle Gewinne 2.6, Ideen-Boards 2.7, Windows-Installer). Was die App heute kann, wo ihre Grenzen liegen und was bewusst noch fehlt.
+Stand: Version 0.2 (24. November 2026: Auto-Update, Google-Sync, Schnelle Gewinne 2.6, Ideen-Boards 2.7, Windows-Installer). Was die App heute kann, wo ihre Grenzen liegen und was bewusst noch fehlt.
 Ausblick und Ideen stehen in der [Roadmap](ROADMAP.md).
 
 ## Aufbau der Oberfläche
