@@ -53,7 +53,9 @@ export function App(): React.JSX.Element {
         st.selectEvent(id)
       }),
       api.onOpenTodo((id) => useStore.getState().selectTodo(id)),
-      api.onNewEvent(() => useStore.getState().openAdd('event'))
+      api.onNewEvent(() => useStore.getState().openAdd('event')),
+      api.onRemoteChange((c) => useStore.getState().applyRemote(c)),
+      api.google?.onNotice((text) => useStore.getState().pushToast({ kind: 'info', title: text })) ?? (() => {})
     ]
     return () => offs.forEach((off) => off())
   }, [])

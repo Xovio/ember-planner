@@ -16,6 +16,8 @@ import {
   type Todo,
   type TodoList
 } from '@shared/types'
+import { applyPatch, type RemoteChange } from '@shared/patch'
+import { isCalendarLocked } from '@shared/google'
 import { api, isDemo } from './lib/api'
 import { holidayOn } from '@shared/holidays'
 import { daysBetween, localDate, nextRecurrence, parseLocalDate } from '@shared/todo'
@@ -117,6 +119,8 @@ interface State {
   boardId: string | null
 
   init(): Promise<void>
+  /** change from the main process (e.g. Google sync) – not an undo step */
+  applyRemote(change: RemoteChange): void
   setPage(p: Page): void
   setView(v: CalendarViewKind): void
   setCursor(d: Date): void
@@ -194,10 +198,33 @@ export const uid = (): string =>
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2) + Date.now().toString(36)
 
+/** number of the last remote change contained in the local data */
+let remoteSeq = 0
 let saveTimer: ReturnType<typeof setTimeout> | null = null
-function persist(data: AppData): void {
+/** saves the newest state (read when the timer fires, so remote changes received meanwhile are included) */
+function persist(): void {
   if (saveTimer) clearTimeout(saveTimer)
-  saveTimer = setTimeout(() => void api.save(data), 250)
+  saveTimer = setTimeout(() => {
+    saveTimer = null
+    const data = useStore.getState().data
+    if (data) void api.save(data, remoteSeq)
+  }, 250)
+}
+
+/** calendars new events may go into (not read-only, not a Google calendar while writing back is off) */
+export function writableCalendars(data: AppData): CalendarInfo[] {
+  return data.calendars.filter((c) => !isCalendarLocked(c))
+}
+
+/** first writable calendar, preferring `preferred` and visible ones */
+function writableCalendarId(data: AppData, preferred?: string): string {
+  const ok = writableCalendars(data)
+  if (preferred && ok.some((c) => c.id === preferred)) return preferred
+  return (ok.find((c) => c.visible) ?? ok[0] ?? data.calendars[0])?.id ?? 'personal'
+}
+
+export function isEventLocked(data: AppData, ev: CalendarEvent | undefined): boolean {
+  return !!ev && isCalendarLocked(data.calendars.find((c) => c.id === ev.calendarId))
 }
 
 const HISTORY_MAX = 100
@@ -231,7 +258,7 @@ export const useStore = create<State>((set, get) => {
       future.length = 0
     }
     set({ data: next })
-    persist(next)
+    persist()
     if (record) syncHistoryFlags()
     if (opts.undoToast && opts.label) get().pushToast({ kind: 'undo', title: opts.label })
   }
@@ -247,6 +274,14 @@ export const useStore = create<State>((set, get) => {
         ? data.events.some((e) => e.id === selection.id)
         : data.todos.some((t) => t.id === selection.id) || data.trash.some((t) => t.id === selection.id)
     if (!exists) get().clearSelection()
+  }
+
+  /** true (and a hint) when the event can't be changed here */
+  const locked = (id: string): boolean => {
+    const data = get().data
+    if (!data || !isEventLocked(data, data.events.find((e) => e.id === id))) return false
+    get().pushToast({ kind: 'info', title: 'Dieser Kalender ist schreibgeschützt' })
+    return true
   }
 
   return {
@@ -269,7 +304,8 @@ export const useStore = create<State>((set, get) => {
     boardId: null,
 
     async init() {
-      const data = await api.load()
+      const { data, seq } = await api.load()
+      remoteSeq = seq
       set({ data, view: data.settings.defaultView })
       // empty the trash of entries older than TRASH_DAYS (not undoable: they expired)
       const cutoff = new Date(Date.now() - TRASH_DAYS * 86400000).toISOString()
@@ -326,6 +362,17 @@ export const useStore = create<State>((set, get) => {
     openHelp: () => set({ overlay: { kind: 'help' }, quickCreate: null, preview: null, contextMenu: null }),
     closeOverlay: () => set({ overlay: null }),
 
+    applyRemote({ seq, patch }) {
+      const cur = get().data
+      // before load finished the loaded data already contains it; older numbers were seen already
+      if (!cur || seq <= remoteSeq) return
+      remoteSeq = seq
+      // rebase the undo history so undoing a local step does not revert the remote change
+      for (const entry of past) entry.data = applyPatch(entry.data, patch)
+      for (const entry of future) entry.data = applyPatch(entry.data, patch)
+      set({ data: applyPatch(cur, patch) })
+    },
+
     /* ── history ── */
     undo() {
       const cur = get().data
@@ -334,7 +381,7 @@ export const useStore = create<State>((set, get) => {
       future.push({ data: cur, label: entry.label })
       lastCoalesce = null
       set({ data: entry.data })
-      persist(entry.data)
+      persist()
       syncHistoryFlags()
       dropStaleSelection()
       get().pushToast({ kind: 'info', title: `Rückgängig: ${entry.label}` })
@@ -346,7 +393,7 @@ export const useStore = create<State>((set, get) => {
       past.push({ data: cur, label: entry.label })
       lastCoalesce = null
       set({ data: entry.data })
-      persist(entry.data)
+      persist()
       syncHistoryFlags()
       dropStaleSelection()
       get().pushToast({ kind: 'info', title: `Wiederholt: ${entry.label}` })
@@ -356,18 +403,17 @@ export const useStore = create<State>((set, get) => {
     createEvent(partial, opts = {}) {
       const data = get().data
       if (!data) return ''
-      const firstVisible = data.calendars.find((c) => c.visible) ?? data.calendars[0]
       const ts = stamp()
       const ev: CalendarEvent = {
         id: uid(),
-        calendarId: firstVisible?.id ?? 'personal',
         title: '',
         allDay: false,
         reminders: [...data.settings.defaultReminders],
         recurrence: null,
         createdAt: ts,
         updatedAt: ts,
-        ...partial
+        ...partial,
+        calendarId: writableCalendarId(data, partial.calendarId)
       }
       mutate((d) => ({ ...d, events: [...d.events, ev] }), { label: 'Termin angelegt' })
       set({ quickCreate: null })
@@ -376,6 +422,7 @@ export const useStore = create<State>((set, get) => {
     },
 
     updateEvent(id, patch, coalesce) {
+      if (locked(id)) return
       mutate(
         (d) => ({ ...d, events: d.events.map((e) => (e.id === id ? { ...e, ...patch, updatedAt: stamp() } : e)) }),
         { label: 'Termin bearbeitet', coalesce: coalesce ? `ev:${id}:${coalesce}` : undefined }
@@ -384,7 +431,7 @@ export const useStore = create<State>((set, get) => {
 
     deleteEvent(id, scope, occurrenceStart) {
       const ev = get().data?.events.find((e) => e.id === id)
-      if (!ev) return
+      if (!ev || locked(id)) return
       const title = ev.title || '(Ohne Titel)'
       mutate(
         (d) => {
@@ -419,14 +466,25 @@ export const useStore = create<State>((set, get) => {
     },
 
     duplicateEvent(id) {
-      const ev = get().data?.events.find((e) => e.id === id)
-      if (!ev) return
-      const copy: CalendarEvent = { ...structuredClone(ev), id: uid(), todoId: undefined, external: undefined }
+      const data = get().data
+      const ev = data?.events.find((e) => e.id === id)
+      if (!data || !ev) return
+      // a copy of a Google event lands in a local calendar; single changed occurrences become plain events
+      const copy: CalendarEvent = {
+        ...structuredClone(ev),
+        id: uid(),
+        calendarId: writableCalendarId(data, ev.calendarId),
+        todoId: undefined,
+        external: undefined,
+        seriesId: undefined,
+        originalStart: undefined
+      }
       mutate((d) => ({ ...d, events: [...d.events, copy] }), { label: 'Termin dupliziert', undoToast: true })
       get().selectEvent(copy.id)
     },
 
     moveEvent(id, start, end) {
+      if (locked(id)) return
       mutate(
         (d) => ({
           ...d,
@@ -678,9 +736,7 @@ export const useStore = create<State>((set, get) => {
       const todo = data?.todos.find((t) => t.id === todoId)
       if (!data || !todo) return
       const ts = stamp()
-      const calId = data.calendars.some((c) => c.id === data.settings.todoCalendarId)
-        ? data.settings.todoCalendarId
-        : data.calendars[0].id
+      const calId = writableCalendarId(data, data.settings.todoCalendarId)
       const ev: CalendarEvent = {
         id: uid(),
         calendarId: calId,

@@ -21,18 +21,19 @@ Wohin sich Ember Planner entwickeln soll. Was schon da ist: [Funktionen & Umfang
 | 2.5 | UX-Überarbeitung: eine Arbeitsfläche, Popups, Detailspalte, Schnelleingabe, Befehlspalette, Undo, Kontextmenüs | ✅ fertig |
 | 2.6 | Schnelle Gewinne: wiederkehrende ToDos, Feiertage, Tastenkürzel-Übersicht, Export/Import, automatische Backups, Archiv & Papierkorb, automatisierte Tests | ✅ fertig |
 | 2.7 | Ideen-Boards: Brainstorm-Fläche mit Zetteln, Rahmen, Pfeilen und Punkten · Zusammenfassen · Export als Obsidian-Notiz und `.canvas` | ✅ fertig |
-| 3 | Google-Kalender-Sync (2-Wege, OAuth) | geplant |
+| 3 | Google-Kalender-Sync (2-Wege, OAuth) | ✅ fertig |
 | 4 | Obsidian-Anbindung & Claude-Integration | geplant – Konzept vorher gemeinsam festlegen |
 | 5 | Verteilung: Installer, Auto-Update | geplant |
 | 6 | Mobile-Version | geplant |
 
-## Phase 3 – Google Kalender
+## Phase 3 – Google Kalender ✅
 
-- Anmeldung per OAuth (eigenes Google-Cloud-Projekt, Anleitung in der App)
-- Kalenderliste aus Google übernehmen, pro Kalender Sync an/aus
-- 2-Wege-Sync mit `syncToken` und ETags; Konflikte: neuere Änderung gewinnt, Hinweis bei Kollision
-- Wiederholungen (RRULE) und Ausnahmen korrekt abbilden
-- Offline-Änderungen sammeln und später übertragen
+Umgesetzt – Details in [GOOGLE-SYNC.md](GOOGLE-SYNC.md), Einrichtung in [GOOGLE-SETUP.md](GOOGLE-SETUP.md).
+Offen geblieben:
+
+- Lokalen Kalender zu Google hochladen („Kalender zu Google hochladen“)
+- Einzelne Termine einer Serie in der App verschieben/bearbeiten („nur dieser“) – das Datenmodell (`seriesId`/`originalStart`) steht
+- Serien in fremden Zeitzonen exakt expandieren, `RDATE` unterstützen
 - Optional: einmaliger Import per ICS-Datei / iCal-Adresse
 
 ## Phase 4 – Obsidian & Claude
@@ -47,6 +48,10 @@ Ideen:
 - **Dataview-freundlich:** Tags und Felder so wählen, dass bestehende Dataview-Abfragen funktionieren
 - **DnD-Kampagnen:** Session-Notizen mit Datum werden zu Terminen; Prep-ToDos einer Session hängen am Termin;
   Countdown-Widget „Tage bis zur nächsten Session“ mit offenen Prep-Aufgaben
+- **Discord-Events:** über einen eigenen Bot die geplanten Events ausgewählter Server (z. B. DnD-Runde) als Kalender
+  einblenden – inkl. Anzahl „Interessiert“ – und Sessions aus dem Kalender per „In Discord ankündigen“ als Server-Event
+  anlegen; verschiebt man die Session, wandert das Discord-Event mit. Baut auf dem Sync-Fundament aus Phase 3 auf
+  (Patches, Outbox, verschlüsselter Token-Speicher). Konzept vorher abstimmen.
 - **Claude-Anbindung (MCP-Server):** Claude kann Termine und ToDos lesen, anlegen und abhaken – z. B. „plane mir die
   Session-Vorbereitung bis Freitag ein“ oder ToDos aus einer Projektnotiz ableiten (immer mit Bestätigung)
 - **Board zusammenfassen lassen:** Knopf im Zusammenfassen-Panel – Claude schlägt Kernaussagen, offene Fragen und nächste
@@ -89,7 +94,7 @@ Ideen:
 - Abhängigkeiten („erst nach …“)
 - Anhänge und Links
 - ~~Archiv und Papierkorb mit Wiederherstellen~~ ✅ 2.6 (für ToDos)
-- Papierkorb auch für Termine – erst nach dem Google-Sync, damit Löschen und Wiederherstellen dort sauber ankommen
+- Papierkorb auch für Termine – jetzt möglich, da der Google-Sync steht; Wiederherstellen muss dort sauber ankommen
 - Filter speichern (z. B. „DnD, nächste 14 Tage, Priorität hoch“)
 
 **Oberfläche**
@@ -108,7 +113,7 @@ Ideen:
 **Technik**
 - ~~Automatisierte Tests (Wiederholungslogik, Schnelleingabe-Parser, Tasks-Format)~~ ✅ 2.6 · Oberflächen-Tests (z. B. Playwright) fehlen noch
 - SQLite statt JSON für große Datenmengen
-- ~~Export/Import (JSON, ICS, Markdown im Tasks-Format) und automatische Backups~~ ✅ 2.6 · ICS-Import folgt mit Phase 3
+- ~~Export/Import (JSON, ICS, Markdown im Tasks-Format) und automatische Backups~~ ✅ 2.6 · ICS-Datei-Import siehe Phase 3 (optional)
 - Wiederkehrende ToDos: Ende der Serie (am Datum / nach N) in der Oberfläche einstellbar – die Logik kann es schon
 - Verschlüsselte Sicherung in der Cloud (optional)
 
