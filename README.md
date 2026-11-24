@@ -73,10 +73,12 @@ Startmenü starten, dann Rechtsklick auf das Taskleisten-Symbol → *An Taskleis
    git push origin v0.2.0
    ```
 
-3. Die GitHub Action *Release* prüft, testet, baut den Installer und veröffentlicht ihn samt `latest.yml` als Release.
+3. Die GitHub Action *Release* prüft und testet, legt einen Release-Entwurf an, lädt Installer, `.blockmap` und
+   `latest.yml` hoch und veröffentlicht den Entwurf erst, wenn alle drei Dateien da sind.
    Installierte Apps finden die Version danach von selbst.
 
 Ohne GitHub Action geht es auch lokal: `$env:GH_TOKEN = '<token>'; npm run release` (Token mit Schreibrecht auf das Repo).
+Das legt einen *Entwurf* an; veröffentlicht wird er auf GitHub von Hand.
 
 ## Installation (aus dem Quellcode)
 
@@ -94,7 +96,7 @@ npm run dev
 | `npm run dev` | Desktop-App mit Hot-Reload |
 | `npm run build` / `npm run start` | Produktions-Bundle bauen / starten |
 | `npm run dist` / `npm run pack` | Windows-Installer bauen / nur entpackte App in `dist\win-unpacked` |
-| `npm run release` | Installer bauen und als GitHub Release veröffentlichen (braucht `GH_TOKEN`, sonst über Tag + Action) |
+| `npm run release` | Installer bauen und als Release-Entwurf hochladen (braucht `GH_TOKEN`; normalerweise über Tag + Action) |
 | `npm run web` | Nur die Oberfläche im Browser (http://localhost:5199) – mit `?demo` und Beispieldaten |
 | `npm run typecheck` | TypeScript prüfen |
 | `npm test` | Automatisierte Tests (Vitest) |

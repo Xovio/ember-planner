@@ -80,7 +80,7 @@
         "provider": "github",
         "owner": "Xovio",
         "repo": "ember-planner",
-        "releaseType": "release"
+        "releaseType": "draft"
       }
     ]
   }
