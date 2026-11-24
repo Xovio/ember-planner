@@ -82,7 +82,8 @@ Hintergründe und Quellen sammeln wir in einer eigenen Recherche-Notiz (`docs/AD
   wird in den Kalender der Woche gezogen und gilt dann als geplant, danach abhakbar. Optional ein Standard-Zeitbereich
   (z. B. Mo–Fr 17–20 Uhr), in dem die Bausteine stattfinden sollen – dort werden sie beim Ziehen hervorgehoben
 - **Gamification:** Punkte fürs Abhaken (Ziele, ToDos, Sessions), Wochenfortschritt, kleine Erfolge – motivierend, nie strafend
-- **Plugin-/Widget-System** nach dem Vorbild von Obsidian; die linke Leiste als Andockpunkt (Konzept folgt in `docs/PLUGINS.md`)
+- **Plugin-/Widget-System** nach dem Vorbild von Obsidian; die linke Leiste als Andockpunkt in drei Stufen: interne Widget-API → Plugins aus einem Ordner (abgeschottet, mit Rechten) → Katalog.
+  Konzept: [PLUGINS.md](PLUGINS.md)
 
 ## Ideen-Sammlung
 
