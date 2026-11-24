@@ -32,6 +32,7 @@ const discord: DiscordApi = {
   disconnect: () => ipcRenderer.invoke('discord:disconnect'),
   guilds: () => ipcRenderer.invoke('discord:guilds'),
   setEnabled: (guild: DiscordGuildEntry, enabled: boolean) => ipcRenderer.invoke('discord:setEnabled', guild, enabled),
+  setShowAll: (guildId: string, all: boolean) => ipcRenderer.invoke('discord:setShowAll', guildId, all),
   channels: (guildId: string) => ipcRenderer.invoke('discord:channels', guildId),
   announce: (eventId: string, opts: AnnounceOptions) => ipcRenderer.invoke('discord:announce', eventId, opts),
   syncNow: () => ipcRenderer.invoke('discord:syncNow'),

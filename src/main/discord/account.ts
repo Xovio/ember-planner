@@ -8,7 +8,16 @@ interface Credentials {
   token: string
   applicationId: string
   bot: string
+  /** Discord user who owns the bot (= the user of this app); older logins don't have it yet */
+  ownerId?: string
 }
+
+interface AppInfo {
+  id: string
+  owner?: { id: string } | null
+  team?: { owner_user_id?: string } | null
+}
+const ownerOf = (a: AppInfo): string | undefined => a.team?.owner_user_id || a.owner?.id || undefined
 
 export interface DiscordAccountDeps {
   dir: string
@@ -97,6 +106,18 @@ export class DiscordAccount {
     return !!this.creds
   }
 
+  /** your own Discord user id (the bot's owner) – asked once and remembered */
+  async ownerId(): Promise<string | undefined> {
+    if (!this.creds) return undefined
+    if (this.creds.ownerId) return this.creds.ownerId
+    const id = ownerOf(await this.request<AppInfo>('/oauth2/applications/@me'))
+    if (id && this.creds) {
+      this.creds = { ...this.creds, ownerId: id }
+      this.write()
+    }
+    return id
+  }
+
   private emit(): DiscordStatus {
     const s = this.status()
     this.deps.onStatus?.(s)
@@ -111,8 +132,9 @@ export class DiscordAccount {
     }
     const me = await this.call<{ id: string; username: string; bot?: boolean }>(token, '/users/@me')
     if (!me.bot) throw new Error('Das ist kein Bot-Token. Bitte den Token aus dem Reiter „Bot“ verwenden.')
-    const appInfo = await this.call<{ id: string }>(token, '/oauth2/applications/@me')
-    this.creds = { token, applicationId: appInfo.id, bot: me.username }
+    const appInfo = await this.call<AppInfo>(token, '/oauth2/applications/@me')
+    const ownerId = ownerOf(appInfo)
+    this.creds = { token, applicationId: appInfo.id, bot: me.username, ...(ownerId ? { ownerId } : {}) }
     this.error = undefined
     this.write()
     return this.emit()

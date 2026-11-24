@@ -54,6 +54,14 @@ https://discord.com/oauth2/authorize?client_id=<ID>&scope=bot&permissions=175921
 
 Mehr Rechte braucht der Bot nicht: Events anderer Mitglieder zeigt Ember Planner nur an, es ändert sie nicht.
 
+> **Fehlt ein Event?** Discord zeigt dem Bot nur Events in Kanälen, die er sehen darf. Liegt eure Session in einem privaten
+> Sprachkanal oder einer Kategorie nur für eine Rolle, gib der Rolle des Bots dort **Kanal ansehen** (oder gib dem Bot die
+> Rolle eurer Gruppe). Administrator-Rechte gehen auch, sind aber mehr als nötig.
+
+Standardmäßig zeigt Ember Planner nur Events, bei denen **du** auf „Interessiert“ geklickt oder die du erstellt hast. „Du“ ist
+dabei der Besitzer des Bots im Developer Portal. Alle Events eines Servers: *Optionen → Discord →* „auch Events ohne dein
+Interessiert“.
+
 ## Trennen
 
 - In Ember Planner: **Optionen → Discord → Trennen** löscht den gespeicherten Token. Bei Discord wird dabei nichts gelöscht.

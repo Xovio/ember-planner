@@ -61,8 +61,11 @@ export function registerDiscordIpc(
   ipcMain.handle('discord:guilds', () =>
     wrap(async (): Promise<DiscordGuildEntry[]> => {
       const guilds = await account.guilds()
-      const shown = new Set(store.get().calendars.map((c) => c.id))
-      return guilds.map((g) => ({ id: g.id, name: g.name, enabled: shown.has(discordCalendarLocalId(g.id)) }))
+      const cals = new Map(store.get().calendars.map((c) => [c.id, c]))
+      return guilds.map((g) => {
+        const cal = cals.get(discordCalendarLocalId(g.id))
+        return { id: g.id, name: g.name, enabled: !!cal, showAll: !!cal?.discordAll }
+      })
     })
   )
 
@@ -81,6 +84,19 @@ export function registerDiscordIpc(
       } else {
         store.applyRemote(removeGuildCalendarsPatch(data, [id]))
       }
+      return true
+    })
+  )
+
+  ipcMain.handle('discord:setShowAll', (_e, guildId: string, all: boolean) =>
+    wrap(() => {
+      const cal = store.get().calendars.find((c) => c.id === discordCalendarLocalId(guildId))
+      if (!cal) return false
+      const next = { ...cal }
+      if (all) next.discordAll = true
+      else delete next.discordAll
+      store.applyRemote({ calendars: { upsert: [next] } })
+      void sync.syncNow()
       return true
     })
   )

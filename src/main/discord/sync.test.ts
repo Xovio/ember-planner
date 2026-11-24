@@ -269,3 +269,60 @@ describe('following an announced event', () => {
     expect(ctx.store.get().events.find((e) => e.id === 's1')!.discord?.status).toBe(4)
   })
 })
+
+describe('only your events', () => {
+  /** fake Discord that knows who is interested in which event; you are "me" */
+  function withInterest(events: DEvent[], interested: Record<string, string[]>, owner: string | null = 'me') {
+    const store = new DataStore()
+    store.applyRemote({ calendars: { upsert: [local, guildCal] } })
+    const paths: string[] = []
+    const account = {
+      isConnected: true,
+      ownerId: async () => owner ?? undefined,
+      request: vi.fn(async (path: string) => {
+        paths.push(path)
+        const m = path.match(/scheduled-events\/([^/]+)\/users/)
+        if (m) return (interested[m[1]] ?? []).map((id) => ({ user: { id } }))
+        if (path.includes('/channels')) return []
+        return events
+      })
+    }
+    const sync = new DiscordSync({ store, account: account as never, dir, now: () => NOW })
+    return { store, sync, paths }
+  }
+  const shown = (store: InstanceType<typeof DataStore>): string[] =>
+    store.get().events.map((e) => e.id).sort()
+
+  it('shows only events you are interested in or created', async () => {
+    const { store, sync } = withInterest(
+      [dEvent('mine'), dEvent('other'), dEvent('created', { creator_id: 'me' })],
+      { mine: ['someone', 'me'], other: ['someone'] }
+    )
+    await sync.syncNow()
+    expect(shown(store)).toEqual(['d:created', 'd:mine'])
+  })
+
+  it('drops an event once you are no longer interested', async () => {
+    const interested = { e1: ['me'] }
+    const { store, sync } = withInterest([dEvent('e1')], interested)
+    await sync.syncNow()
+    expect(shown(store)).toEqual(['d:e1'])
+    interested.e1 = []
+    await sync.syncNow()
+    expect(shown(store)).toEqual([])
+  })
+
+  it('"auch Events ohne dein Interessiert" shows the whole server', async () => {
+    const { store, sync, paths } = withInterest([dEvent('a'), dEvent('b')], {})
+    store.applyRemote({ calendars: { upsert: [{ ...guildCal, discordAll: true }] } })
+    await sync.syncNow()
+    expect(shown(store)).toEqual(['d:a', 'd:b'])
+    expect(paths.some((p) => p.includes('/users'))).toBe(false)
+  })
+
+  it('without a known owner nothing is hidden', async () => {
+    const { store, sync } = withInterest([dEvent('a')], {}, null)
+    await sync.syncNow()
+    expect(shown(store)).toEqual(['d:a'])
+  })
+})
