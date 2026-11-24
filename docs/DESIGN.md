@@ -30,7 +30,8 @@ Akiflow, Sunsama, Motion, Morgen, TickTick, Todoist, ClickUp und dem Obsidian-Pl
 └────┴──────────────┴───────────────────────────────────────┴──────────────┘
 ```
 
-- **Navigationsleiste (links, schmal):** Heute · Kalender · ToDos · (Obsidian, später) · Einstellungen
+- **Navigationsleiste (links, schmal):** Planen · ToDos · Übersicht · Ideen · Suchen · Optionen (Stand 2.7; ursprünglich geplant:
+  Heute · Kalender · ToDos · Obsidian · Einstellungen)
 - **Kalenderansichten:** Tag, Woche, Monat, Agenda. Montag als Wochenstart, 24-h-Format, deutsche Lokalisierung.
 - **Termineditor als Seitendialog:** Titel, Ganztägig, Start/Ende, Kalender, Ort, Notizen, Wiederholung, mehrere Erinnerungen.
 - **Tastenkürzel:** `T` Heute · `D/W/M/A` Ansicht · `←/→` blättern · `N` neuer Termin · `Esc` schließen.
@@ -74,8 +75,9 @@ Für die Startseite „Heute“ und später ein frei anordenbares Dashboard:
 > Aktueller Stand und weitere Ideen: [ROADMAP.md](ROADMAP.md) · Funktionsumfang: [FEATURES.md](FEATURES.md)
 
 
-1. Grundgerüst, Theme, Kalender (Tag/Woche/Monat/Agenda), Termine, Wiederholung, Erinnerungen, Tray, Heute-Ansicht mit ersten Widgets
-2. ✅ ToDos (Listen, Kategorien, harte/weiche Deadlines, Unteraufgaben, Zeitschätzung), Seitenleiste im Kalender, Drag & Drop, Schnelleingabe, Deadline-Widgets, Deadline-Erinnerungen · offen: Befehlspalette, Eisenhower-Matrix
-3. Google-Kalender 2-Wege-Sync
+1. ✅ Grundgerüst, Theme, Kalender (Tag/Woche/Monat/Agenda), Termine, Wiederholung, Erinnerungen, Tray, Heute-Ansicht mit ersten Widgets
+2. ✅ ToDos (Listen, Kategorien, harte/weiche Deadlines, Unteraufgaben, Zeitschätzung), Seitenleiste im Kalender, Drag & Drop, Schnelleingabe, Deadline-Widgets, Deadline-Erinnerungen, Befehlspalette · offen: Eisenhower-Matrix
+3. ✅ Google-Kalender 2-Wege-Sync (dazwischen: 2.6 Schnelle Gewinne, 2.7 Ideen-Boards)
 4. Obsidian- und Claude-Anbindung (nach Absprache)
-5. Mobile (Capacitor)
+5. Verteilung: ✅ Installer · offen: Signatur, Auto-Update
+6. Mobile (Capacitor)

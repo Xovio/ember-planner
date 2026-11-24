@@ -1,6 +1,6 @@
 # Funktionen & Umfang
 
-Stand: Version 0.1 (November 2026). Was die App heute kann, wo ihre Grenzen liegen und was bewusst noch fehlt.
+Stand: Version 0.1 (24. November 2026: Google-Sync, Schnelle Gewinne 2.6, Ideen-Boards 2.7, Windows-Installer). Was die App heute kann, wo ihre Grenzen liegen und was bewusst noch fehlt.
 Ausblick und Ideen stehen in der [Roadmap](ROADMAP.md).
 
 ## Aufbau der Oberfläche
@@ -157,11 +157,14 @@ Technik und Entscheidungen: [GOOGLE-SYNC.md](GOOGLE-SYNC.md)
 - Datenmodell vorbereitet für Obsidian-Quellen (Datei + Zeile)
 - **Automatisierte Tests** (`npm test`, Vitest): Wiederholungen, iCalendar-Regeln, Google-Mapping, Sync und Hochladen,
   Schnelleingabe, Tasks-Format, Feiertage, Export/Import, Board-Gliederung, Markdown- und Canvas-Export
+- **Windows-Installer** (`npm run dist`, electron-builder/NSIS): pro Benutzer ohne Adminrechte, Startmenü- und
+  Desktop-Verknüpfung, eigenes App-Icon; die installierte App lässt sich an die Taskleiste anheften und nutzt dieselben Daten
+  wie der Entwicklungsstart
 - Web-Build (`npm run web`) mit Demo-Modus `?demo` – Grundlage für eine spätere Mobil-/Web-Version
 
 ## Grenzen der aktuellen Version
 
-- Nur **Windows** getestet; kein Installer, Start aus dem Quellcode
+- Nur **Windows** getestet; Installer (`npm run dist`) ist nicht signiert und hat noch kein Auto-Update
 - **Sync nur mit Google Kalender** – ToDos werden nicht zwischen Geräten abgeglichen
 - Google-Serien in einer anderen Zeitzone als der des PCs können rund um die Zeitumstellung um eine Stunde abweichen; `RDATE` wird nicht unterstützt
 - Einzelne Termine einer Serie lassen sich in der App weiterhin nur löschen, nicht einzeln verschieben (in Google geänderte werden korrekt angezeigt)
