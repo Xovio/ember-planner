@@ -9,8 +9,8 @@ damit eine spätere Obsidian-Anbindung nahtlos passt.
 
 ![Planen – Wochenansicht mit ToDo-Spalte](docs/screenshots/planen-woche.png)
 
-> Status: **frühe Version (0.1)** für Windows. Läuft lokal, Daten bleiben auf dem eigenen Rechner –
-> optional mit **2-Wege-Sync zu Google Kalender**. Obsidian-Anbindung ist geplant – siehe [Roadmap](docs/ROADMAP.md).
+> Status: **frühe Version (0.1)** für Windows, als Installer baubar (`npm run dist`). Läuft lokal, Daten bleiben auf dem
+> eigenen Rechner – optional mit **2-Wege-Sync zu Google Kalender**. Obsidian-Anbindung ist geplant – siehe [Roadmap](docs/ROADMAP.md).
 
 ## Highlights
 
@@ -36,7 +36,7 @@ Alle Funktionen im Detail: **[docs/FEATURES.md](docs/FEATURES.md)**
 | ![Schnelleingabe](docs/screenshots/schnelleingabe.png) **Schnelleingabe** – erkennt Termin oder ToDo, Deadlines, Kategorie, Priorität | ![Details](docs/screenshots/todo-details.png) **Details in der Seitenspalte** – Änderungen werden sofort gespeichert |
 | ![Monat](docs/screenshots/planen-monat.png) **Monatsansicht** mit Deadline-Markierungen und „Heute“-Spalte | ![ToDos](docs/screenshots/todos.png) **ToDo-Seite** – gruppiert nach Dringlichkeit, Mehrfachauswahl |
 | ![Übersicht](docs/screenshots/uebersicht.png) **Übersicht** mit Widgets | ![Befehlspalette](docs/screenshots/befehlspalette.png) **Befehlspalette** (`Strg+K`) |
-| ![Rosé](docs/screenshots/theme-rose.png) **Theme „Rosé“** | |
+| ![Ideen](docs/screenshots/ideen-board.png) **Ideen-Board** – Zettel, Rahmen, Pfeile und Punkte; Export als Obsidian-Notiz | ![Rosé](docs/screenshots/theme-rose.png) **Theme „Rosé“** |
 
 ## Als Desktop-App installieren
 
