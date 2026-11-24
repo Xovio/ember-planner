@@ -361,6 +361,7 @@ export class GoogleSync {
         const mapped = eventFromGoogle(remote, curCal, curCal.defaultReminders ?? [], () => cur!.id)
         if (mapped) {
           if (cur!.discord) mapped.discord = cur!.discord
+          if (cur!.templateId) mapped.templateId = cur!.templateId
           this.deps.store.applyRemote({ events: { upsert: [mapped] } })
         }
         this.deps.onNotice?.(

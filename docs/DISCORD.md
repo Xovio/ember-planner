@@ -1,6 +1,6 @@
 # Discord-Anbindung – Konzept
 
-**Status:** Lesen, Ankündigen, Mitziehen und Absagen sind gebaut (24. November 2026). Der Platzhalter für die nächste Session folgt.
+**Status:** Alle Schritte gebaut (24. November 2026), inklusive Platzhalter für die nächste Session.
 Einrichtung des Bots: [DISCORD-SETUP.md](DISCORD-SETUP.md).
 
 ## Ziel

@@ -108,6 +108,8 @@ export interface CalendarEvent {
   originalStart?: ISODateTime
   /** announced on / imported from a Discord server */
   discord?: DiscordLink
+  /** created from this event template – the last one marks where the next placeholder goes */
+  templateId?: string
   /** set while the event lies in `AppData.eventTrash` */
   deletedAt?: ISODateTime
   createdAt: ISODateTime
@@ -128,6 +130,25 @@ export interface EventTemplate {
   location?: string
   notes?: string
   reminders: number[]
+  /** "next session": show the next date as a grey placeholder until it is made a real event */
+  rhythm?: TemplateRhythm
+  /** defaults for announcing events of this template on Discord */
+  discord?: TemplateDiscord
+  /** placeholders before this day are skipped ("fällt aus") */
+  skipUntil?: LocalDate
+}
+
+export interface TemplateRhythm {
+  /** Mon=0 … Sun=6 */
+  weekday: number
+  /** every n weeks (1–4) */
+  everyWeeks: number
+}
+
+export interface TemplateDiscord {
+  guildId: string
+  kind: 'voice' | 'external'
+  channelId?: string
 }
 
 export type Priority = 0 | 1 | 2 | 3

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { addDays, isSameMonth, isToday } from 'date-fns'
 import { expandAll } from '@shared/recurrence'
-import { useCalendarMap, useHolidays, useStore, useVisibleEvents } from '../../store'
+import { useCalendarEvents, useCalendarMap, useHolidays, useStore } from '../../store'
 import { calVar } from '../../lib/theme'
 import { WEEKDAY_SHORT, fmt, monthGridRange, toLocalDate, toLocalTime } from '../../lib/dates'
 import { DeadlineChip } from '../todos/TodoItem'
@@ -9,14 +9,14 @@ import { acceptsDayDrop, clickOccurrence, dropOnDay } from './TimeGrid'
 import { eventMenu } from '../../lib/menus'
 import { isMultiDay, layoutSpans } from './layout'
 import { SpanLanes } from './SpanLanes'
-import { DiscordBadge, discordClass } from '../discord/DiscordBadge'
+import { DiscordBadge, discordClass, placeholderClass } from '../discord/DiscordBadge'
 import type { Todo } from '@shared/types'
 
 const MAX_CHIPS = 3
 
 export function MonthGrid(): React.JSX.Element {
   const cursor = useStore((s) => s.cursor)
-  const events = useVisibleEvents()
+  const events = useCalendarEvents()
   const calendars = useCalendarMap()
   const holiday = useHolidays()
   const setQuickCreate = useStore((s) => s.setQuickCreate)
@@ -131,7 +131,7 @@ export function MonthGrid(): React.JSX.Element {
                       key={o.key}
                       className={`chip ${o.event.allDay ? 'chip-allday' : 'chip-timed'} ${
                         selection?.kind === 'event' && selection.id === o.event.id ? 'selected' : ''
-                      } ${discordClass(o.event)}`}
+                      } ${discordClass(o.event)} ${placeholderClass(o.event)}`}
                       style={{ '--c': color } as React.CSSProperties}
                       onClick={(e) => clickOccurrence(o.event.id, o.start.toISOString(), e.currentTarget)}
                       onDoubleClick={() => selectEvent(o.event.id, o.start.toISOString())}

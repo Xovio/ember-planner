@@ -2,12 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { addDays, addMinutes, isSameDay, isToday } from 'date-fns'
 import { Repeat, Bell, SquareCheck } from 'lucide-react'
 import { expandAll, type Occurrence } from '@shared/recurrence'
-import { useCalendarMap, useHolidays, useStore, useVisibleEvents, type Anchor } from '../../store'
+import { isPlaceholderId, placeholderTemplateId, useCalendarEvents, useCalendarMap, useHolidays, useStore, type Anchor } from '../../store'
 import { calVar } from '../../lib/theme'
 import { fmt, minutesSinceMidnight, snap, toLocalTime } from '../../lib/dates'
 import { isMultiDay, layoutDay, layoutSpans, type Segment } from './layout'
 import { SpanLanes } from './SpanLanes'
-import { DiscordBadge, discordClass } from '../discord/DiscordBadge'
+import { DiscordBadge, discordClass, placeholderClass } from '../discord/DiscordBadge'
 import { localDate } from '@shared/todo'
 import { TODO_MIME, todoDrag } from '../../lib/dnd'
 import { DEADLINE_MIME, DeadlineChip } from '../todos/TodoItem'
@@ -28,6 +28,11 @@ type Drag =
 let lastClick: { key: string; at: number } | null = null
 export function clickOccurrence(eventId: string, occurrenceStart: string, el: HTMLElement): void {
   const st = useStore.getState()
+  if (isPlaceholderId(eventId)) {
+    const r = el.getBoundingClientRect()
+    st.openPlaceholder(placeholderTemplateId(eventId), { x: r.left, y: r.top, w: r.width, h: r.height })
+    return
+  }
   const key = `${eventId}::${occurrenceStart}`
   const now = Date.now()
   if (lastClick && lastClick.key === key && now - lastClick.at < 380) {
@@ -63,7 +68,7 @@ export const acceptsDayDrop = (e: React.DragEvent): boolean =>
   e.dataTransfer.types.includes(TODO_MIME) || e.dataTransfer.types.includes(DEADLINE_MIME)
 
 export function TimeGrid({ days }: { days: Date[] }): React.JSX.Element {
-  const events = useVisibleEvents()
+  const events = useCalendarEvents()
   const calendars = useCalendarMap()
   const holiday = useHolidays()
   const settings = useStore((s) => s.data!.settings)
@@ -149,6 +154,8 @@ export function TimeGrid({ days }: { days: Date[] }): React.JSX.Element {
     // the original (un-previewed) occurrence
     const occ = timed.find((o) => o.key === seg.occ.key) ?? seg.occ
     const el = (e.currentTarget as HTMLElement).closest('.event-block') as HTMLElement
+    // a placeholder can't be moved – a click makes it a real session
+    if (isPlaceholderId(occ.event.id)) return setDrag({ kind: 'click', occ, el })
     if (resize) return setDrag({ kind: 'resize', occ, el, originMin: min, minDelta: 0 })
     setDrag({ kind: 'move', occ, el, originDay: dayIdx, originMin: min, dayDelta: 0, minDelta: 0 })
   }
@@ -248,7 +255,8 @@ export function TimeGrid({ days }: { days: Date[] }): React.JSX.Element {
     scheduleTodo(id, start, addMinutes(start, Math.min(target.dur, 1440 - target.startMin)))
   }
 
-  const qcStart = quickCreate && !quickCreate.allDay ? new Date(quickCreate.start) : null
+  // the placeholder itself marks the slot while it is being made a session
+  const qcStart = quickCreate && !quickCreate.allDay && !quickCreate.placeholderOf ? new Date(quickCreate.start) : null
   const qcEnd = quickCreate ? new Date(quickCreate.end) : null
   const cols = `56px repeat(${days.length}, minmax(0, 1fr))`
   const nowMin = minutesSinceMidnight(now)
@@ -312,7 +320,7 @@ export function TimeGrid({ days }: { days: Date[] }): React.JSX.Element {
                 return (
                   <button
                     key={o.key}
-                    className={`chip chip-allday ${selection?.kind === 'event' && selection.id === o.event.id ? 'selected' : ''} ${discordClass(o.event)}`}
+                    className={`chip chip-allday ${selection?.kind === 'event' && selection.id === o.event.id ? 'selected' : ''} ${discordClass(o.event)} ${placeholderClass(o.event)}`}
                     style={{ '--c': calVar(cal?.color ?? 'red') } as React.CSSProperties}
                     onClick={(e) => clickOccurrence(o.event.id, o.start.toISOString(), e.currentTarget)}
                     onDoubleClick={(e) => {
@@ -450,7 +458,7 @@ function EventBlock({
     <div
       className={`event-block ${compact ? 'compact' : ''} ${dragging ? 'dragging' : ''} ${ev.recurrence ? 'recurring' : ''} ${
         todoDone !== undefined ? 'todo-block' : ''
-      } ${todoDone ? 'todo-done' : ''} ${selected ? 'selected' : ''} ${discordClass(ev)}`}
+      } ${todoDone ? 'todo-done' : ''} ${selected ? 'selected' : ''} ${discordClass(ev)} ${placeholderClass(ev)}`}
       style={
         {
           top,
@@ -478,7 +486,7 @@ function EventBlock({
         </div>
       )}
       {!compact && ev.location && height > 64 && <div className="eb-loc">{ev.location}</div>}
-      {!seg.clippedEnd && (
+      {!seg.clippedEnd && !isPlaceholderId(ev.id) && (
         <div className="eb-resize" onPointerDown={(e) => onDown(e, true)} />
       )}
     </div>

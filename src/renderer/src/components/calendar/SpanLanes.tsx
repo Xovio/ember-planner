@@ -5,7 +5,7 @@ import { toLocalTime } from '../../lib/dates'
 import { eventMenu } from '../../lib/menus'
 import { clickOccurrence } from './TimeGrid'
 import type { SpanPiece } from './layout'
-import { DiscordBadge, discordClass } from '../discord/DiscordBadge'
+import { DiscordBadge, discordClass, placeholderClass } from '../discord/DiscordBadge'
 
 /** one day's pieces of multi-day bars; empty lanes keep the bars of other days aligned */
 export function SpanLanes({
@@ -31,7 +31,7 @@ export function SpanLanes({
             key={p.occ.key}
             className={`chip chip-allday chip-span ${p.contLeft ? 'cont-left' : ''} ${p.contRight ? 'cont-right' : ''} ${p.head ? 'head' : ''} ${
               selected ? 'selected' : ''
-            } ${discordClass(ev)}`}
+            } ${discordClass(ev)} ${placeholderClass(ev)}`}
             style={
               { '--c': calVar(calendars.get(ev.calendarId)?.color ?? 'red'), '--len': p.len } as React.CSSProperties
             }

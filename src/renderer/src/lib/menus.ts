@@ -106,6 +106,24 @@ export function todoMenu(ids: string[]): MenuItem[] {
 export function eventMenu(eventId: string, occurrenceStart?: string): MenuItem[] {
   const st = useStore.getState()
   const data = st.data!
+  if (eventId.startsWith('ph:')) {
+    const templateId = eventId.slice(3)
+    const t = data.templates.find((x) => x.id === templateId)
+    if (!t) return []
+    return [
+      {
+        label: 'Fertig machen …',
+        action: () => {
+          const el = document.querySelector('.is-placeholder')
+          const r = el?.getBoundingClientRect()
+          st.openPlaceholder(templateId, r ? { x: r.left, y: r.top, w: r.width, h: r.height } : { x: 200, y: 200, w: 0, h: 0 })
+        }
+      },
+      { label: 'Fällt aus – eine Runde weiter', action: () => st.skipPlaceholder(templateId) },
+      { separator: true },
+      { label: 'Rhythmus der Vorlage ändern', action: () => st.setPage('settings') }
+    ]
+  }
   const ev = data.events.find((e) => e.id === eventId)
   if (!ev) return []
   const todo = ev.todoId ? data.todos.find((t) => t.id === ev.todoId) : undefined

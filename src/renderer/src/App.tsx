@@ -91,7 +91,7 @@ export function App(): React.JSX.Element {
           {page === 'settings' && <SettingsPage />}
         </main>
       </div>
-      {quickCreate && <QuickCreate key={quickCreate.start + quickCreate.end + String(quickCreate.allDay)} />}
+      {quickCreate && <QuickCreate key={quickCreate.start + quickCreate.end + String(quickCreate.allDay) + (quickCreate.placeholderOf ?? '')} />}
       {preview && <EventPreview key={preview.eventId + (preview.occurrenceStart ?? '')} />}
       {overlay?.kind === 'add' && <UniversalAdd initialKind={overlay.addKind} prefill={overlay.prefill} />}
       {overlay?.kind === 'palette' && <CommandPalette />}
