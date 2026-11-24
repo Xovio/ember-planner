@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from 'react'
-import { Archive, CheckCheck, Keyboard, RotateCcw, Trash2, X } from 'lucide-react'
+import { Archive, CalendarDays, CheckCheck, Keyboard, Repeat, RotateCcw, Trash2, X } from 'lucide-react'
 import { ARCHIVE_DAYS, TRASH_DAYS, type Priority } from '@shared/types'
-import { useStore } from '../store'
+import { useCalendarMap, useStore } from '../store'
 import { calVar } from '../lib/theme'
-import { fmt } from '../lib/dates'
+import { fmt, toLocalTime } from '../lib/dates'
 import { VIEW_LABELS, groupTodos, matchesView } from '../lib/todos'
 import { QuickAdd } from '../components/todos/QuickAdd'
 import { TodoItem } from '../components/todos/TodoItem'
@@ -57,7 +57,7 @@ export function TodosPage(): React.JSX.Element {
             </h1>
             <p className="muted">
               {view === 'trash'
-                ? `${data.trash.length} gelöscht · wird nach ${TRASH_DAYS} Tagen endgültig entfernt`
+                ? `${data.trash.length + data.eventTrash.filter((e) => !e.seriesId).length} gelöscht · wird nach ${TRASH_DAYS} Tagen endgültig entfernt`
                 : view === 'archive'
                   ? `${visible.length} archiviert · erledigte ToDos wandern nach ${ARCHIVE_DAYS} Tagen hierher`
                   : view === 'done'
@@ -167,65 +167,134 @@ function useListKeyboard(ordered: string[]): void {
   }, [ordered])
 }
 
-/** Papierkorb: restore or remove for good – both undoable with Strg+Z. */
+/** Papierkorb for events and ToDos: restore or remove for good – both undoable with Strg+Z. */
 function TrashList(): React.JSX.Element {
   const trash = useStore((s) => s.data!.trash)
+  const allEvents = useStore((s) => s.data!.eventTrash)
   const lists = useStore((s) => s.data!.lists)
+  const calendars = useCalendarMap()
   const restore = useStore((s) => s.restoreTodos)
   const purge = useStore((s) => s.purgeTodos)
+  const restoreEvents = useStore((s) => s.restoreEvents)
+  const purgeEvents = useStore((s) => s.purgeEvents)
+  // changed occurrences of a deleted series come back with it
+  const events = useMemo(() => allEvents.filter((e) => !e.seriesId), [allEvents])
 
-  if (trash.length === 0) {
+  if (trash.length === 0 && events.length === 0) {
     return (
       <div className="empty-state">
         <Trash2 size={34} strokeWidth={1.4} />
         <h3>Papierkorb ist leer</h3>
-        <p>Gelöschte ToDos bleiben {TRASH_DAYS} Tage hier und lassen sich wiederherstellen.</p>
+        <p>Gelöschte Termine und ToDos bleiben {TRASH_DAYS} Tage hier und lassen sich wiederherstellen.</p>
       </div>
     )
+  }
+
+  const expiry = (deletedAt?: string): { deleted: Date; expires: Date } => {
+    const deleted = deletedAt ? new Date(deletedAt) : new Date()
+    return { deleted, expires: new Date(deleted.getTime() + TRASH_DAYS * 86400000) }
   }
 
   return (
     <div className="trash">
       <div className="trash-bar">
-        <button className="btn btn-ghost sm" onClick={() => restore(trash.map((t) => t.id))}>
+        <button
+          className="btn btn-ghost sm"
+          onClick={() => {
+            if (events.length) restoreEvents(events.map((e) => e.id))
+            if (trash.length) restore(trash.map((t) => t.id))
+          }}
+        >
           <RotateCcw size={14} /> Alle wiederherstellen
         </button>
-        <button className="btn btn-ghost sm danger-text" onClick={() => purge('all')}>
+        <button
+          className="btn btn-ghost sm danger-text"
+          onClick={() => {
+            if (events.length) purgeEvents('all')
+            if (trash.length) purge('all')
+          }}
+        >
           <Trash2 size={14} /> Papierkorb leeren
         </button>
       </div>
-      <div className="todo-list">
-        {trash.map((t) => {
-          const list = lists.find((l) => l.id === t.listId)
-          const deleted = t.deletedAt ? new Date(t.deletedAt) : new Date()
-          const expires = new Date(deleted.getTime() + TRASH_DAYS * 86400000)
-          return (
-            <div className="trash-row" key={t.id}>
-              <Trash2 size={15} className="trash-icon" />
-              <div className="todo-main">
-                <span className={`todo-title ${t.done ? 'is-done' : ''}`}>{t.title || '(Ohne Titel)'}</span>
-                <div className="todo-meta">
-                  <span className="meta-plain">
-                    gelöscht {fmt(deleted, "d. MMM 'um' HH:mm")} · {list?.name ?? 'Eingang'} · entfernt am{' '}
-                    {fmt(expires, 'd. MMM')}
-                  </span>
+
+      {events.length > 0 && (
+        <section>
+          <h2 className="trash-heading">Termine</h2>
+          <div className="todo-list">
+            {events.map((e) => {
+              const { deleted, expires } = expiry(e.deletedAt)
+              const start = new Date(e.start)
+              const cal = calendars.get(e.calendarId)
+              return (
+                <div className="trash-row" key={e.id}>
+                  <CalendarDays size={15} className="trash-icon" />
+                  <div className="todo-main">
+                    <span className="todo-title">
+                      {e.title || '(Ohne Titel)'} {e.recurrence && <Repeat size={12} aria-label="Serie" />}
+                    </span>
+                    <div className="todo-meta">
+                      <span className="meta-plain">
+                        {fmt(start, 'EEE d. MMM yyyy')}
+                        {!e.allDay && `, ${toLocalTime(start)}`} · {cal?.name ?? 'Kalender gelöscht'} · gelöscht{' '}
+                        {fmt(deleted, "d. MMM 'um' HH:mm")} · entfernt am {fmt(expires, 'd. MMM')}
+                      </span>
+                    </div>
+                  </div>
+                  <button className="btn btn-ghost sm" onClick={() => restoreEvents([e.id])}>
+                    <RotateCcw size={14} /> Wiederherstellen
+                  </button>
+                  <button
+                    className="icon-btn sm danger"
+                    title="Endgültig löschen"
+                    aria-label="Endgültig löschen"
+                    onClick={() => purgeEvents([e.id])}
+                  >
+                    <X size={15} />
+                  </button>
                 </div>
-              </div>
-              <button className="btn btn-ghost sm" onClick={() => restore([t.id])}>
-                <RotateCcw size={14} /> Wiederherstellen
-              </button>
-              <button
-                className="icon-btn sm danger"
-                title="Endgültig löschen"
-                aria-label="Endgültig löschen"
-                onClick={() => purge([t.id])}
-              >
-                <X size={15} />
-              </button>
-            </div>
-          )
-        })}
-      </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {trash.length > 0 && (
+        <section>
+          {events.length > 0 && <h2 className="trash-heading">ToDos</h2>}
+          <div className="todo-list">
+            {trash.map((t) => {
+              const list = lists.find((l) => l.id === t.listId)
+              const { deleted, expires } = expiry(t.deletedAt)
+              return (
+                <div className="trash-row" key={t.id}>
+                  <Trash2 size={15} className="trash-icon" />
+                  <div className="todo-main">
+                    <span className={`todo-title ${t.done ? 'is-done' : ''}`}>{t.title || '(Ohne Titel)'}</span>
+                    <div className="todo-meta">
+                      <span className="meta-plain">
+                        gelöscht {fmt(deleted, "d. MMM 'um' HH:mm")} · {list?.name ?? 'Eingang'} · entfernt am{' '}
+                        {fmt(expires, 'd. MMM')}
+                      </span>
+                    </div>
+                  </div>
+                  <button className="btn btn-ghost sm" onClick={() => restore([t.id])}>
+                    <RotateCcw size={14} /> Wiederherstellen
+                  </button>
+                  <button
+                    className="icon-btn sm danger"
+                    title="Endgültig löschen"
+                    aria-label="Endgültig löschen"
+                    onClick={() => purge([t.id])}
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

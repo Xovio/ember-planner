@@ -154,6 +154,10 @@ interface State {
    * series there. Selects and returns the id to edit from now on.
    */
   editOccurrence(id: string, occurrenceStart: string, scope: 'one' | 'following'): string
+  /** brings events back from the trash (a series with its changed occurrences) */
+  restoreEvents(ids: string[]): void
+  /** removes events from the trash for good (still undoable in this session) */
+  purgeEvents(ids: string[] | 'all'): void
   /** moves a single occurrence of a series (only this one) */
   moveOccurrence(id: string, occurrenceStart: string, start: Date, end: Date): void
   duplicateEvent(id: string): void
@@ -317,8 +321,16 @@ export const useStore = create<State>((set, get) => {
       set({ data, view: data.settings.defaultView })
       // empty the trash of entries older than TRASH_DAYS (not undoable: they expired)
       const cutoff = new Date(Date.now() - TRASH_DAYS * 86400000).toISOString()
-      if (data.trash.some((t) => (t.deletedAt ?? '') < cutoff)) {
-        mutate((d) => ({ ...d, trash: d.trash.filter((t) => (t.deletedAt ?? '') >= cutoff) }), { history: false })
+      const expired = (x: { deletedAt?: string }): boolean => (x.deletedAt ?? '') < cutoff
+      if (data.trash.some(expired) || data.eventTrash.some(expired)) {
+        mutate(
+          (d) => ({
+            ...d,
+            trash: d.trash.filter((t) => !expired(t)),
+            eventTrash: d.eventTrash.filter((e) => !expired(e))
+          }),
+          { history: false }
+        )
       }
       if (isDemo) applyDemoParams()
     },
@@ -469,10 +481,17 @@ export const useStore = create<State>((set, get) => {
               )
             }
           }
+          // into the trash, a series together with its changed occurrences
+          const ts = stamp()
+          const gone = d.events.filter((e) => e.id === id || (ev.recurrence && e.seriesId === id))
+          const goneIds = new Set(gone.map((e) => e.id))
           return {
             ...d,
-            events: d.events.filter((e) => e.id !== id),
-            todos: d.todos.map((t) => (t.linkedEventId === id ? { ...t, linkedEventId: undefined } : t))
+            events: d.events.filter((e) => !goneIds.has(e.id)),
+            eventTrash: [...gone.map((e) => ({ ...e, deletedAt: ts })), ...d.eventTrash],
+            todos: d.todos.map((t) =>
+              t.linkedEventId && goneIds.has(t.linkedEventId) ? { ...t, linkedEventId: undefined } : t
+            )
           }
         },
         {
@@ -481,13 +500,82 @@ export const useStore = create<State>((set, get) => {
               ? `„${title}“ (ein Termin) gelöscht`
               : scope === 'following' && series
                 ? `„${title}“ ab diesem Termin gelöscht`
-                : `„${title}“ gelöscht`,
+                : `„${title}“ im Papierkorb`,
           undoToast: true
         }
       )
       const sel = get().selection
       if (sel?.kind === 'event' && sel.id === id) get().clearSelection()
       set({ preview: null })
+    },
+
+    restoreEvents(ids) {
+      const data = get().data
+      if (!data) return
+      // a restored series brings its changed occurrences along
+      const pick = new Set(ids)
+      for (const e of data.eventTrash) if (e.seriesId && pick.has(e.seriesId)) pick.add(e.id)
+      const back = data.eventTrash.filter((e) => pick.has(e.id))
+      if (!back.length) return
+      const first = back.find((e) => e.id === ids[0]) ?? back[0]
+      // new ids: at Google the old events are gone (or about to be), so they are uploaded as new ones
+      const newId = new Map(back.map((e) => [e.id, uid()]))
+      const ts = stamp()
+      mutate(
+        (d) => {
+          const live = new Set(d.events.map((e) => e.id))
+          const todos = new Map(d.todos.map((t) => [t.id, t]))
+          const relink = new Map<string, string>()
+          const restored = back.map((e) => {
+            const id = newId.get(e.id)!
+            const seriesId = e.seriesId ? (newId.get(e.seriesId) ?? (live.has(e.seriesId) ? e.seriesId : undefined)) : undefined
+            const todo = e.todoId ? todos.get(e.todoId) : undefined
+            const keepTodo = !!todo && !todo.linkedEventId && !relink.has(todo.id)
+            if (keepTodo) relink.set(todo.id, id)
+            return {
+              ...e,
+              id,
+              calendarId: writableCalendarId(d, e.calendarId),
+              external: undefined,
+              deletedAt: undefined,
+              seriesId,
+              originalStart: seriesId ? e.originalStart : undefined,
+              todoId: keepTodo ? e.todoId : undefined,
+              updatedAt: ts
+            }
+          })
+          return {
+            ...d,
+            // the series first, so it reaches Google before its changed occurrences
+            events: [...d.events, ...restored.filter((e) => !e.seriesId), ...restored.filter((e) => e.seriesId)],
+            eventTrash: d.eventTrash.filter((e) => !pick.has(e.id)),
+            todos: relink.size
+              ? d.todos.map((t) => (relink.has(t.id) ? { ...t, linkedEventId: relink.get(t.id), updatedAt: ts } : t))
+              : d.todos
+          }
+        },
+        {
+          label: ids.length > 1 ? `${ids.length} Termine wiederhergestellt` : `„${first.title || '(Ohne Titel)'}“ wiederhergestellt`,
+          undoToast: true
+        }
+      )
+    },
+
+    purgeEvents(ids) {
+      const trash = get().data?.eventTrash ?? []
+      const pick = new Set(ids === 'all' ? trash.map((e) => e.id) : ids)
+      for (const e of trash) if (e.seriesId && pick.has(e.seriesId)) pick.add(e.id)
+      if (!pick.size) return
+      const first = trash.find((e) => e.id === (ids === 'all' ? '' : ids[0]))
+      mutate((d) => ({ ...d, eventTrash: d.eventTrash.filter((e) => !pick.has(e.id)) }), {
+        label:
+          ids === 'all'
+            ? 'Termine im Papierkorb gelöscht'
+            : ids.length > 1
+              ? `${ids.length} Termine endgültig gelöscht`
+              : `„${first?.title || '(Ohne Titel)'}“ endgültig gelöscht`,
+        undoToast: true
+      })
     },
 
     editOccurrence(id, occurrenceStart, scope) {

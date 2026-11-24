@@ -89,6 +89,8 @@ export interface CalendarEvent {
   seriesId?: string
   /** single occurrence that was changed: its start in the series (the series has it as exdate) */
   originalStart?: ISODateTime
+  /** set while the event lies in `AppData.eventTrash` */
+  deletedAt?: ISODateTime
   createdAt: ISODateTime
   updatedAt: ISODateTime
 }
@@ -226,6 +228,8 @@ export interface AppData {
   todos: Todo[]
   /** deleted ToDos, restorable for TRASH_DAYS; kept apart so no view or reminder sees them */
   trash: Todo[]
+  /** deleted events (series together with their changed occurrences), restorable for TRASH_DAYS */
+  eventTrash: CalendarEvent[]
   boards: Board[]
   settings: Settings
 }
@@ -296,6 +300,7 @@ export function createDefaultData(): AppData {
     ],
     todos: [],
     trash: [],
+    eventTrash: [],
     boards: [],
     settings: { ...DEFAULT_SETTINGS }
   }
@@ -315,6 +320,7 @@ export function normalizeData(raw: Partial<AppData> | null | undefined): AppData
     categories: raw.categories ?? base.categories,
     todos: (raw.todos ?? []).map((t) => ({ ...t, subtasks: t.subtasks ?? [], priority: t.priority ?? 0 })),
     trash: raw.trash ?? [],
+    eventTrash: raw.eventTrash ?? [],
     boards: (raw.boards ?? []).map((b) => ({ ...b, notes: b.notes ?? [], frames: b.frames ?? [], edges: b.edges ?? [] })),
     settings: { ...DEFAULT_SETTINGS, ...(raw.settings ?? {}) }
   }

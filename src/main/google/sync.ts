@@ -308,7 +308,8 @@ export class GoogleSync {
       const g = await this.send(
         `${this.calendarPath(gcal)}/${encodeURIComponent(iid)}`,
         'PATCH',
-        googleBody(cur!, ALL_FIELDS, { ...ctx, patch: true })
+        // confirmed: brings back an occurrence that was cancelled before (e.g. restored from the trash)
+        { ...googleBody(cur!, ALL_FIELDS, { ...ctx, patch: true }), status: 'confirmed' }
       )
       this.remember(cur!.id, g, gcal)
       return
