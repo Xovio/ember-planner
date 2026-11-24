@@ -1,6 +1,9 @@
 import type { CalendarEvent, CalendarInfo, DiscordLink, Recurrence } from './types'
 
 export const DISCORD_API = 'https://discord.com/api/v10'
+
+/** a Discord event without an end is usually a D&D session: those run about 4 hours */
+export const SESSION_MINUTES = 240
 export const DISCORD_SETUP_URL = 'https://github.com/Xovio/ember-planner/blob/master/docs/DISCORD-SETUP.md'
 
 /**
@@ -225,13 +228,12 @@ export function eventFromDiscord(
   d: DEvent,
   cal: CalendarInfo,
   channelName: (id: string) => string | undefined,
-  defaultDurationMin: number,
   before?: CalendarEvent
 ): CalendarEvent {
   const start = new Date(d.scheduled_start_time)
   const end = d.scheduled_end_time
     ? new Date(d.scheduled_end_time)
-    : new Date(start.getTime() + defaultDurationMin * 60_000)
+    : new Date(start.getTime() + SESSION_MINUTES * 60_000)
   const channel = d.channel_id ? channelName(d.channel_id) : undefined
   const ev: CalendarEvent = {
     id: discordEventLocalId(d.id),
