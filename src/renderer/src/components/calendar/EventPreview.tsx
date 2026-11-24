@@ -9,6 +9,7 @@ import { describeRecurrence } from '../details/EventDetails'
 import { TodoCheck } from '../todos/TodoItem'
 import { Popover } from '../ui/Popover'
 import { DiscordInfo } from '../discord/DiscordInfo'
+import { GoalCheck, MissedPrompt } from '../goals/Goals'
 
 /** Read-only peek at an event with quick actions; "Bearbeiten" opens the details panel. */
 export function EventPreview(): React.JSX.Element | null {
@@ -131,6 +132,14 @@ export function EventPreview(): React.JSX.Element | null {
             <span className={todo.done ? 'is-done' : ''}>ToDo: {todo.title}</span>
           </div>
         )}
+        {ev.goal && !ev.goal.done && end.getTime() <= Date.now() ? (
+          <MissedPrompt event={ev} />
+        ) : ev.goal ? (
+          <div className="pv-todo">
+            <GoalCheck event={ev} />
+            <span className={ev.goal.done ? 'is-done' : ''}>Wochenziel {ev.goal.done ? 'geschafft' : 'abhaken'}</span>
+          </div>
+        ) : null}
       </div>
     </Popover>
   )

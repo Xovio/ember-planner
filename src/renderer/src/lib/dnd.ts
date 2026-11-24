@@ -5,3 +5,7 @@
 export const todoDrag: { id: string | null } = { id: null }
 
 export const TODO_MIME = 'application/x-todo'
+
+/** a weekly-goal block from the goal bar; the goal id is mirrored for the drop preview */
+export const GOAL_MIME = 'application/x-goal'
+export const goalDrag: { id: string | null } = { id: null }

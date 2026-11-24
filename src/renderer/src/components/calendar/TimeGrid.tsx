@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { addDays, addMinutes, isSameDay, isToday } from 'date-fns'
-import { Repeat, Bell, SquareCheck } from 'lucide-react'
+import { Repeat, Bell, SquareCheck, Target } from 'lucide-react'
 import { expandAll, type Occurrence } from '@shared/recurrence'
 import { isPlaceholderId, placeholderTemplateId, useCalendarEvents, useCalendarMap, useHolidays, useStore, type Anchor } from '../../store'
 import { calVar } from '../../lib/theme'
@@ -9,7 +9,7 @@ import { isMultiDay, layoutDay, layoutSpans, type Segment } from './layout'
 import { SpanLanes } from './SpanLanes'
 import { DiscordBadge, discordClass, placeholderClass } from '../discord/DiscordBadge'
 import { localDate } from '@shared/todo'
-import { TODO_MIME, todoDrag } from '../../lib/dnd'
+import { GOAL_MIME, TODO_MIME, goalDrag, todoDrag } from '../../lib/dnd'
 import { DEADLINE_MIME, DeadlineChip } from '../todos/TodoItem'
 import { eventMenu } from '../../lib/menus'
 import type { Todo } from '@shared/types'
@@ -80,6 +80,8 @@ export function TimeGrid({ days }: { days: Date[] }): React.JSX.Element {
   const moveEvent = useStore((s) => s.moveEvent)
   const moveOccurrence = useStore((s) => s.moveOccurrence)
   const scheduleTodo = useStore((s) => s.scheduleTodo)
+  const planGoalBlock = useStore((s) => s.planGoalBlock)
+  const goals = useStore((s) => s.data!.goals)
   const todos = useStore((s) => s.data!.todos)
   const setCursor = useStore((s) => s.setCursor)
   const setView = useStore((s) => s.setView)
@@ -227,15 +229,17 @@ export function TimeGrid({ days }: { days: Date[] }): React.JSX.Element {
       setDayDrop(pointToCell(e.clientX, e.clientY).dayIdx)
       return
     }
-    if (!e.dataTransfer.types.includes(TODO_MIME)) return
+    const isGoal = e.dataTransfer.types.includes(GOAL_MIME)
+    if (!isGoal && !e.dataTransfer.types.includes(TODO_MIME)) return
     e.preventDefault()
     e.dataTransfer.dropEffect = 'copy'
-    const t = todoDrag.id ? todoById.get(todoDrag.id) : undefined
-    const dur = t?.estimateMin ?? settings.defaultDurationMin
+    const t = !isGoal && todoDrag.id ? todoById.get(todoDrag.id) : undefined
+    const g = isGoal && goalDrag.id ? goals.find((x) => x.id === goalDrag.id) : undefined
+    const dur = g?.durationMin ?? t?.estimateMin ?? settings.defaultDurationMin
     const { dayIdx, min } = pointToCell(e.clientX, e.clientY)
     const startMin = Math.min(1440 - SNAP, Math.floor(min / SNAP) * SNAP)
     if (!drop || drop.dayIdx !== dayIdx || drop.startMin !== startMin) {
-      setDrop({ dayIdx, startMin, dur, title: t?.title ?? 'ToDo' })
+      setDrop({ dayIdx, startMin, dur, title: g?.title ?? t?.title ?? 'ToDo' })
     }
   }
 
@@ -246,12 +250,14 @@ export function TimeGrid({ days }: { days: Date[] }): React.JSX.Element {
       dropOnDay(e, days[pointToCell(e.clientX, e.clientY).dayIdx])
       return
     }
+    const goalId = e.dataTransfer.getData(GOAL_MIME)
     const id = e.dataTransfer.getData(TODO_MIME)
     const target = drop
     setDrop(null)
-    if (!id || !target) return
+    if ((!id && !goalId) || !target) return
     e.preventDefault()
     const start = addMinutes(days[target.dayIdx], target.startMin)
+    if (goalId) return planGoalBlock(goalId, start, Math.min(target.dur, 1440 - target.startMin))
     scheduleTodo(id, start, addMinutes(start, Math.min(target.dur, 1440 - target.startMin)))
   }
 
@@ -458,7 +464,7 @@ function EventBlock({
     <div
       className={`event-block ${compact ? 'compact' : ''} ${dragging ? 'dragging' : ''} ${ev.recurrence ? 'recurring' : ''} ${
         todoDone !== undefined ? 'todo-block' : ''
-      } ${todoDone ? 'todo-done' : ''} ${selected ? 'selected' : ''} ${discordClass(ev)} ${placeholderClass(ev)}`}
+      } ${todoDone ? 'todo-done' : ''} ${ev.goal ? 'goal-block' : ''} ${ev.goal?.done ? 'goal-done' : ''} ${selected ? 'selected' : ''} ${discordClass(ev)} ${placeholderClass(ev)}`}
       style={
         {
           top,
@@ -474,6 +480,7 @@ function EventBlock({
     >
       <div className="eb-title">
         {todoDone !== undefined && <SquareCheck size={12} className="eb-todo-icon" />}
+        {ev.goal && <Target size={12} className="eb-todo-icon" />}
         <span className="eb-title-text">{ev.title || '(Ohne Titel)'}</span>
         {compact && <span className="eb-time-inline">{toLocalTime(occ.start)}</span>}
         <DiscordBadge ev={ev} />

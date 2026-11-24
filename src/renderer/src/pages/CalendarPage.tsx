@@ -11,6 +11,7 @@ import { MonthGrid } from '../components/calendar/MonthGrid'
 import { AgendaList } from '../components/calendar/AgendaList'
 import { CategoriesSection, ListsSection, SmartViews } from '../components/todos/ListNav'
 import { RightPanel } from '../components/RightPanel'
+import { GoalBar } from '../components/goals/Goals'
 
 const VIEWS: { id: CalendarViewKind; label: string; key: string }[] = [
   { id: 'day', label: 'Tag', key: 'D' },
@@ -49,6 +50,7 @@ export function CalendarPage(): React.JSX.Element {
         </button>
         <MiniMonth />
         <CalendarList />
+        <GoalBar day={cursor} />
         <div className="sidebar-todos">
           <div className="section-head">
             <span>ToDos</span>

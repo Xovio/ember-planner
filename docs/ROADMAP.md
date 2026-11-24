@@ -78,10 +78,13 @@ Ideen:
 Ember Planner soll besonders Menschen mit ADHS gut tun: wenig Reibung, sichtbarer Fortschritt, Belohnung statt Schuldgefühl.
 Hintergründe und Quellen sammeln wir in einer eigenen Recherche-Notiz (`docs/ADHS.md`, folgt).
 
-- **Wochenziele als Bausteine:** z. B. „3× Gym“, auch wiederkehrend jede Woche. Angelegt bei den ToDos; jeder Baustein
+- ~~**Wochenziele als Bausteine**~~ ✅ (mit festen Zeiten und Nachfrage „Hat’s geklappt?“): z. B. „3× Gym“, auch wiederkehrend jede Woche. Angelegt bei den ToDos; jeder Baustein
   wird in den Kalender der Woche gezogen und gilt dann als geplant, danach abhakbar. Optional ein Standard-Zeitbereich
   (z. B. Mo–Fr 17–20 Uhr), in dem die Bausteine stattfinden sollen – dort werden sie beim Ziehen hervorgehoben
-- **Gamification:** Punkte fürs Abhaken (Ziele, ToDos, Sessions), Wochenfortschritt, kleine Erfolge – motivierend, nie strafend
+- ~~**Gamification:** Punkte fürs Abhaken (Ziele, ToDos, Sessions, Prep-Stunden), Wochenfortschritt, Level~~ ✅
+- **Avatar** ⭐ als nächster Schritt: ein kleiner Charakter, der mit den Punkten levelt; Coins für Kleidung und ein Haus zum
+  Einrichten; Attribute (z. B. Fitness, Ausdauer, Köpfchen), denen ToDo-Kategorien zugeordnet sind – Schwierigkeit und Dauer
+  geben Bonus auf das Attribut. Konzept folgt
 - **Plugin-/Widget-System** nach dem Vorbild von Obsidian; die linke Leiste als Andockpunkt in drei Stufen: interne Widget-API → Plugins aus einem Ordner (abgeschottet, mit Rechten) → Katalog.
   Konzept: [PLUGINS.md](PLUGINS.md)
 

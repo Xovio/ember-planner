@@ -2852,3 +2852,281 @@ input[type='time'].input {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* weekly goals */
+.goalbar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.goal-empty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-3);
+  font-size: 12.5px;
+  text-align: left;
+  cursor: pointer;
+}
+.goal-empty:hover {
+  border-color: var(--accent);
+  color: var(--text-2);
+}
+.goal-row {
+  display: grid;
+  gap: 5px;
+  padding: 6px 6px 7px;
+  border-radius: var(--radius-sm);
+}
+.goal-row:hover {
+  background: var(--surface-2);
+}
+.goal-row-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13.5px;
+}
+.goal-icon {
+  color: var(--c);
+  flex: none;
+}
+.goal-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.goal-count {
+  font-size: 12px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+}
+.goal-row.complete .goal-count {
+  color: var(--c);
+}
+.goal-row:hover .ghost-hover {
+  opacity: 1;
+}
+.goal-pips {
+  display: flex;
+  gap: 4px;
+  padding-left: 21px;
+}
+.goal-pips i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--c);
+}
+.goal-pips i.done {
+  background: var(--c);
+}
+.goal-pips i.planned {
+  background: linear-gradient(90deg, var(--c) 50%, transparent 50%);
+}
+.goal-pips i.open {
+  border-style: dashed;
+  opacity: 0.7;
+}
+.goal-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 21px;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--c) 50%, var(--border));
+  background: color-mix(in srgb, var(--c) 12%, transparent);
+  font-size: 12px;
+  cursor: grab;
+  user-select: none;
+}
+.goal-chip b {
+  flex: 1;
+  min-width: 0;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.goal-chip span {
+  flex: none;
+  color: var(--text-3);
+}
+.goal-missed {
+  display: grid;
+  gap: 7px;
+  padding: 9px 10px;
+  border-radius: var(--radius);
+  background: var(--accent-softer);
+  border: 1px solid var(--accent-soft);
+  font-size: 12.5px;
+}
+.goal-missed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.goals-list {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+.goals-card .goal-missed {
+  margin-top: 6px;
+}
+.goals-plan {
+  margin-top: 10px;
+}
+.event-block.goal-block {
+  border-left-style: double;
+}
+.event-block.goal-done .eb-title {
+  text-decoration: line-through;
+  color: var(--text-2);
+}
+.goal-check.done {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.goal-editor {
+  width: min(520px, calc(100vw - 32px));
+}
+.goal-editor .confirm-head svg {
+  color: var(--accent);
+}
+.goal-editor-grid {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.goal-editor-grid > label {
+  align-self: start;
+  padding-top: 6px;
+}
+.goal-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.goal-num {
+  width: 60px;
+}
+.goal-slots {
+  display: grid;
+  gap: 6px;
+  justify-items: start;
+}
+.goal-slot {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.goal-once {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+/* points */
+.level-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 99px;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 13px;
+}
+.level-badge strong {
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+.level-bar {
+  display: block;
+  margin: -4px 0 14px;
+}
+.points-week {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+.points-week > div:first-child {
+  display: grid;
+}
+.points-week > div:first-child strong {
+  font-size: 24px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.points-week > div:first-child span {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.points-bars {
+  flex: 1;
+  height: 44px;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 4px;
+  align-items: end;
+}
+.points-bars span {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+.points-bars i {
+  width: 100%;
+  border-radius: 3px 3px 1px 1px;
+  background: var(--accent-muted);
+}
+.points-bars span.now i {
+  background: var(--accent);
+}
+.points-recent {
+  list-style: none;
+  display: grid;
+  gap: 6px;
+  font-size: 12.5px;
+}
+.points-recent li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.points-kind {
+  flex: none;
+  font-size: 10.5px;
+  font-weight: 650;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+.points-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.points-recent strong {
+  color: var(--accent-text);
+  font-variant-numeric: tabular-nums;
+}

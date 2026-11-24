@@ -362,6 +362,7 @@ export class GoogleSync {
         if (mapped) {
           if (cur!.discord) mapped.discord = cur!.discord
           if (cur!.templateId) mapped.templateId = cur!.templateId
+          if (cur!.goal) mapped.goal = cur!.goal
           this.deps.store.applyRemote({ events: { upsert: [mapped] } })
         }
         this.deps.onNotice?.(

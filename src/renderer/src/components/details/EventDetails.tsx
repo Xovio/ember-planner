@@ -32,6 +32,7 @@ import {
   toLocalTime
 } from '../../lib/dates'
 import { DatePicker } from '../ui/DatePicker'
+import { GoalCheck } from '../goals/Goals'
 import { DiscordInfo } from '../discord/DiscordInfo'
 
 const FREQ_LABEL: Record<RecurrenceFreq, [string, string]> = {
@@ -128,6 +129,7 @@ export function EventDetails({ id, occurrenceStart }: { id: string; occurrenceSt
   const duplicate = useStore((s) => s.duplicateEvent)
   const saveAsTemplate = useStore((s) => s.saveAsTemplate)
   const toggleTodo = useStore((s) => s.toggleTodo)
+  const goalTitle = useStore((s) => (ev?.goal ? s.data?.goals.find((g) => g.id === ev.goal!.goalId)?.title : undefined))
   const selectTodo = useStore((s) => s.selectTodo)
   const selectEvent = useStore((s) => s.selectEvent)
   const editOccurrence = useStore((s) => s.editOccurrence)
@@ -272,6 +274,16 @@ export function EventDetails({ id, occurrenceStart }: { id: string; occurrenceSt
         />
 
         <DiscordInfo ev={ev} occurrenceStart={occurrenceStart} />
+
+        {ev.goal && (
+          <div className="linked-todo">
+            <GoalCheck event={ev} />
+            <span>
+              Baustein für das Wochenziel <strong>{goalTitle ?? ev.title}</strong>
+              {ev.goal.done && ' · geschafft'}
+            </span>
+          </div>
+        )}
 
         {linkedTodo && (
           <div className="linked-todo">

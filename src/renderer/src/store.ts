@@ -15,7 +15,9 @@ import {
   type ReminderPayload,
   type Settings,
   type Todo,
-  type TodoList
+  type TodoList,
+  type PointsLedger,
+  type WeeklyGoal
 } from '@shared/types'
 import { applyPatch, type RemoteChange } from '@shared/patch'
 import { isCalendarLocked } from '@shared/google'
@@ -23,6 +25,7 @@ import { api, isDemo } from './lib/api'
 import { holidayOn } from '@shared/holidays'
 import { daysBetween, localDate, nextRecurrence, parseLocalDate } from '@shared/todo'
 import { detachOccurrence, endSeriesBefore, splitSeries } from '@shared/series'
+import { goalEvent, markFilled, slotsToFill, weekKey } from '@shared/goals'
 import {
   isPlaceholderId,
   placeholderEvent,
@@ -227,6 +230,22 @@ interface State {
   removeCategory(id: string): void
   scheduleTodo(todoId: string, start: Date, end: Date): void
 
+  /* weekly goals */
+  upsertGoal(g: WeeklyGoal): void
+  /** archived goals keep their past blocks and points */
+  archiveGoal(id: string): void
+  /** a block of the goal as an event at `start` */
+  planGoalBlock(goalId: string, start: Date, durationMin?: number): void
+  setGoalDone(eventId: string, done: boolean): void
+  /** missed or unwanted block: back to the pool (event into the trash) */
+  returnGoalBlock(eventId: string): void
+  /** not this week: event into the trash and one block less for that week */
+  strikeGoalBlock(eventId: string): void
+  /** puts the fixed times of all goals into this and next week (once per week) */
+  fillGoalSlots(now?: Date): void
+  /** silent: the points ledger after reconciling */
+  setPoints(points: PointsLedger): void
+
   /** replace all data (restore / import) – one undo step */
   replaceData(next: AppData, label: string): void
   /** add imported ToDos to the inbox */
@@ -316,6 +335,7 @@ export const useStore = create<State>((set, get) => {
   }
 
   const stamp = (): string => new Date().toISOString()
+  const toHm = (d: Date): string => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 
   /** after undo/redo the selected item may be gone */
   const dropStaleSelection = (): void => {
@@ -373,6 +393,7 @@ export const useStore = create<State>((set, get) => {
           { history: false }
         )
       }
+      get().fillGoalSlots()
       if (isDemo) applyDemoParams()
     },
 
@@ -1039,6 +1060,142 @@ export const useStore = create<State>((set, get) => {
         }),
         { label: `„${todo.title}“ eingeplant` }
       )
+    },
+
+    /* ── weekly goals ── */
+    upsertGoal(g) {
+      const prev = get().data?.goals.find((x) => x.id === g.id)
+      const slotsChanged = !!prev && JSON.stringify(prev.slots) !== JSON.stringify(g.slots)
+      const now = Date.now()
+      // blocks the old fixed times put into the future; they are replaced by the new ones
+      const stale = (e: CalendarEvent): boolean =>
+        slotsChanged &&
+        e.goal?.goalId === g.id &&
+        !e.goal.done &&
+        new Date(e.start).getTime() > now &&
+        prev!.slots.some((s) => s.day === (new Date(e.start).getDay() + 6) % 7 && s.time === toHm(new Date(e.start)))
+      const goal = { ...g, updatedAt: stamp(), ...(slotsChanged || !prev ? { filledWeeks: [] } : {}) }
+      mutate(
+        (d) => ({
+          ...d,
+          goals: prev ? d.goals.map((x) => (x.id === g.id ? goal : x)) : [...d.goals, goal],
+          events: d.events.filter((e) => !stale(e))
+        }),
+        { label: prev ? `Ziel „${g.title}“ geändert` : `Ziel „${g.title}“ angelegt` }
+      )
+      if (!prev || slotsChanged) get().fillGoalSlots()
+    },
+
+    archiveGoal(id) {
+      const g = get().data?.goals.find((x) => x.id === id)
+      if (!g) return
+      const now = Date.now()
+      mutate(
+        (d) => ({
+          ...d,
+          goals: d.goals.map((x) => (x.id === id ? { ...x, archived: true, updatedAt: stamp() } : x)),
+          // blocks still ahead go into the trash; past ones stay as history
+          events: d.events.filter((e) => !(e.goal?.goalId === id && !e.goal.done && new Date(e.start).getTime() > now)),
+          eventTrash: [
+            ...d.events.filter((e) => e.goal?.goalId === id && !e.goal.done && new Date(e.start).getTime() > now).map((e) => ({ ...e, deletedAt: stamp() })),
+            ...d.eventTrash
+          ]
+        }),
+        { label: `Ziel „${g.title}“ entfernt`, undoToast: true }
+      )
+    },
+
+    planGoalBlock(goalId, start, durationMin) {
+      const data = get().data
+      const goal = data?.goals.find((g) => g.id === goalId)
+      if (!data || !goal) return
+      const ts = stamp()
+      const ev: CalendarEvent = {
+        id: uid(),
+        reminders: [...data.settings.defaultReminders],
+        createdAt: ts,
+        updatedAt: ts,
+        ...goalEvent(goal, start, durationMin ?? goal.durationMin),
+        calendarId: writableCalendarId(data, goal.calendarId)
+      }
+      mutate((d) => ({ ...d, events: [...d.events, ev] }), { label: `„${goal.title}“ eingeplant` })
+    },
+
+    setGoalDone(eventId, done) {
+      const ev = get().data?.events.find((e) => e.id === eventId)
+      if (!ev?.goal) return
+      const ts = stamp()
+      mutate(
+        (d) => ({
+          ...d,
+          events: d.events.map((e) =>
+            e.id === eventId ? { ...e, goal: { ...e.goal!, done, doneAt: done ? ts : undefined }, updatedAt: ts } : e
+          )
+        }),
+        { label: `„${ev.title}“ ${done ? 'geschafft' : 'wieder offen'}`, undoToast: done }
+      )
+    },
+
+    returnGoalBlock(eventId) {
+      const ev = get().data?.events.find((e) => e.id === eventId)
+      if (!ev) return
+      const ts = stamp()
+      mutate(
+        (d) => ({ ...d, events: d.events.filter((e) => e.id !== eventId), eventTrash: [{ ...ev, deletedAt: ts }, ...d.eventTrash] }),
+        { label: `„${ev.title}“ zurück in den Vorrat`, undoToast: true }
+      )
+      if (get().selection?.id === eventId) get().clearSelection()
+    },
+
+    strikeGoalBlock(eventId) {
+      const ev = get().data?.events.find((e) => e.id === eventId)
+      if (!ev?.goal) return
+      const week = weekKey(new Date(ev.start))
+      const ts = stamp()
+      mutate(
+        (d) => ({
+          ...d,
+          events: d.events.filter((e) => e.id !== eventId),
+          eventTrash: [{ ...ev, deletedAt: ts }, ...d.eventTrash],
+          goals: d.goals.map((g) => (g.id === ev.goal!.goalId ? { ...g, struck: { ...(g.struck ?? {}), [week]: (g.struck?.[week] ?? 0) + 1 } } : g))
+        }),
+        { label: `„${ev.title}“ für diese Woche gestrichen`, undoToast: true }
+      )
+      if (get().selection?.id === eventId) get().clearSelection()
+    },
+
+    fillGoalSlots(now = new Date()) {
+      const data = get().data
+      if (!data || data.goals.length === 0) return
+      const todo = slotsToFill(data.goals, [now, addWeeks(now, 1)], now)
+      if (todo.length === 0) return
+      const ts = stamp()
+      const created: CalendarEvent[] = []
+      for (const t of todo) {
+        const goal = data.goals.find((g) => g.id === t.goalId)!
+        for (const s of t.starts) {
+          created.push({
+            id: uid(),
+            reminders: [...data.settings.defaultReminders],
+            createdAt: ts,
+            updatedAt: ts,
+            ...goalEvent(goal, s.start, s.durationMin),
+            calendarId: writableCalendarId(data, goal.calendarId)
+          })
+        }
+      }
+      mutate(
+        (d) => ({
+          ...d,
+          events: [...d.events, ...created],
+          goals: d.goals.map((g) => todo.filter((t) => t.goalId === g.id).reduce((acc, t) => markFilled(acc, t.week), g))
+        }),
+        { history: false }
+      )
+    },
+
+    setPoints(points) {
+      mutate((d) => ({ ...d, points }), { history: false })
     },
 
     replaceData(next, label) {

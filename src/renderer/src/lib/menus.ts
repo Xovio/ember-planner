@@ -151,6 +151,17 @@ export function eventMenu(eventId: string, occurrenceStart?: string): MenuItem[]
       ? [{ label: 'In Discord ankündigen …', action: () => st.openAnnounce(eventId, occurrenceStart) }]
       : []),
     ...(todo ? [{ label: todo.done ? 'ToDo wieder öffnen' : 'ToDo abhaken', action: () => st.toggleTodo(todo.id) }] : []),
+    ...(ev.goal
+      ? [
+          { label: ev.goal.done ? 'Doch nicht geschafft' : 'Geschafft', action: () => st.setGoalDone(eventId, !ev.goal!.done) },
+          ...(!ev.goal.done
+            ? [
+                { label: 'Zurück in den Vorrat', action: () => st.returnGoalBlock(eventId) },
+                { label: 'Diese Woche nicht', action: () => st.strikeGoalBlock(eventId) }
+              ]
+            : [])
+        ]
+      : []),
     {
       label: 'Kalender',
       items: data.calendars.map((c) => ({
