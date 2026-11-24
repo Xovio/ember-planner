@@ -23,8 +23,34 @@ export const THEMES: ThemeInfo[] = [
     description: 'Hell, warmes Off-White, Rot-Akzent',
     dark: false,
     swatches: ['#f6efec', '#ffffff', '#d93a3f', '#b52a30']
+  },
+  {
+    id: 'midnight',
+    name: 'Midnight',
+    description: 'Dunkel, kühles Blau',
+    dark: true,
+    swatches: ['#0d1220', '#1a2133', '#5b8def', '#8fb2ff']
+  },
+  {
+    id: 'forest',
+    name: 'Forest',
+    description: 'Dunkel, ruhiges Grün',
+    dark: true,
+    swatches: ['#0e1511', '#1a251e', '#3fb27f', '#6fd3a0']
+  },
+  {
+    id: 'paper',
+    name: 'Paper',
+    description: 'Hell, neutral, blauer Akzent',
+    dark: false,
+    swatches: ['#f4f4f1', '#ffffff', '#2f6fed', '#2459c9']
   }
 ]
+
+export function nextThemeId(current: string): string {
+  const i = THEMES.findIndex((t) => t.id === current)
+  return THEMES[(i + 1) % THEMES.length].id
+}
 
 export const COLOR_NAMES: Record<CalendarColor, string> = {
   red: 'Rot',

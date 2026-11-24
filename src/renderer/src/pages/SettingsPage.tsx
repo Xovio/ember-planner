@@ -2,7 +2,7 @@ import { Check } from 'lucide-react'
 import type { CalendarViewKind } from '@shared/types'
 import { isCalendarLocked } from '@shared/google'
 import { useStore } from '../store'
-import { THEMES } from '../lib/theme'
+import { THEMES, nextThemeId } from '../lib/theme'
 import { REMINDER_PRESETS, reminderLabel } from '../lib/dates'
 import { api } from '../lib/api'
 import { playChime } from '../lib/chime'
@@ -47,12 +47,15 @@ export function SettingsPage(): React.JSX.Element {
               )}
             </button>
           ))}
-          <div className="theme-card ghost">
+          <button
+            className="theme-card ghost"
+            onClick={() => update({ theme: nextThemeId(s.theme) })}
+          >
             <div className="theme-meta">
-              <strong>Weitere Styles</strong>
-              <span>folgen später</span>
+              <strong>Style wechseln</strong>
+              <span>durchschalten · Style-Prompt-Builder folgt</span>
             </div>
-          </div>
+          </button>
         </div>
       </section>
 
