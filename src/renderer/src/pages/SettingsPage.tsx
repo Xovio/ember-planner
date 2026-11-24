@@ -9,6 +9,7 @@ import { playChime } from '../lib/chime'
 import { DataSection } from '../components/DataSection'
 import { HOLIDAY_REGIONS } from '@shared/holidays'
 import { GoogleSection } from '../components/settings/GoogleSection'
+import { UpdateSection } from '../components/settings/UpdateSection'
 
 export function SettingsPage(): React.JSX.Element {
   const s = useStore((st) => st.data!.settings)
@@ -173,6 +174,8 @@ export function SettingsPage(): React.JSX.Element {
           <Switch checked={s.launchAtLogin} onChange={(v) => update({ launchAtLogin: v })} />
         </Row>
       </section>
+
+      <UpdateSection switchControl={<Switch checked={s.autoUpdate} onChange={(v) => update({ autoUpdate: v })} />} />
 
       <DataSection />
     </div>

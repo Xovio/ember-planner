@@ -160,11 +160,14 @@ Technik und Entscheidungen: [GOOGLE-SYNC.md](GOOGLE-SYNC.md)
 - **Windows-Installer** (`npm run dist`, electron-builder/NSIS): pro Benutzer ohne Adminrechte, Startmenü- und
   Desktop-Verknüpfung, eigenes App-Icon; die installierte App lässt sich an die Taskleiste anheften und nutzt dieselben Daten
   wie der Entwicklungsstart
+- **Auto-Update** über GitHub Releases (electron-updater): Suche beim Start und alle 6 Stunden, Download im Hintergrund,
+  Installation beim Beenden oder per *Jetzt neu starten*; Hinweis „Update bereit“ in der Titelleiste; Veröffentlichen per
+  Tag `vX.Y.Z` und GitHub Action
 - Web-Build (`npm run web`) mit Demo-Modus `?demo` – Grundlage für eine spätere Mobil-/Web-Version
 
 ## Grenzen der aktuellen Version
 
-- Nur **Windows** getestet; Installer (`npm run dist`) ist nicht signiert und hat noch kein Auto-Update
+- Nur **Windows** getestet; Installer ist nicht signiert (SmartScreen fragt beim ersten Installieren nach)
 - **Sync nur mit Google Kalender** – ToDos werden nicht zwischen Geräten abgeglichen
 - Google-Serien in einer anderen Zeitzone als der des PCs können rund um die Zeitumstellung um eine Stunde abweichen; `RDATE` wird nicht unterstützt
 - Einzelne Termine einer Serie lassen sich in der App weiterhin nur löschen, nicht einzeln verschieben (in Google geänderte werden korrekt angezeigt)

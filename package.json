@@ -15,10 +15,12 @@
     "test:watch": "vitest",
     "icon": "node --no-warnings scripts/make-icon.mts",
     "pack": "electron-vite build && electron-builder --win dir",
-    "dist": "electron-vite build && electron-builder --win nsis"
+    "dist": "electron-vite build && electron-builder --win nsis",
+    "release": "electron-vite build && electron-builder --win nsis --publish always"
   },
   "dependencies": {
     "date-fns": "^4.1.0",
+    "electron-updater": "^6.8.11",
     "rrule": "^2.8.1"
   },
   "devDependencies": {
@@ -70,7 +72,16 @@
       "createStartMenuShortcut": true,
       "shortcutName": "Ember Planner",
       "runAfterFinish": true,
-      "deleteAppDataOnUninstall": false
-    }
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "Ember-Planner-Setup-${version}.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "Xovio",
+        "repo": "ember-planner",
+        "releaseType": "release"
+      }
+    ]
   }
 }

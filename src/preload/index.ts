@@ -3,6 +3,7 @@ import type { AppData, LoadResult, ReminderPayload, TitleBarTheme } from '@share
 import type { RemoteChange } from '@shared/patch'
 import type { GoogleApi, GoogleCalendarEntry, GoogleStatus } from '@shared/google'
 import type { BackupInfo } from '../main/backup'
+import type { UpdateApi, UpdateInfo } from '@shared/update'
 
 interface FileFilter {
   name: string
@@ -22,6 +23,13 @@ const google: GoogleApi = {
   syncNow: () => ipcRenderer.invoke('google:syncNow'),
   onStatus: (cb: (s: GoogleStatus) => void) => listen('google:status', cb),
   onNotice: (cb: (text: string) => void) => listen('google:notice', cb)
+}
+
+const updates: UpdateApi = {
+  info: () => ipcRenderer.invoke('update:info'),
+  check: () => ipcRenderer.invoke('update:check'),
+  install: () => ipcRenderer.invoke('update:install'),
+  onStatus: (cb: (s: UpdateInfo) => void) => listen('update:status', cb)
 }
 
 function listen<T>(channel: string, cb: (payload: T) => void): () => void {
@@ -53,7 +61,8 @@ const api = {
   onOpenEvent: (cb: (eventId: string) => void) => listen('event:open', cb),
   onOpenTodo: (cb: (todoId: string) => void) => listen('todo:open', cb),
   onNewEvent: (cb: () => void) => listen('event:new', cb),
-  google
+  google,
+  updates
 }
 
 export type ElectronApi = typeof api

@@ -130,6 +130,33 @@ kbd {
   color: var(--text-2);
 }
 
+.update-pill {
+  margin-left: auto;
+  -webkit-app-region: no-drag;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.update-pill:hover {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+.settings-control a.btn {
+  text-decoration: none;
+}
+.update-error {
+  color: var(--danger) !important;
+}
+
 .app-body {
   flex: 1;
   min-height: 0;

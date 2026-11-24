@@ -213,6 +213,8 @@ export interface Settings {
   showHolidays: boolean
   /** 'DE' = nationwide only, 'DE-BY' etc. = with state holidays */
   holidayRegion: string
+  /** look for new versions on GitHub and install them on quit (installed app only) */
+  autoUpdate: boolean
 }
 
 export interface AppData {
@@ -266,7 +268,8 @@ export const DEFAULT_SETTINGS: Settings = {
   deadlineReminderHour: 9,
   showTodoPanel: true,
   showHolidays: false,
-  holidayRegion: 'DE'
+  holidayRegion: 'DE',
+  autoUpdate: true
 }
 
 export const INBOX_ID = 'inbox'
