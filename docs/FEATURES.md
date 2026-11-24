@@ -100,6 +100,15 @@ Die linke Leiste filtert die ToDo-Spalte: Ein Klick auf eine Liste oder Kategori
 | Kategorien | offene ToDos je Kategorie |
 | Deadline-Radar | 14 Tage, Korridor zwischen weicher und harter Deadline |
 | Aktivität | Heatmap über 12 Monate – Termine oder erledigte ToDos |
+| Prep-Zeit | wie lange Obsidian, OneNote und Foundry offen waren – heute, Woche, Monat, gesamt; pro App und zusammen (Überschneidungen einmal), plus „Stunden bisher“ und nächster Meilenstein |
+| Starter | Kacheln für Programme, Spiele, Ordner und Links; eine Kachel mit mehreren Zielen ist eine Szene (z. B. „D&D-Abend“) |
+
+**Prep-Zeit:** Die Desktop-App prüft einmal pro Minute die laufenden Programme (`tasklist`) und speichert die Zeiten in
+`apptime.json` neben den Daten. Welche Programme zählen (Prozessnamen), die Stunden vor dem Tracking und ob abwesende Zeit
+(keine Eingabe, gesperrter PC) pausiert, stellst du unter *Anordnen → ⚙* ein. Foundry im Browser wird nicht erkannt.
+
+**Starter:** Programme, Verknüpfungen (auch Steam-Spiele vom Desktop) oder Ordner auf das Widget ziehen legt eine Kachel an;
+auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `steam://`, `obsidian://` trägst du unter ⚙ ein.
 
 ## Ideen (Brainstorm-Boards)
 

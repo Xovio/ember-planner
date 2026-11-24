@@ -4,6 +4,8 @@ import type { RemoteChange } from '@shared/patch'
 import type { GoogleApi } from '@shared/google'
 import type { DiscordApi } from '@shared/discord'
 import type { UpdateApi } from '@shared/update'
+import type { AppTimeApi } from '@shared/apptime'
+import type { LauncherApi } from '@shared/launcher'
 
 export interface FileFilter {
   name: string
@@ -49,6 +51,10 @@ export interface PlannerApi {
   discord?: DiscordApi
   /** only in the desktop app */
   updates?: UpdateApi
+  /** only in the desktop app */
+  appTime?: AppTimeApi
+  /** only in the desktop app */
+  launcher?: LauncherApi
 }
 
 declare global {

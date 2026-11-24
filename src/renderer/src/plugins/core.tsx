@@ -12,6 +12,10 @@ import { CategoryBars, FocusTodos, TodoStats } from '../components/widgets/TodoW
 import { WeekLoad } from '../components/widgets/WeekLoad'
 import { DeadlineRadar } from '../components/widgets/DeadlineRadar'
 import { YearHeatmap } from '../components/widgets/YearHeatmap'
+import { PREP_WIDGET_ID } from '@shared/apptime'
+import { LAUNCHER_WIDGET_ID } from '@shared/launcher'
+import { PrepTracker, PrepTrackerSettings } from '../components/widgets/PrepTracker'
+import { Launcher, LauncherSettings } from '../components/widgets/Launcher'
 import { SESSION_WIDGET_ID, SessionCountdown, SessionCountdownSettings } from '../components/widgets/SessionCountdown'
 
 /** the overview, with the details column when an event or ToDo is selected */
@@ -39,6 +43,8 @@ registerWidget({ ...core, id: 'agenda', title: 'Tagesplan', description: 'Die Te
 registerWidget({ ...core, id: 'next-up', title: 'Als Nächstes', description: 'Countdown zum nächsten Termin', size: 'half', order: 30, component: NextUpWidget })
 registerWidget({ ...core, id: 'week-load', title: 'Wochenauslastung', description: 'Verplante Stunden pro Tag', size: 'half', order: 40, component: WeekLoad })
 registerWidget({ ...core, id: SESSION_WIDGET_ID, title: 'Nächste Session', description: 'Countdown zur nächsten D&D-Session mit offenen Vorbereitungs-ToDos', size: 'half', order: 45, component: SessionCountdown, settings: SessionCountdownSettings })
+registerWidget({ ...core, id: PREP_WIDGET_ID, title: 'Prep-Zeit', description: 'Wie lange Obsidian, OneNote und Foundry offen waren – pro App und insgesamt', size: 'half', order: 46, component: PrepTracker, settings: PrepTrackerSettings })
+registerWidget({ ...core, id: LAUNCHER_WIDGET_ID, title: 'Starter', description: 'Programme, Spiele und Szenen mit einem Klick öffnen', size: 'half', order: 47, component: Launcher, settings: LauncherSettings })
 registerWidget({ ...core, id: 'focus-todos', title: 'Fokus', description: 'Überfällige und bald fällige ToDos', size: 'half', order: 50, component: FocusTodos })
 registerWidget({ ...core, id: 'categories', title: 'Kategorien', description: 'Offene ToDos je Kategorie', size: 'half', order: 60, component: CategoryBars })
 registerWidget({ ...core, id: 'deadline-radar', title: 'Deadline-Radar', description: 'Deadlines der nächsten 14 Tage', size: 'full', order: 70, component: DeadlineRadar })
