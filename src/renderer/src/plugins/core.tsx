@@ -1,4 +1,4 @@
-import { CalendarDays, CheckSquare, LayoutDashboard, Lightbulb, Settings } from 'lucide-react'
+import { CalendarDays, CheckSquare, LayoutDashboard, Lightbulb, Settings, Smile } from 'lucide-react'
 import { useStore } from '../store'
 import { registerPage, registerWidget } from './registry'
 import { CalendarPage } from '../pages/CalendarPage'
@@ -6,6 +6,8 @@ import { TodayPage } from '../pages/TodayPage'
 import { TodosPage } from '../pages/TodosPage'
 import { IdeasPage } from '../pages/IdeasPage'
 import { SettingsPage } from '../pages/SettingsPage'
+import { CharacterPage } from '../pages/CharacterPage'
+import { CharacterWidget } from '../components/widgets/CharacterWidget'
 import { RightPanel } from '../components/RightPanel'
 import { AgendaWidget, NextUpWidget } from '../components/widgets/TodayWidgets'
 import { CategoryBars, FocusTodos, TodoStats } from '../components/widgets/TodoWidgets'
@@ -35,11 +37,13 @@ const core = { source: 'core' as const }
 registerPage({ ...core, id: 'plan', label: 'Planen', icon: CalendarDays, hint: 'T', order: 10, component: CalendarPage })
 registerPage({ ...core, id: 'todos', label: 'ToDos', icon: CheckSquare, order: 20, component: TodosPage })
 registerPage({ ...core, id: 'overview', label: 'Übersicht', icon: LayoutDashboard, order: 30, component: OverviewPage })
+registerPage({ ...core, id: 'character', label: 'Charakter', icon: Smile, order: 35, component: CharacterPage })
 registerPage({ ...core, id: 'ideas', label: 'Ideen', icon: Lightbulb, order: 40, component: IdeasPage })
 registerPage({ ...core, id: 'settings', label: 'Optionen', icon: Settings, order: 1000, position: 'bottom', component: SettingsPage })
 
 /* ── overview widgets, in their default order ── */
 registerWidget({ ...core, id: 'todo-stats', title: 'ToDo-Zahlen', description: 'Offen, überfällig, diese Woche erledigt', size: 'full', order: 10, component: TodoStats })
+registerWidget({ ...core, id: 'character', title: 'Charakter', description: 'Dein Charakter mit Level, Coins und stärksten Attributen', size: 'half', order: 11, component: CharacterWidget })
 registerWidget({ ...core, id: 'goals', title: 'Wochenziele', description: 'Fortschritt der Wochenziele, Nachfrage bei verpassten Terminen', size: 'half', order: 12, component: GoalsWidget })
 registerWidget({ ...core, id: 'points', title: 'Punkte & Level', description: 'Punkte für Erledigtes, Wochenverlauf und Level', size: 'half', order: 14, component: PointsWidget })
 registerWidget({ ...core, id: 'agenda', title: 'Tagesplan', description: 'Die Termine von heute', size: 'half', tall: true, order: 20, component: AgendaWidget })
