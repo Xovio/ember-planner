@@ -3,6 +3,7 @@ import { addDays, differenceInMinutes } from 'date-fns'
 import {
   AlignLeft,
   Bell,
+  BookmarkPlus,
   CalendarDays,
   Clock,
   Copy,
@@ -124,6 +125,7 @@ export function EventDetails({ id, occurrenceStart }: { id: string; occurrenceSt
   const update = useStore((s) => s.updateEvent)
   const del = useStore((s) => s.deleteEvent)
   const duplicate = useStore((s) => s.duplicateEvent)
+  const saveAsTemplate = useStore((s) => s.saveAsTemplate)
   const toggleTodo = useStore((s) => s.toggleTodo)
   const selectTodo = useStore((s) => s.selectTodo)
   const selectEvent = useStore((s) => s.selectEvent)
@@ -177,6 +179,9 @@ export function EventDetails({ id, occurrenceStart }: { id: string; occurrenceSt
       <div className="details-toolbar">
         <span className="drawer-kicker">Termin</span>
         <span style={{ flex: 1 }} />
+        <button className="icon-btn sm" title="Als Vorlage speichern" onClick={() => saveAsTemplate(ev.id)}>
+          <BookmarkPlus size={14} />
+        </button>
         <button
           className="icon-btn sm"
           title={isLocked ? 'Als eigenen Termin kopieren' : 'Duplizieren'}

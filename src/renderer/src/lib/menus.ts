@@ -123,6 +123,7 @@ export function eventMenu(eventId: string, occurrenceStart?: string): MenuItem[]
       ? [{ label: 'Zur Serie', action: () => st.selectEvent(ev.seriesId!) }]
       : []),
     { label: 'Duplizieren', action: () => st.duplicateEvent(eventId) },
+    { label: 'Als Vorlage speichern', action: () => st.saveAsTemplate(eventId) },
     ...(todo ? [{ label: todo.done ? 'ToDo wieder öffnen' : 'ToDo abhaken', action: () => st.toggleTodo(todo.id) }] : []),
     {
       label: 'Kalender',

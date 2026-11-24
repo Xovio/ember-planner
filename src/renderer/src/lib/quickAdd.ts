@@ -1,5 +1,6 @@
 import { addDays, addWeeks } from 'date-fns'
-import type { Category, LocalDate, Priority, Recurrence, RecurrenceFreq, TodoList } from '@shared/types'
+import type { Category, EventTemplate, LocalDate, Priority, Recurrence, RecurrenceFreq, TodoList } from '@shared/types'
+import { findTemplate } from '@shared/templates'
 import { localDate, parseTasksLine } from '@shared/todo'
 
 export interface QuickAddResult {
@@ -213,6 +214,17 @@ export interface EventParse {
   durationMin?: number
   allDay: boolean
   calendarId?: string
+  /** "/session": event template to start from */
+  templateId?: string
+}
+
+/** "/session" anywhere in the text names an event template */
+const TEMPLATE_RE = /(^|\s)\/([\p{L}\p{N}_-]+)(?=$|[\s,;])/u
+
+/** template named in the text, if any */
+export function templateIn(input: string, templates: EventTemplate[]): EventTemplate | undefined {
+  const m = ` ${input} `.match(TEMPLATE_RE)
+  return m ? findTemplate(m[2], templates) : undefined
 }
 
 const TIME_RE =
@@ -249,10 +261,18 @@ export function looksLikeEvent(input: string): boolean {
 export function parseEventInput(
   input: string,
   calendars: { id: string; name: string }[],
-  today = new Date()
+  today = new Date(),
+  templates: EventTemplate[] = []
 ): EventParse {
   let text = ` ${input} `
   const res: EventParse = { title: '', date: localDate(today), allDay: false }
+
+  text = text.replace(TEMPLATE_RE, (m, pre: string, token: string) => {
+    const t = findTemplate(token, templates)
+    if (!t) return m
+    res.templateId = t.id
+    return pre
+  })
 
   text = text.replace(/(^|\s)ganztägig(?=$|\s)/iu, (_m, pre: string) => {
     res.allDay = true
@@ -275,8 +295,12 @@ export function parseEventInput(
       text = text.replace(d[0], d[1])
     }
   } else {
-    // short weekday ("Do 14 Uhr") is accepted when followed by a time
-    const sd = text.match(/(^|\s)(mo|di|mi|do|fr|sa|so)\.?(?=\s+(?:um\s+)?\d)/iu)
+    // short weekday ("Do 14 Uhr") is accepted when followed by a time – or with a template ("/session Fr")
+    const sd = text.match(
+      res.templateId
+        ? /(^|\s)(mo|di|mi|do|fr|sa|so)\.?(?=$|[\s,;])/iu
+        : /(^|\s)(mo|di|mi|do|fr|sa|so)\.?(?=\s+(?:um\s+)?\d)/iu
+    )
     const date = sd ? resolveDate(sd[2], today) : undefined
     if (sd && date) {
       res.date = date

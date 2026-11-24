@@ -2362,3 +2362,57 @@ input[type='time'].input {
   overflow-x: visible;
   overflow-y: clip;
 }
+
+/* ───────────── Event templates (Optionen) ───────────── */
+.settings-empty {
+  color: var(--text-3);
+  font-size: 12.5px;
+  line-height: 1.5;
+  padding: 10px 0;
+}
+.settings-empty svg {
+  vertical-align: -2px;
+}
+.tpl-list {
+  display: flex;
+  flex-direction: column;
+}
+.tpl-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) 1fr auto;
+  gap: 12px;
+  align-items: start;
+  padding: 12px 0 12px 10px;
+  border-bottom: 1px solid var(--grid-line);
+  box-shadow: inset 3px 0 0 var(--c);
+}
+.tpl-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tpl-name {
+  font-weight: 600;
+}
+.tpl-key {
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+.tpl-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.tpl-fields .input {
+  width: auto;
+  min-width: 0;
+  flex: 1 1 140px;
+}
+.tpl-fields .xs-time,
+.tpl-fields select {
+  flex: 0 0 auto;
+}
+.tpl-when {
+  font-size: 12px;
+}

@@ -11,6 +11,7 @@ import {
   type CalendarInfo,
   type CalendarViewKind,
   type Category,
+  type EventTemplate,
   type ReminderPayload,
   type Settings,
   type Todo,
@@ -22,6 +23,7 @@ import { api, isDemo } from './lib/api'
 import { holidayOn } from '@shared/holidays'
 import { daysBetween, localDate, nextRecurrence, parseLocalDate } from '@shared/todo'
 import { detachOccurrence, endSeriesBefore, splitSeries } from '@shared/series'
+import { templateFromEvent, templateKey } from '@shared/templates'
 
 /* ───────────── UI types ───────────── */
 
@@ -162,6 +164,11 @@ interface State {
   moveOccurrence(id: string, occurrenceStart: string, start: Date, end: Date): void
   duplicateEvent(id: string): void
   moveEvent(id: string, start: Date, end: Date): void
+
+  /** saves an event as a template and returns its id */
+  saveAsTemplate(eventId: string): string
+  upsertTemplate(t: EventTemplate): void
+  removeTemplate(id: string): void
 
   upsertCalendar(c: CalendarInfo): void
   removeCalendar(id: string): void
@@ -645,6 +652,38 @@ export const useStore = create<State>((set, get) => {
         }),
         { label: 'Termin verschoben' }
       )
+    },
+
+    /* ── event templates ── */
+    saveAsTemplate(eventId) {
+      const ev = get().data?.events.find((e) => e.id === eventId)
+      if (!ev) return ''
+      const t = templateFromEvent(ev, uid())
+      mutate((d) => ({ ...d, templates: [...d.templates, t] }), { label: `Vorlage „${t.name}“ gespeichert` })
+      get().pushToast({
+        kind: 'undo',
+        title: `Vorlage „${t.name}“ gespeichert`,
+        body: `In der Schnelleingabe mit /${templateKey(t)} · verwalten unter Optionen`
+      })
+      return t.id
+    },
+    upsertTemplate(t) {
+      mutate(
+        (d) => ({
+          ...d,
+          templates: d.templates.some((x) => x.id === t.id)
+            ? d.templates.map((x) => (x.id === t.id ? t : x))
+            : [...d.templates, t]
+        }),
+        { label: 'Vorlage bearbeitet', coalesce: `tpl:${t.id}` }
+      )
+    },
+    removeTemplate(id) {
+      const t = get().data?.templates.find((x) => x.id === id)
+      mutate((d) => ({ ...d, templates: d.templates.filter((x) => x.id !== id) }), {
+        label: `Vorlage „${t?.name}“ gelöscht`,
+        undoToast: true
+      })
     },
 
     /* ── calendars & settings ── */

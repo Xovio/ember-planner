@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Category, TodoList } from '@shared/types'
-import { looksLikeEvent, parseEventInput, parseQuickAdd, resolveDate } from './quickAdd'
+import { looksLikeEvent, parseEventInput, parseQuickAdd, resolveDate, templateIn } from './quickAdd'
 
 // Monday, 23 Nov 2026, noon
 const TODAY = new Date(2026, 10, 23, 12)
@@ -116,6 +116,15 @@ describe('events', () => {
       end: '23:00',
       calendarId: 'dnd'
     })
+  })
+
+  it('recognises a template with /name and keeps the rest', () => {
+    const tpls = [{ id: 't1', name: 'DnD-Session', title: 'DnD-Session', calendarId: 'dnd', allDay: false, durationMin: 240, reminders: [] }]
+    expect(parseEventInput('/session Fr', cals, TODAY, tpls)).toMatchObject({ templateId: 't1', title: '', date: '2026-11-27' })
+    expect(parseEventInput('Finale /dnd Sa 18 Uhr', cals, TODAY, tpls)).toMatchObject({ templateId: 't1', title: 'Finale', start: '18:00' })
+    expect(parseEventInput('Pfad /home/x', cals, TODAY, tpls).templateId).toBeUndefined()
+    expect(templateIn('/session morgen', tpls)?.id).toBe('t1')
+    expect(templateIn('ohne Vorlage', tpls)).toBeUndefined()
   })
 
   it('parses all-day events', () => {

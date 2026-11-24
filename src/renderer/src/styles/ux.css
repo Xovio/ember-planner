@@ -978,3 +978,29 @@ fieldset.details-body:disabled {
   width: 100%;
   padding-left: 22px;
 }
+
+/* event templates in the quick-create popover */
+.qc-templates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-3);
+}
+.qc-tpl {
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 11px;
+  border: 1px dashed var(--border-strong, var(--border));
+  font-size: 11.5px;
+  color: var(--text-2);
+}
+.qc-tpl:hover {
+  background: var(--surface-2);
+}
+.qc-tpl.on {
+  border-style: solid;
+  border-color: var(--c);
+  background: color-mix(in srgb, var(--c) 18%, transparent);
+  color: var(--text-1);
+}
