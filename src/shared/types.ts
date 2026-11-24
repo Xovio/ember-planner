@@ -275,6 +275,8 @@ export interface Settings {
   autoUpdate: boolean
   /** arrangement of the widgets on the overview page */
   overviewLayout: OverviewLayout
+  /** per-widget options, keyed by widget id; each widget validates its own values */
+  widgetConfig: Record<string, Record<string, unknown>>
 }
 
 export type WidgetSize = 'half' | 'full'
@@ -344,7 +346,8 @@ export const DEFAULT_SETTINGS: Settings = {
   showHolidays: false,
   holidayRegion: 'DE',
   autoUpdate: true,
-  overviewLayout: { order: [], hidden: [], sizes: {} }
+  overviewLayout: { order: [], hidden: [], sizes: {} },
+  widgetConfig: {}
 }
 
 export const INBOX_ID = 'inbox'

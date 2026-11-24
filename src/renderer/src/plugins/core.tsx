@@ -12,6 +12,7 @@ import { CategoryBars, FocusTodos, TodoStats } from '../components/widgets/TodoW
 import { WeekLoad } from '../components/widgets/WeekLoad'
 import { DeadlineRadar } from '../components/widgets/DeadlineRadar'
 import { YearHeatmap } from '../components/widgets/YearHeatmap'
+import { SESSION_WIDGET_ID, SessionCountdown, SessionCountdownSettings } from '../components/widgets/SessionCountdown'
 
 /** the overview, with the details column when an event or ToDo is selected */
 function OverviewPage(): React.JSX.Element {
@@ -37,6 +38,7 @@ registerWidget({ ...core, id: 'todo-stats', title: 'ToDo-Zahlen', description: '
 registerWidget({ ...core, id: 'agenda', title: 'Tagesplan', description: 'Die Termine von heute', size: 'half', tall: true, order: 20, component: AgendaWidget })
 registerWidget({ ...core, id: 'next-up', title: 'Als Nächstes', description: 'Countdown zum nächsten Termin', size: 'half', order: 30, component: NextUpWidget })
 registerWidget({ ...core, id: 'week-load', title: 'Wochenauslastung', description: 'Verplante Stunden pro Tag', size: 'half', order: 40, component: WeekLoad })
+registerWidget({ ...core, id: SESSION_WIDGET_ID, title: 'Nächste Session', description: 'Countdown zur nächsten D&D-Session mit offenen Vorbereitungs-ToDos', size: 'half', order: 45, component: SessionCountdown, settings: SessionCountdownSettings })
 registerWidget({ ...core, id: 'focus-todos', title: 'Fokus', description: 'Überfällige und bald fällige ToDos', size: 'half', order: 50, component: FocusTodos })
 registerWidget({ ...core, id: 'categories', title: 'Kategorien', description: 'Offene ToDos je Kategorie', size: 'half', order: 60, component: CategoryBars })
 registerWidget({ ...core, id: 'deadline-radar', title: 'Deadline-Radar', description: 'Deadlines der nächsten 14 Tage', size: 'full', order: 70, component: DeadlineRadar })

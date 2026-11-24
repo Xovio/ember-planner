@@ -1,4 +1,5 @@
-import { useSyncExternalStore, type ComponentType } from 'react'
+import { useCallback, useSyncExternalStore, type ComponentType } from 'react'
+import { useStore } from '../store'
 import type { LucideIcon } from 'lucide-react'
 import type { WidgetSize } from '@shared/types'
 
@@ -37,6 +38,8 @@ export interface WidgetDef {
   defaultHidden?: boolean
   order: number
   component: ComponentType
+  /** options form, opened from the widget's gear button in arrange mode (see useWidgetConfig) */
+  settings?: ComponentType
   source?: Source
 }
 
@@ -85,3 +88,23 @@ export const getWidget = widgets.get
 
 export const usePages = (): PageDef[] => useSyncExternalStore(pages.subscribe, pages.list)
 export const useWidgets = (): WidgetDef[] => useSyncExternalStore(widgets.subscribe, widgets.list)
+
+/**
+ * A widget's own options, stored under settings.widgetConfig[id].
+ * Stored values are merged over `defaults`; `update` patches and saves them.
+ */
+export function useWidgetConfig<T extends Record<string, unknown>>(
+  id: string,
+  defaults: T
+): [T, (patch: Partial<T>) => void] {
+  const stored = useStore((s) => s.data?.settings.widgetConfig?.[id])
+  const updateSettings = useStore((s) => s.updateSettings)
+  const update = useCallback(
+    (patch: Partial<T>) => {
+      const all = useStore.getState().data?.settings.widgetConfig ?? {}
+      updateSettings({ widgetConfig: { ...all, [id]: { ...(all[id] ?? {}), ...patch } } })
+    },
+    [id, updateSettings]
+  )
+  return [{ ...defaults, ...(stored ?? {}) } as T, update]
+}

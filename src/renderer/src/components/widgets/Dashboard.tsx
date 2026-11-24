@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Eye, EyeOff, GripVertical, Maximize2, Minimize2, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Eye, EyeOff, GripVertical, Maximize2, Minimize2, Plus, Settings2 } from 'lucide-react'
 import type { OverviewLayout } from '@shared/types'
 import { useStore } from '../../store'
 import { useWidgets } from '../../plugins/registry'
@@ -12,6 +12,7 @@ export function Dashboard({ editing }: { editing: boolean }): React.JSX.Element 
   const updateSettings = useStore((s) => s.updateSettings)
   const [dragId, setDragId] = useState<string | null>(null)
   const [overId, setOverId] = useState<string | null>(null)
+  const [settingsId, setSettingsId] = useState<string | null>(null)
 
   const resolved = useMemo(() => resolveLayout(widgets, layout), [widgets, layout])
   const byId = useMemo(() => new Map(widgets.map((w) => [w.id, w])), [widgets])
@@ -83,6 +84,17 @@ export function Dashboard({ editing }: { editing: boolean }): React.JSX.Element 
                   >
                     {size === 'full' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
                   </button>
+                  {w.settings && (
+                    <button
+                      className={`icon-btn ${settingsId === id ? 'active' : ''}`}
+                      title="Einstellungen"
+                      aria-label={`${w.title}: Einstellungen`}
+                      aria-expanded={settingsId === id}
+                      onClick={() => setSettingsId(settingsId === id ? null : id)}
+                    >
+                      <Settings2 size={14} />
+                    </button>
+                  )}
                   <button
                     className="icon-btn"
                     title="Ausblenden"
@@ -90,6 +102,18 @@ export function Dashboard({ editing }: { editing: boolean }): React.JSX.Element 
                     onClick={() => save(setHidden(widgets, layout, id, true))}>
                     <EyeOff size={14} />
                   </button>
+                </div>
+              )}
+              {editing && settingsId === id && w.settings && (
+                <div
+                  className="dash-settings card"
+                  // typing or selecting text in the form must not start dragging the widget
+                  onDragStart={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                  }}
+                >
+                  <w.settings />
                 </div>
               )}
               <div className="dash-body" inert={editing || undefined}>
