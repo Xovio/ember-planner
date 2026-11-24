@@ -48,12 +48,29 @@ export const CALENDAR_COLORS: CalendarColor[] = [
 ]
 
 export interface ExternalRef {
-  provider: 'google'
+  provider: 'google' | 'discord'
   id: string
   etag?: string
   calendarId?: string
   /** last change at the provider (ISO) */
   updated?: string
+}
+
+/** connection of an event to a Discord scheduled event */
+export interface DiscordLink {
+  guildId: string
+  eventId: string
+  /** announced from this app (editable, follows the calendar event); false = someone else's event */
+  own: boolean
+  /** 'voice' = in a voice channel, 'external' = place or link */
+  kind?: 'voice' | 'external'
+  channelId?: string
+  /** people marked as interested */
+  userCount?: number
+  /** Discord status: 1 planned, 2 running, 3 finished, 4 cancelled */
+  status?: number
+  /** own events: the fields as last seen at Discord */
+  synced?: { name: string; start: string; end: string; location?: string; description?: string }
 }
 
 export interface CalendarInfo {
@@ -89,6 +106,8 @@ export interface CalendarEvent {
   seriesId?: string
   /** single occurrence that was changed: its start in the series (the series has it as exdate) */
   originalStart?: ISODateTime
+  /** announced on / imported from a Discord server */
+  discord?: DiscordLink
   /** set while the event lies in `AppData.eventTrash` */
   deletedAt?: ISODateTime
   createdAt: ISODateTime

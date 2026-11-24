@@ -1,6 +1,6 @@
 # Funktionen & Umfang
 
-Stand: Version 0.2 (24. November 2026: Serientermine einzeln, Termin-Vorlagen, Papierkorb für Termine, Auto-Update, Google-Sync, Schnelle Gewinne 2.6, Ideen-Boards 2.7, Windows-Installer). Was die App heute kann, wo ihre Grenzen liegen und was bewusst noch fehlt.
+Stand: Version 0.2 (24. November 2026: Discord-Anbindung, Serientermine einzeln, Termin-Vorlagen, Papierkorb für Termine, Auto-Update, Google-Sync, Schnelle Gewinne 2.6, Ideen-Boards 2.7, Windows-Installer). Was die App heute kann, wo ihre Grenzen liegen und was bewusst noch fehlt.
 Ausblick und Ideen stehen in der [Roadmap](ROADMAP.md).
 
 ## Aufbau der Oberfläche
@@ -154,6 +154,21 @@ Eine freie Fläche zum Sammeln und Ordnen – in der Art von Miro, aber bewusst 
 
 Technik und Entscheidungen: [GOOGLE-SYNC.md](GOOGLE-SYNC.md)
 
+## Discord
+
+- **Verbinden** unter *Optionen → Discord* mit einem eigenen Bot (einmalig, kostenlos, Anleitung:
+  [DISCORD-SETUP.md](DISCORD-SETUP.md)); der Token wird verschlüsselt gespeichert. Kein Bot-Server, keine Nachrichten:
+  Ember Planner fragt die Events ab, solange die App läuft
+- **Server als Kalender:** angehakte Server erscheinen links unter *Discord* mit allen Events, auch denen anderer Mitglieder.
+  Diese sind schreibgeschützt, haben einen gestrichelten Rand und zeigen die Anzahl Interessierter („👥 6“)
+- **Ankündigen:** „In Discord ankündigen“ in Vorschau, Details oder Rechtsklick → Server und Sprachkanal oder Ort/Link wählen.
+  Titel, Zeit und Notizen kommen aus dem Termin; er bleibt in seinem Kalender und zeigt Server, Interessierte und einen Link
+- **Mitziehen:** Änderungen am Termin gehen nach ca. 2,5 Sekunden zu Discord; Änderungen in Discord kommen zurück (mit Hinweis)
+- **Absagen:** Löschen eines angekündigten Termins fragt vorher nach und sagt das Event in Discord ab (offline: später)
+- Abgleich beim Start, alle 5 Minuten, beim Zurückkehren ins Fenster und auf Knopfdruck (↻ neben *Discord*)
+
+Konzept und Entscheidungen: [DISCORD.md](DISCORD.md)
+
 ## Daten & Technik
 
 - Lokale JSON-Datei `%APPDATA%\Ember Planner\data.json`, atomar geschrieben; defekte Dateien werden gesichert statt überschrieben
@@ -184,6 +199,8 @@ Technik und Entscheidungen: [GOOGLE-SYNC.md](GOOGLE-SYNC.md)
 - **Keine Obsidian-Anbindung** (nur das Format ist vorbereitet)
 - Mehrtägige Termine mit Uhrzeit erscheinen in Tag und Woche pro Tag als eigenes Stück im Raster
 - Ein einzeln geänderter Termin einer Google-Serie kann nicht in einen anderen Kalender wandern (dort wird er als eigener Termin angelegt)
+- Discord: nur einzelne Termine lassen sich ankündigen (Serien: erst „Nur diesen Termin“), nur in Sprachkanälen oder mit Ort,
+  keine Stage-Events; der Abgleich läuft nur, solange Ember Planner läuft
 - Keine Zeitzonen-Auswahl (es gilt die Systemzeitzone)
 - Kein Import von `.ics`-Dateien; Sicherungen gibt es nur in der Desktop-App, nicht im Web-Build
 - Nur ganz gelöschte Termine kommen in den Papierkorb; „nur diesen“ / „diesen und folgende“ löschen macht `Strg+Z` rückgängig

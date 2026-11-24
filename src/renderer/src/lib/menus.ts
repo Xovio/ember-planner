@@ -1,7 +1,8 @@
 import { addDays, nextMonday, nextSaturday } from 'date-fns'
 import type { Priority } from '@shared/types'
 import { localDate } from '@shared/todo'
-import { roundUp, useStore, type MenuItem } from '../store'
+import { isEventLocked, roundUp, useStore, type MenuItem } from '../store'
+import { api } from './api'
 import { calVar } from './theme'
 import { PRIORITY_LABEL } from './todos'
 
@@ -124,6 +125,13 @@ export function eventMenu(eventId: string, occurrenceStart?: string): MenuItem[]
       : []),
     { label: 'Duplizieren', action: () => st.duplicateEvent(eventId) },
     { label: 'Als Vorlage speichern', action: () => st.saveAsTemplate(eventId) },
+    ...(!ev.discord &&
+    api.discord &&
+    !isEventLocked(data, ev) &&
+    data.calendars.some((c) => c.external?.provider === 'discord') &&
+    new Date(occurrenceStart ?? ev.start).getTime() > Date.now()
+      ? [{ label: 'In Discord ankündigen …', action: () => st.openAnnounce(eventId, occurrenceStart) }]
+      : []),
     ...(todo ? [{ label: todo.done ? 'ToDo wieder öffnen' : 'ToDo abhaken', action: () => st.toggleTodo(todo.id) }] : []),
     {
       label: 'Kalender',

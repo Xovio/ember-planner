@@ -8,6 +8,7 @@ import { fmt, formatDuration, reminderLabel, toLocalTime } from '../../lib/dates
 import { describeRecurrence } from '../details/EventDetails'
 import { TodoCheck } from '../todos/TodoItem'
 import { Popover } from '../ui/Popover'
+import { DiscordInfo } from '../discord/DiscordInfo'
 
 /** Read-only peek at an event with quick actions; "Bearbeiten" opens the details panel. */
 export function EventPreview(): React.JSX.Element | null {
@@ -123,6 +124,7 @@ export function EventPreview(): React.JSX.Element | null {
             )}
           </li>
         </ul>
+        <DiscordInfo ev={ev} occurrenceStart={pv.occurrenceStart} compact />
         {todo && (
           <div className="pv-todo">
             <TodoCheck todo={todo} size={16} />

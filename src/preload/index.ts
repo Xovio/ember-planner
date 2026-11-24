@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
 import type { AppData, LoadResult, ReminderPayload, TitleBarTheme } from '@shared/types'
 import type { RemoteChange } from '@shared/patch'
 import type { GoogleApi, GoogleCalendarEntry, GoogleStatus } from '@shared/google'
+import type { AnnounceOptions, DiscordApi, DiscordGuildEntry, DiscordStatus } from '@shared/discord'
 import type { BackupInfo } from '../main/backup'
 import type { UpdateApi, UpdateInfo } from '@shared/update'
 
@@ -23,6 +24,19 @@ const google: GoogleApi = {
   syncNow: () => ipcRenderer.invoke('google:syncNow'),
   onStatus: (cb: (s: GoogleStatus) => void) => listen('google:status', cb),
   onNotice: (cb: (text: string) => void) => listen('google:notice', cb)
+}
+
+const discord: DiscordApi = {
+  status: () => ipcRenderer.invoke('discord:status'),
+  connect: (token: string) => ipcRenderer.invoke('discord:connect', token),
+  disconnect: () => ipcRenderer.invoke('discord:disconnect'),
+  guilds: () => ipcRenderer.invoke('discord:guilds'),
+  setEnabled: (guild: DiscordGuildEntry, enabled: boolean) => ipcRenderer.invoke('discord:setEnabled', guild, enabled),
+  channels: (guildId: string) => ipcRenderer.invoke('discord:channels', guildId),
+  announce: (eventId: string, opts: AnnounceOptions) => ipcRenderer.invoke('discord:announce', eventId, opts),
+  syncNow: () => ipcRenderer.invoke('discord:syncNow'),
+  onStatus: (cb: (s: DiscordStatus) => void) => listen('discord:status', cb),
+  onNotice: (cb: (text: string) => void) => listen('discord:notice', cb)
 }
 
 const updates: UpdateApi = {
@@ -62,6 +76,7 @@ const api = {
   onOpenTodo: (cb: (todoId: string) => void) => listen('todo:open', cb),
   onNewEvent: (cb: () => void) => listen('event:new', cb),
   google,
+  discord,
   updates
 }
 

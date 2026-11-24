@@ -359,7 +359,10 @@ export class GoogleSync {
       const remoteNewer = Date.parse(remote.updated ?? '') > Date.parse(cur!.updatedAt)
       if (remoteNewer) {
         const mapped = eventFromGoogle(remote, curCal, curCal.defaultReminders ?? [], () => cur!.id)
-        if (mapped) this.deps.store.applyRemote({ events: { upsert: [mapped] } })
+        if (mapped) {
+          if (cur!.discord) mapped.discord = cur!.discord
+          this.deps.store.applyRemote({ events: { upsert: [mapped] } })
+        }
         this.deps.onNotice?.(
           `„${cur!.title || 'Termin'}“ wurde auch in Google geändert – die neuere Version aus Google gilt.`
         )

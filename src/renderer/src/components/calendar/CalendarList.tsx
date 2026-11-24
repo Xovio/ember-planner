@@ -5,6 +5,7 @@ import { uid, useStore } from '../../store'
 import { COLOR_NAMES, calVar } from '../../lib/theme'
 import { api } from '../../lib/api'
 import { lastSyncLabel, useGoogleStatus, useTick } from '../../lib/googleStatus'
+import { useDiscordStatus } from '../../lib/discordStatus'
 
 export function CalendarList(): React.JSX.Element {
   const calendars = useStore((s) => s.data!.calendars)
@@ -15,8 +16,9 @@ export function CalendarList(): React.JSX.Element {
   const setPage = useStore((s) => s.setPage)
   const toggleHolidays = (): void => updateSettings({ showHolidays: !showHolidays })
   const [editing, setEditing] = useState<CalendarInfo | null>(null)
-  const local = calendars.filter((c) => c.external?.provider !== 'google')
+  const local = calendars.filter((c) => !c.external)
   const google = calendars.filter((c) => c.external?.provider === 'google')
+  const discord = calendars.filter((c) => c.external?.provider === 'discord')
 
   const renderRow = (c: CalendarInfo): React.JSX.Element =>
     editing?.id === c.id ? (
@@ -97,6 +99,16 @@ export function CalendarList(): React.JSX.Element {
             <GoogleSyncButton />
           </div>
           {google.map(renderRow)}
+        </>
+      )}
+
+      {discord.length > 0 && (
+        <>
+          <div className="section-head">
+            <span>Discord</span>
+            <DiscordSyncButton />
+          </div>
+          {discord.map(renderRow)}
         </>
       )}
     </div>
@@ -193,6 +205,31 @@ function GoogleSyncButton(): React.JSX.Element | null {
       aria-label={title}
       disabled={sync?.running || status.state !== 'connected'}
       onClick={() => void api.google?.syncNow()}
+    >
+      {problem ? <CloudAlert size={14} /> : <RefreshCw size={13} className={sync?.running ? 'spin' : ''} />}
+    </button>
+  )
+}
+
+/** sync state of the Discord section, like the Google one */
+function DiscordSyncButton(): React.JSX.Element | null {
+  const status = useDiscordStatus()
+  useTick()
+  if (!status || !api.discord) return null
+  const sync = status.sync
+  const problem = status.state !== 'connected' ? (status.error ?? 'Nicht mit Discord verbunden') : (status.error ?? sync?.error)
+  const title = problem
+    ? `Problem: ${problem}`
+    : sync?.running
+      ? 'Gleiche mit Discord ab …'
+      : `Zuletzt abgeglichen ${lastSyncLabel(sync?.lastSync)}${sync?.pending ? ` · ${sync.pending} Absage(n) ausstehend` : ''} – klicken zum Abgleichen`
+  return (
+    <button
+      className={`icon-btn sm ${problem ? 'sync-problem' : ''}`}
+      title={title}
+      aria-label={title}
+      disabled={sync?.running || status.state !== 'connected'}
+      onClick={() => void api.discord?.syncNow()}
     >
       {problem ? <CloudAlert size={14} /> : <RefreshCw size={13} className={sync?.running ? 'spin' : ''} />}
     </button>

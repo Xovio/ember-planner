@@ -2,6 +2,7 @@ import { createDemoData } from './demo'
 import { normalizeData, type AppData, type LoadResult, type ReminderPayload, type TitleBarTheme } from '@shared/types'
 import type { RemoteChange } from '@shared/patch'
 import type { GoogleApi } from '@shared/google'
+import type { DiscordApi } from '@shared/discord'
 import type { UpdateApi } from '@shared/update'
 
 export interface FileFilter {
@@ -44,6 +45,8 @@ export interface PlannerApi {
   onNewEvent(cb: () => void): () => void
   /** only in the desktop app */
   google?: GoogleApi
+  /** only in the desktop app */
+  discord?: DiscordApi
   /** only in the desktop app */
   updates?: UpdateApi
 }

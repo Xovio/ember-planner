@@ -74,6 +74,14 @@ export interface ContextMenuState {
   items: MenuItem[]
 }
 
+/** a question before an action that others will see and that can't be taken back (e.g. a Discord cancellation) */
+export interface ConfirmState {
+  title: string
+  body: string
+  confirmLabel: string
+  action: () => void
+}
+
 export interface Toast {
   id: string
   kind: 'reminder' | 'deadline' | 'info' | 'undo'
@@ -110,7 +118,13 @@ interface State {
   quickCreate: QuickCreateState | null
   preview: PreviewState | null
   contextMenu: ContextMenuState | null
-  overlay: { kind: 'add'; addKind: AddKind; prefill?: string } | { kind: 'palette' } | { kind: 'help' } | null
+  overlay:
+    | { kind: 'add'; addKind: AddKind; prefill?: string }
+    | { kind: 'palette' }
+    | { kind: 'help' }
+    | { kind: 'announce'; eventId: string }
+    | null
+  confirm: ConfirmState | null
   toasts: Toast[]
   todoView: TodoView
   todoCategory: string | null
@@ -144,13 +158,17 @@ interface State {
   openPalette(): void
   openHelp(): void
   closeOverlay(): void
+  /** opens the "In Discord ankündigen" dialog; a series occurrence is detached first */
+  openAnnounce(eventId: string, occurrenceStart?: string): void
+  askConfirm(c: ConfirmState | null): void
 
   undo(): void
   redo(): void
 
   createEvent(ev: Partial<CalendarEvent> & { start: string; end: string }, opts?: { select?: boolean }): string
   updateEvent(id: string, patch: Partial<CalendarEvent>, coalesce?: string): void
-  deleteEvent(id: string, scope: 'all' | 'one' | 'following', occurrenceStart?: string): void
+  /** `confirmed`: the user agreed that a Discord announcement gets cancelled */
+  deleteEvent(id: string, scope: 'all' | 'one' | 'following', occurrenceStart?: string, confirmed?: boolean): void
   /**
    * Splits a series for editing: 'one' makes the occurrence an own event, 'following' starts a new
    * series there. Selects and returns the id to edit from now on.
@@ -314,6 +332,7 @@ export const useStore = create<State>((set, get) => {
     preview: null,
     contextMenu: null,
     overlay: null,
+    confirm: null,
     toasts: [],
     todoView: 'open',
     todoCategory: null,
@@ -388,6 +407,13 @@ export const useStore = create<State>((set, get) => {
     openPalette: () => set({ overlay: { kind: 'palette' }, quickCreate: null, preview: null, contextMenu: null }),
     openHelp: () => set({ overlay: { kind: 'help' }, quickCreate: null, preview: null, contextMenu: null }),
     closeOverlay: () => set({ overlay: null }),
+    openAnnounce(eventId, occurrenceStart) {
+      const ev = get().data?.events.find((e) => e.id === eventId)
+      if (!ev) return
+      const id = ev.recurrence && occurrenceStart ? get().editOccurrence(eventId, occurrenceStart, 'one') : eventId
+      set({ overlay: { kind: 'announce', eventId: id }, quickCreate: null, preview: null, contextMenu: null })
+    },
+    askConfirm: (confirm) => set({ confirm, contextMenu: null }),
 
     applyRemote({ seq, patch }) {
       const cur = get().data
@@ -456,9 +482,24 @@ export const useStore = create<State>((set, get) => {
       )
     },
 
-    deleteEvent(id, scope, occurrenceStart) {
-      const ev = get().data?.events.find((e) => e.id === id)
+    deleteEvent(id, scope, occurrenceStart, confirmed) {
+      const data = get().data
+      const ev = data?.events.find((e) => e.id === id)
       if (!ev || locked(id)) return
+      // an announced session: others will see the cancellation, so ask first
+      const wholeEvent = scope === 'all' || !ev.recurrence || !occurrenceStart
+      const link = ev.discord
+      if (wholeEvent && !confirmed && link?.own && (link.status === undefined || link.status <= 2)) {
+        const server = data!.calendars.find((c) => c.id === `d:${link.guildId}`)?.name ?? 'Discord'
+        const people = link.userCount ? ` – ${link.userCount === 1 ? '1 Person ist' : `${link.userCount} Personen sind`} interessiert` : ''
+        get().askConfirm({
+          title: 'Termin löschen und in Discord absagen?',
+          body: `„${ev.title || '(Ohne Titel)'}“ ist auf ${server} angekündigt${people}. Das Event wird dort abgesagt, alle sehen die Absage. Das lässt sich in Discord nicht zurücknehmen – den Termin selbst holst du mit Strg+Z oder aus dem Papierkorb zurück.`,
+          confirmLabel: 'Löschen und absagen',
+          action: () => get().deleteEvent(id, scope, occurrenceStart, true)
+        })
+        return
+      }
       const title = ev.title || '(Ohne Titel)'
       const series = !!ev.recurrence && !!occurrenceStart
       mutate(
@@ -544,6 +585,8 @@ export const useStore = create<State>((set, get) => {
               id,
               calendarId: writableCalendarId(d, e.calendarId),
               external: undefined,
+              // the Discord event was cancelled when the event was deleted: announce again if wanted
+              discord: undefined,
               deletedAt: undefined,
               seriesId,
               originalStart: seriesId ? e.originalStart : undefined,
@@ -634,6 +677,7 @@ export const useStore = create<State>((set, get) => {
         calendarId: writableCalendarId(data, ev.calendarId),
         todoId: undefined,
         external: undefined,
+        discord: undefined,
         seriesId: undefined,
         originalStart: undefined
       }

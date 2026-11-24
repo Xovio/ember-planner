@@ -23,6 +23,7 @@ Wohin sich Ember Planner entwickeln soll. Was schon da ist: [Funktionen & Umfang
 | 2.7 | Ideen-Boards: Brainstorm-Fläche mit Zetteln, Rahmen, Pfeilen und Punkten · Zusammenfassen · Export als Obsidian-Notiz und `.canvas` | ✅ fertig |
 | 2.8 | Kleine Lücken: Serientermine einzeln bearbeiten, Serienende für ToDos, mehrtägige Balken, Papierkorb für Termine, Termin-Vorlagen | ✅ fertig |
 | 3 | Google-Kalender-Sync (2-Wege, OAuth) | ✅ fertig |
+| 3.5 | Discord: Server-Events im Kalender, Termine ankündigen, mitziehen und absagen ([Konzept](DISCORD.md)) | ✅ fertig · Platzhalter für die nächste Session folgt |
 | 4 | Obsidian-Anbindung & Claude-Integration | geplant – Konzept vorher gemeinsam festlegen |
 | 5 | Verteilung: Installer ✅ (NSIS, `npm run dist`), Auto-Update ✅ (GitHub Releases), Code-Signatur | fast fertig |
 | 6 | Mobile-Version | geplant |
@@ -52,7 +53,7 @@ Ideen:
 - **Discord-Events:** über einen eigenen Bot die geplanten Events ausgewählter Server (z. B. DnD-Runde) als Kalender
   einblenden – inkl. Anzahl „Interessiert“ – und Sessions aus dem Kalender per „In Discord ankündigen“ als Server-Event
   anlegen; verschiebt man die Session, wandert das Discord-Event mit. Baut auf dem Sync-Fundament aus Phase 3 auf
-  (Patches, Outbox, verschlüsselter Token-Speicher). Konzept vorher abstimmen.
+  (Patches, Outbox, verschlüsselter Token-Speicher). Konzept: [DISCORD.md](DISCORD.md), Bot-Einrichtung: [DISCORD-SETUP.md](DISCORD-SETUP.md)
 - **Claude-Anbindung (MCP-Server):** Claude kann Termine und ToDos lesen, anlegen und abhaken – z. B. „plane mir die
   Session-Vorbereitung bis Freitag ein“ oder ToDos aus einer Projektnotiz ableiten (immer mit Bestätigung)
 - **Board zusammenfassen lassen:** Knopf im Zusammenfassen-Panel – Claude schlägt Kernaussagen, offene Fragen und nächste
