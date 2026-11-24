@@ -73,6 +73,17 @@ Ideen:
 - Touch-Gesten: langes Drücken zum Verschieben, Wischen für „erledigt“ / „morgen“
 - Sync über Google Kalender bzw. eine eigene Sync-Lösung für ToDos
 
+## ADHS-freundlich & Motivation ⭐
+
+Ember Planner soll besonders Menschen mit ADHS gut tun: wenig Reibung, sichtbarer Fortschritt, Belohnung statt Schuldgefühl.
+Hintergründe und Quellen sammeln wir in einer eigenen Recherche-Notiz (`docs/ADHS.md`, folgt).
+
+- **Wochenziele als Bausteine:** z. B. „3× Gym“, auch wiederkehrend jede Woche. Angelegt bei den ToDos; jeder Baustein
+  wird in den Kalender der Woche gezogen und gilt dann als geplant, danach abhakbar. Optional ein Standard-Zeitbereich
+  (z. B. Mo–Fr 17–20 Uhr), in dem die Bausteine stattfinden sollen – dort werden sie beim Ziehen hervorgehoben
+- **Gamification:** Punkte fürs Abhaken (Ziele, ToDos, Sessions), Wochenfortschritt, kleine Erfolge – motivierend, nie strafend
+- **Plugin-/Widget-System** nach dem Vorbild von Obsidian; die linke Leiste als Andockpunkt (Konzept folgt in `docs/PLUGINS.md`)
+
 ## Ideen-Sammlung
 
 **Planung**
@@ -81,7 +92,7 @@ Ideen:
 - Tagesritual: morgendliche Planung („Was schaffe ich heute?“) und Tagesabschluss („Was schiebe ich?“)
 - ~~Wiederkehrende ToDos (z. B. wöchentlich Wohnung aufräumen)~~ ✅ 2.6
 - Gewohnheiten-Tracker mit Serien
-- Pufferzeiten und Arbeitszeiten pro Wochentag; Warnung bei überbuchten Tagen
+- Pufferzeiten; Warnung bei überbuchten Tagen (Arbeitszeiten bewusst nicht)
 - Fokus-Modus / Pomodoro für einen Zeitblock
 
 **Kalender**
@@ -93,12 +104,12 @@ Ideen:
 - ~~Termin-Vorlagen (z. B. „DnD-Session“ mit Dauer, Ort, Erinnerung)~~ ✅ 2.8
 
 **ToDos**
-- Projekte mit Unter-Listen und Fortschritt
+- **Projekte** mit Unter-Listen und Fortschritt – später mit Obsidian-Projektnotizen verbunden ⭐
 - Abhängigkeiten („erst nach …“)
 - Anhänge und Links
 - ~~Archiv und Papierkorb mit Wiederherstellen~~ ✅ 2.6 (für ToDos)
 - ~~Papierkorb auch für Termine~~ ✅ 2.8
-- Filter speichern (z. B. „DnD, nächste 14 Tage, Priorität hoch“)
+- **Filter speichern** (z. B. „DnD, nächste 14 Tage, Priorität hoch“) ⭐
 
 **Oberfläche**
 - Weitere Styles (z. B. „Glut“, „Pergament“ für die Kampagnen-Stimmung, hoher Kontrast)
@@ -118,7 +129,7 @@ Ideen:
 - SQLite statt JSON für große Datenmengen
 - ~~Export/Import (JSON, ICS, Markdown im Tasks-Format) und automatische Backups~~ ✅ 2.6 · ICS-Datei-Import siehe Phase 3 (optional)
 - ~~Wiederkehrende ToDos: Ende der Serie (am Datum / nach N) in der Oberfläche einstellbar~~ ✅ 2.8
-- Verschlüsselte Sicherung in der Cloud (optional)
+- **Cloud-Anbindung:** verschlüsselte Sicherung und Sync der ToDos über Geräte (auch Grundlage für Mobile) ⭐
 
 ## Mitmachen
 
