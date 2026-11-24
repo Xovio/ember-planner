@@ -23,8 +23,34 @@ export const THEMES: ThemeInfo[] = [
     description: 'Hell, warmes Off-White, Rot-Akzent',
     dark: false,
     swatches: ['#f6efec', '#ffffff', '#d93a3f', '#b52a30']
+  },
+  {
+    id: 'neon',
+    name: 'Neon Ninja',
+    description: 'Cyberpunk: Neonpink, Cyan, tiefes Violett',
+    dark: true,
+    swatches: ['#0b0714', '#261845', '#ff2d95', '#19f0ff']
+  },
+  {
+    id: 'forest',
+    name: 'Forest',
+    description: 'Dunkel, ruhiges Grün',
+    dark: true,
+    swatches: ['#0e1511', '#1a251e', '#3fb27f', '#6fd3a0']
+  },
+  {
+    id: 'paper',
+    name: 'Paper',
+    description: 'Hell, neutral, blauer Akzent',
+    dark: false,
+    swatches: ['#f4f4f1', '#ffffff', '#2f6fed', '#2459c9']
   }
 ]
+
+export function nextThemeId(current: string): string {
+  const i = THEMES.findIndex((t) => t.id === current)
+  return THEMES[(i + 1) % THEMES.length].id
+}
 
 export const COLOR_NAMES: Record<CalendarColor, string> = {
   red: 'Rot',
@@ -38,6 +64,23 @@ export const COLOR_NAMES: Record<CalendarColor, string> = {
 }
 
 export const calVar = (c: CalendarColor): string => `var(--cal-${c})`
+
+export const FONTS = [
+  { id: 'default', name: 'Standard' },
+  { id: 'rounded', name: 'Weich' },
+  { id: 'serif', name: 'Serif' },
+  { id: 'mono', name: 'Mono' }
+]
+export const CORNERS = [
+  { id: 'sharp', name: 'Eckig' },
+  { id: 'soft', name: 'Normal' },
+  { id: 'round', name: 'Rund' }
+]
+
+export function applyLook(font: string, corners: string): void {
+  document.documentElement.dataset.font = font
+  document.documentElement.dataset.corners = corners
+}
 
 export function applyTheme(id: string): { color: string; symbolColor: string } {
   const theme = THEMES.find((t) => t.id === id) ?? THEMES[0]

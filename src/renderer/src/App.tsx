@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useStore } from './store'
 import { api } from './lib/api'
-import { applyTheme } from './lib/theme'
+import { applyTheme, applyLook } from './lib/theme'
 import { playChime } from './lib/chime'
 import { TitleBar } from './components/TitleBar'
 import { NavRail } from './components/NavRail'
@@ -22,6 +22,8 @@ export function App(): React.JSX.Element {
   const preview = useStore((s) => s.preview)
   const overlay = useStore((s) => s.overlay)
   const theme = data?.settings.theme
+  const font = data?.settings.font ?? 'default'
+  const corners = data?.settings.corners ?? 'soft'
 
   useEffect(() => {
     void useStore.getState().init()
@@ -31,6 +33,10 @@ export function App(): React.JSX.Element {
     if (!theme) return
     api.setTitleBarTheme(applyTheme(theme))
   }, [theme])
+
+  useEffect(() => {
+    applyLook(font, corners)
+  }, [font, corners])
 
   // main-process events
   useEffect(() => {

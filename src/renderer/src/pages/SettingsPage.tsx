@@ -2,7 +2,7 @@ import { Check } from 'lucide-react'
 import type { CalendarViewKind } from '@shared/types'
 import { isCalendarLocked } from '@shared/google'
 import { useStore } from '../store'
-import { THEMES } from '../lib/theme'
+import { THEMES, FONTS, CORNERS, nextThemeId } from '../lib/theme'
 import { REMINDER_PRESETS, reminderLabel } from '../lib/dates'
 import { api } from '../lib/api'
 import { playChime } from '../lib/chime'
@@ -11,6 +11,7 @@ import { HOLIDAY_REGIONS } from '@shared/holidays'
 import { GoogleSection } from '../components/settings/GoogleSection'
 import { UpdateSection } from '../components/settings/UpdateSection'
 import { TemplatesSection } from '../components/settings/TemplatesSection'
+import { StylePromptBuilder } from '../components/settings/StylePromptBuilder'
 import { DiscordSection } from '../components/settings/DiscordSection'
 
 export function SettingsPage(): React.JSX.Element {
@@ -47,13 +48,27 @@ export function SettingsPage(): React.JSX.Element {
               )}
             </button>
           ))}
-          <div className="theme-card ghost">
+          <button
+            className="theme-card ghost"
+            onClick={() => update({ theme: nextThemeId(s.theme) })}
+          >
             <div className="theme-meta">
-              <strong>Weitere Styles</strong>
-              <span>folgen später</span>
+              <strong>Style wechseln</strong>
+              <span>durchschalten</span>
             </div>
-          </div>
+          </button>
         </div>
+        <Row label="Schriftart">
+          <select className="input" value={s.font ?? 'default'} onChange={(e) => update({ font: e.target.value })}>
+            {FONTS.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+          </select>
+        </Row>
+        <Row label="Ecken">
+          <select className="input" value={s.corners ?? 'soft'} onChange={(e) => update({ corners: e.target.value })}>
+            {CORNERS.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+          </select>
+        </Row>
+        <StylePromptBuilder />
       </section>
 
       <section className="settings-section">
