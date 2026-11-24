@@ -34,7 +34,28 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
-      - name: Installer bauen und veröffentlichen
+      # Create the release up front as a draft: electron-builder uploads its files in parallel, and without an
+      # existing release each upload may create its own one (v0.2.0 ended up with two releases for one tag).
+      - name: Release-Entwurf anlegen
+        shell: bash
+        run: gh release create "$GITHUB_REF_NAME" --draft --verify-tag --title "Ember Planner ${GITHUB_REF_NAME#v}" --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Installer bauen und hochladen
         run: npm run release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # only now the installed apps can see it
+      - name: Release veröffentlichen
+        shell: bash
+        run: |
+          n=$(gh release view "$GITHUB_REF_NAME" --json assets --jq '[.assets[].name | select(endswith(".exe") or endswith(".exe.blockmap") or . == "latest.yml")] | length')
+          if [ "$n" -ne 3 ]; then
+            echo "::error::Erwartet: Installer, .blockmap und latest.yml – gefunden: $n Dateien. Der Entwurf bleibt unveröffentlicht."
+            exit 1
+          fi
+          gh release edit "$GITHUB_REF_NAME" --draft=false --latest
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
