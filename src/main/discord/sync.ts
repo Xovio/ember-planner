@@ -34,7 +34,7 @@ interface SyncFile {
 
 export interface DiscordSyncDeps {
   store: DataStore
-  account: Pick<DiscordAccount, 'isConnected' | 'request'>
+  account: Pick<DiscordAccount, 'isConnected' | 'request'> & Partial<Pick<DiscordAccount, 'ownerId'>>
   dir: string
   onState?(state: DiscordSyncState): void
   onNotice?(text: string): void
@@ -262,11 +262,13 @@ export class DiscordSync {
     const upserts: CalendarEvent[] = [...ownUpserts]
     const remove: string[] = []
     if (cal) {
+      const mine = cal.discordAll ? null : await this.myEvents(guildId, list, ownIds)
       const channelNames = await this.channelNames(guildId, list)
       const local = new Map(data.events.filter((e) => e.calendarId === calId).map((e) => [e.id, e]))
       const seen = new Set<string>()
       for (const d of list) {
         if (ownIds.has(d.id)) continue
+        if (mine && !mine.has(d.id)) continue
         const id = discordEventLocalId(d.id)
         seen.add(id)
         const before = local.get(id)
@@ -286,6 +288,36 @@ export class DiscordSync {
       }
     }
     this.apply({ events: { upsert: upserts, remove } })
+  }
+
+  /**
+   * events you created or clicked "Interessiert" on. Without a known owner every event counts,
+   * so nothing disappears just because Discord didn't say who you are.
+   */
+  private async myEvents(guildId: string, list: DEvent[], ownIds: Set<string>): Promise<Set<string> | null> {
+    const me = await this.deps.account.ownerId?.()
+    if (!me) return null
+    const mine = new Set<string>()
+    for (const d of list) {
+      if (ownIds.has(d.id)) continue
+      if (d.creator_id === me) {
+        mine.add(d.id)
+        continue
+      }
+      let after = '0'
+      for (let page = 0; page < 10; page++) {
+        const users = await this.deps.account.request<{ user: { id: string } }[]>(
+          `/guilds/${guildId}/scheduled-events/${d.id}/users?limit=100&after=${after}`
+        )
+        if (users.some((u) => u.user.id === me)) {
+          mine.add(d.id)
+          break
+        }
+        if (users.length < 100) break
+        after = users[users.length - 1].user.id
+      }
+    }
+    return mine
   }
 
   private async channelNames(guildId: string, list: DEvent[]): Promise<Map<string, string>> {

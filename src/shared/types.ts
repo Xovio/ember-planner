@@ -82,6 +82,8 @@ export interface CalendarInfo {
   readOnly?: boolean
   /** reminders the provider applies to events that use its defaults */
   defaultReminders?: number[]
+  /** Discord server: show all events, not only those you are interested in or created */
+  discordAll?: boolean
   external?: ExternalRef
 }
 

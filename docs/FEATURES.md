@@ -159,8 +159,9 @@ Technik und Entscheidungen: [GOOGLE-SYNC.md](GOOGLE-SYNC.md)
 - **Verbinden** unter *Optionen → Discord* mit einem eigenen Bot (einmalig, kostenlos, Anleitung:
   [DISCORD-SETUP.md](DISCORD-SETUP.md)); der Token wird verschlüsselt gespeichert. Kein Bot-Server, keine Nachrichten:
   Ember Planner fragt die Events ab, solange die App läuft
-- **Server als Kalender:** angehakte Server erscheinen links unter *Discord* mit allen Events, auch denen anderer Mitglieder.
-  Diese sind schreibgeschützt, haben einen gestrichelten Rand und zeigen die Anzahl Interessierter („👥 6“)
+- **Server als Kalender:** angehakte Server erscheinen links unter *Discord* – mit den Events, bei denen du auf
+  „Interessiert“ geklickt oder die du selbst erstellt hast (der Bot erkennt dich als seinen Besitzer). Pro Server lässt sich
+  unter *Optionen → Discord* „auch Events ohne dein Interessiert“ einschalten. Gestrichelt, mit Anzahl der Interessierten
 - **Ankündigen:** „In Discord ankündigen“ in Vorschau, Details oder Rechtsklick → Server und Sprachkanal oder Ort/Link wählen.
   Titel, Zeit und Notizen kommen aus dem Termin; er bleibt in seinem Kalender und zeigt Server, Interessierte und einen Link
 - **Mitziehen:** Änderungen am Termin gehen nach ca. 2,5 Sekunden zu Discord; Änderungen in Discord kommen zurück (mit Hinweis)

@@ -112,14 +112,16 @@ export function DiscordSection(): React.JSX.Element {
             <div className="settings-label">
               <span>Server</span>
               <small>
-                Angehakte Server erscheinen links unter „Discord“ mit allen Events. Fehlt einer, lade den Bot dorthin ein.
+                Angehakte Server erscheinen links unter „Discord“ – mit den Events, für die du dich interessierst oder die du
+                selbst erstellt hast. Fehlt einer, lade den Bot dorthin ein.
               </small>
             </div>
             <div className="settings-control discord-guilds">
               {guilds === null && <span className="muted">Lade …</span>}
               {guilds?.length === 0 && <span className="muted">Der Bot ist noch auf keinem Server.</span>}
               {guilds?.map((g) => (
-                <label key={g.id} className="discord-guild">
+                <div key={g.id} className="discord-guild-row">
+                <label className="discord-guild">
                   <input
                     type="checkbox"
                     checked={g.enabled}
@@ -132,6 +134,22 @@ export function DiscordSection(): React.JSX.Element {
                   />
                   {g.name}
                 </label>
+                {g.enabled && (
+                  <label className="discord-guild discord-guild-sub" title="Aus: nur Events, bei denen du auf „Interessiert“ geklickt hast oder die du erstellt hast">
+                    <input
+                      type="checkbox"
+                      checked={!!g.showAll}
+                      onChange={async (e) => {
+                        const all = e.target.checked
+                        if (await run(discord.setShowAll(g.id, all))) {
+                          setGuilds((list) => list?.map((x) => (x.id === g.id ? { ...x, showAll: all } : x)) ?? null)
+                        }
+                      }}
+                    />
+                    auch Events ohne dein „Interessiert“
+                  </label>
+                )}
+                </div>
               ))}
               <div className="discord-guild-actions">
                 {status.applicationId && (

@@ -50,6 +50,8 @@ export interface DiscordGuildEntry {
   name: string
   /** already shown as a calendar */
   enabled: boolean
+  /** all events of the server, not only yours (interested or created) */
+  showAll?: boolean
 }
 
 export interface DiscordChannel {
@@ -75,6 +77,7 @@ export interface DiscordApi {
   disconnect(): Promise<DiscordResult<DiscordStatus>>
   guilds(): Promise<DiscordResult<DiscordGuildEntry[]>>
   setEnabled(guild: DiscordGuildEntry, enabled: boolean): Promise<DiscordResult<boolean>>
+  setShowAll(guildId: string, all: boolean): Promise<DiscordResult<boolean>>
   channels(guildId: string): Promise<DiscordResult<DiscordChannel[]>>
   announce(eventId: string, opts: AnnounceOptions): Promise<DiscordResult<boolean>>
   syncNow(): Promise<DiscordResult<DiscordStatus>>
@@ -105,7 +108,8 @@ export function calendarInfoForGuild(
     // events on a server belong to the people who created them
     readOnly: true,
     defaultReminders: existing?.defaultReminders ?? defaultReminders,
-    external: { provider: 'discord', id: guild.id }
+    external: { provider: 'discord', id: guild.id },
+    ...(existing?.discordAll ? { discordAll: true } : {})
   }
 }
 
