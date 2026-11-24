@@ -8,9 +8,13 @@ import { createAppIcon } from './icon'
 import { GoogleAccount } from './google/account'
 import { registerGoogleIpc } from './google/ipc'
 import { GoogleSync } from './google/sync'
+import { DiscordAccount } from './discord/account'
+import { registerDiscordIpc } from './discord/ipc'
+import { DiscordSync } from './discord/sync'
 import { autoUpdater } from 'electron-updater'
 import { Updater } from './updater'
 import type { GoogleStatus } from '@shared/google'
+import type { DiscordStatus } from '@shared/discord'
 import type { AppData, LoadResult, TitleBarTheme } from '@shared/types'
 
 interface FileFilter {
@@ -29,6 +33,7 @@ let store: DataStore
 let reminders: ReminderScheduler
 let backups: Backups
 let googleSync: GoogleSync | null = null
+let discordSync: DiscordSync | null = null
 let updater: Updater | null = null
 let quitting = false
 
@@ -124,9 +129,33 @@ function init(): void {
   registerGoogleIpc(store, google, googleSync, googleStatus)
   googleSync.start()
 
+  const discord = new DiscordAccount({
+    dir: app.getPath('userData'),
+    box: {
+      available: () => safeStorage.isEncryptionAvailable(),
+      encrypt: (plain) => safeStorage.encryptString(plain),
+      decrypt: (data) => safeStorage.decryptString(data)
+    },
+    onStatus: () => sendDiscordStatus()
+  })
+  discordSync = new DiscordSync({
+    store,
+    account: discord,
+    dir: app.getPath('userData'),
+    onState: () => sendDiscordStatus(),
+    onNotice: (text) => win?.webContents.send('discord:notice', text),
+    // e.g. a session moved in Discord: a Google calendar holding it must hear about it too
+    onEventsChanged: (diff, data) => googleSync?.recordLocal(diff, data)
+  })
+  const discordStatus = (): DiscordStatus => ({ ...discord.status(), sync: discordSync?.state })
+  const sendDiscordStatus = (): void => win?.webContents.send('discord:status', discordStatus())
+  registerDiscordIpc(store, discord, discordSync, discordStatus)
+  discordSync.start()
+
   store.subscribe({
     onLocalChange(diff, data) {
       googleSync?.recordLocal(diff, data)
+      discordSync?.recordLocal(diff)
     },
     onRemoteChange(change) {
       win?.webContents.send('data:remote', change)
@@ -175,7 +204,10 @@ function createWindow(): void {
   })
 
   // coming back to the window is a good moment to look for changes at Google
-  win.on('focus', () => googleSync?.poke())
+  win.on('focus', () => {
+    googleSync?.poke()
+    discordSync?.poke()
+  })
 
   win.once('ready-to-show', () => {
     if (!startHidden) win?.show()
@@ -243,6 +275,7 @@ app.on('before-quit', () => {
   reminders?.stop()
   backups?.stop()
   googleSync?.stop()
+  discordSync?.stop()
   updater?.stop()
   store?.flush()
 })

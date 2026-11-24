@@ -106,6 +106,13 @@ describe('patchFromGoogle', () => {
     expect(patch.events?.remove).not.toContain(other.id)
   })
 
+  it('keeps the link to a Discord event when Google sends a new version', () => {
+    const first = run([timed('a')]).events[0]
+    const linked = { ...first, discord: { guildId: '1', eventId: '2', own: true, userCount: 4 } }
+    const { events } = run([timed('a', { summary: 'Neu', etag: '"2"' })], [linked])
+    expect(events[0]).toMatchObject({ title: 'Neu', discord: { eventId: '2', userCount: 4 } })
+  })
+
   describe('recurring events', () => {
     const series = timed('s', {
       summary: 'Session',
