@@ -41,8 +41,12 @@ const api = {
   createBackup: (): Promise<BackupInfo> => ipcRenderer.invoke('backup:create'),
   readBackup: (file: string): Promise<string> => ipcRenderer.invoke('backup:read', file),
   openBackupFolder: (): Promise<string> => ipcRenderer.invoke('backup:open-folder'),
-  saveFile: (name: string, content: string, filters: FileFilter[]): Promise<string | null> =>
-    ipcRenderer.invoke('file:save', name, content, filters),
+  saveFile: (
+    name: string,
+    content: string,
+    filters: FileFilter[],
+    extras?: { name: string; content: string }[]
+  ): Promise<string | null> => ipcRenderer.invoke('file:save', name, content, filters, extras ?? []),
   openFile: (filters: FileFilter[]): Promise<{ name: string; content: string } | null> =>
     ipcRenderer.invoke('file:open', filters),
   onReminder: (cb: (p: ReminderPayload) => void) => listen('reminder:fired', cb),

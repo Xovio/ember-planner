@@ -1,5 +1,5 @@
 import { addDays, startOfWeek } from 'date-fns'
-import { createDefaultData, type AppData, type CalendarEvent, type Todo } from '@shared/types'
+import { createDefaultData, type AppData, type Board, type BoardNote, type CalendarColor, type CalendarEvent, type Todo } from '@shared/types'
 import { localDate } from '@shared/todo'
 
 /**
@@ -102,5 +102,54 @@ export function createDemoData(now = new Date()): AppData {
   const block = ev('personal', 'NPC-Steckbriefe schreiben', at(2, 9, 30), at(2, 11, 30), { todoId: data.todos[1].id })
   data.events.push(block)
   data.todos[1].linkedEventId = block.id
+
+  data.boards = [demoBoard(ts)]
   return data
+}
+
+/** brainstorm for the next campaign arc */
+function demoBoard(ts: string): Board {
+  let n = 0
+  const note = (x: number, y: number, text: string, color: CalendarColor, extra: Partial<BoardNote> = {}): BoardNote => ({
+    id: `demo-note-${++n}`,
+    x,
+    y,
+    w: 200,
+    text,
+    color,
+    votes: 0,
+    ...extra
+  })
+  const notes = [
+    note(40, 60, 'Versunkene Stadt unter dem Leuchtturm', 'aqua', { votes: 3 }),
+    note(300, 40, 'Eingang nur bei Ebbe erreichbar', 'aqua'),
+    note(300, 150, 'Glocken läuten unter Wasser', 'aqua', { votes: 1 }),
+    note(40, 190, 'Alte Zollstation als Schmugglerversteck', 'aqua'),
+    note(620, 60, 'Leuchtturmwärterin Maren\nweiß mehr, als sie sagt', 'violet', { votes: 2 }),
+    note(880, 60, 'Kapitän Ostrand – will die Stadt plündern', 'violet'),
+    note(620, 190, 'Ein Kind, das im Traum die Glocken hört', 'violet', { votes: 2 }),
+    note(40, 420, 'Wer hat die Stadt versenkt – und warum?', 'orange'),
+    note(300, 420, 'Wie lange halten Wasseratmungs-Tränke?', 'orange'),
+    note(620, 420, 'Karte der Küste zeichnen', 'red', { action: true }),
+    note(880, 420, 'Glockengeräusch als Soundeffekt suchen', 'red', { action: true })
+  ]
+  const id = (i: number): string => `demo-note-${i}`
+  return {
+    id: 'demo-board-1',
+    title: 'Arc 3: Die versunkene Stadt',
+    notes,
+    frames: [
+      { id: 'demo-frame-1', x: 10, y: 10, w: 520, h: 300, title: 'Schauplätze', color: 'aqua' },
+      { id: 'demo-frame-2', x: 590, y: 10, w: 520, h: 300, title: 'NPCs', color: 'violet' },
+      { id: 'demo-frame-3', x: 10, y: 370, w: 520, h: 170, title: 'Offene Fragen', color: 'orange' }
+    ],
+    edges: [
+      { id: 'demo-edge-1', from: id(1), to: id(2) },
+      { id: 'demo-edge-2', from: id(1), to: id(3) },
+      { id: 'demo-edge-3', from: id(5), to: id(7) },
+      { id: 'demo-edge-4', from: id(3), to: id(7) }
+    ],
+    createdAt: ts,
+    updatedAt: ts
+  }
 }

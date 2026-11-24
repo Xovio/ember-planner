@@ -6,6 +6,7 @@ import {
   TRASH_DAYS,
   normalizeData,
   type AppData,
+  type Board,
   type CalendarEvent,
   type CalendarInfo,
   type CalendarViewKind,
@@ -23,7 +24,7 @@ import { daysBetween, localDate, nextRecurrence, parseLocalDate } from '@shared/
 
 /* ───────────── UI types ───────────── */
 
-export type Page = 'plan' | 'todos' | 'overview' | 'settings'
+export type Page = 'plan' | 'todos' | 'overview' | 'ideas' | 'settings'
 export type RightTab = 'todos' | 'today' | 'details'
 
 export type Selection =
@@ -114,6 +115,8 @@ interface State {
   picked: string[]
   canUndo: boolean
   canRedo: boolean
+  /** open brainstorm board */
+  boardId: string | null
 
   init(): Promise<void>
   /** change from the main process (e.g. Google sync) – not an undo step */
@@ -176,6 +179,14 @@ interface State {
   replaceData(next: AppData, label: string): void
   /** add imported ToDos to the inbox */
   importTodos(todos: NewTodo[], label: string): void
+
+  openBoard(id: string | null): void
+  addBoard(title?: string): string
+  /** change one board; `coalesce` merges quick consecutive edits into one undo step */
+  editBoard(id: string, fn: (b: Board) => Board, label: string, coalesce?: string): void
+  deleteBoard(id: string): void
+  /** creates a ToDo from a note and links both */
+  noteToTodo(boardId: string, noteId: string): void
 
   pushToast(t: Omit<Toast, 'id'>): void
   dismissToast(id: string): void
@@ -290,6 +301,7 @@ export const useStore = create<State>((set, get) => {
     picked: [],
     canUndo: false,
     canRedo: false,
+    boardId: null,
 
     async init() {
       const { data, seq } = await api.load()
@@ -768,6 +780,77 @@ export const useStore = create<State>((set, get) => {
       }))
       if (!todos.length) return
       mutate((d) => ({ ...d, todos: [...d.todos, ...todos] }), { label, undoToast: true })
+    },
+
+    /* ── brainstorm boards ── */
+    openBoard: (boardId) => set({ boardId, page: 'ideas' }),
+
+    addBoard(title = '') {
+      const ts = stamp()
+      const board: Board = { id: uid(), title, notes: [], frames: [], edges: [], createdAt: ts, updatedAt: ts }
+      mutate((d) => ({ ...d, boards: [board, ...d.boards] }), { label: 'Board angelegt' })
+      set({ boardId: board.id, page: 'ideas' })
+      return board.id
+    },
+
+    editBoard(id, fn, label, coalesce) {
+      mutate(
+        (d) => {
+          let changed = false
+          const boards = d.boards.map((b) => {
+            if (b.id !== id) return b
+            const next = fn(b)
+            if (next === b) return b
+            changed = true
+            return { ...next, updatedAt: stamp() }
+          })
+          return changed ? { ...d, boards } : d
+        },
+        { label, coalesce: coalesce ? `board:${id}:${coalesce}` : undefined }
+      )
+    },
+
+    deleteBoard(id) {
+      const b = get().data?.boards.find((x) => x.id === id)
+      if (!b) return
+      mutate((d) => ({ ...d, boards: d.boards.filter((x) => x.id !== id) }), {
+        label: `Board „${b.title || 'Ohne Titel'}“ gelöscht`,
+        undoToast: true
+      })
+      if (get().boardId === id) set({ boardId: get().data?.boards[0]?.id ?? null })
+    },
+
+    noteToTodo(boardId, noteId) {
+      const board = get().data?.boards.find((b) => b.id === boardId)
+      const note = board?.notes.find((n) => n.id === noteId)
+      if (!board || !note || !note.text.trim()) return
+      const [first, ...rest] = note.text.trim().split('\n')
+      const ts = stamp()
+      const todo: Todo = {
+        id: uid(),
+        title: first.trim(),
+        listId: INBOX_ID,
+        priority: 0,
+        subtasks: [],
+        done: false,
+        notes: [rest.join('\n').trim(), `Aus dem Brainstorm „${board.title || 'Ohne Titel'}“`]
+          .filter(Boolean)
+          .join('\n\n'),
+        createdAt: ts,
+        updatedAt: ts
+      }
+      mutate(
+        (d) => ({
+          ...d,
+          todos: [...d.todos, todo],
+          boards: d.boards.map((b) =>
+            b.id === boardId
+              ? { ...b, updatedAt: ts, notes: b.notes.map((n) => (n.id === noteId ? { ...n, todoId: todo.id, action: true } : n)) }
+              : b
+          )
+        }),
+        { label: `ToDo „${todo.title}“ angelegt`, undoToast: true }
+      )
     },
 
     /* ── toasts ── */

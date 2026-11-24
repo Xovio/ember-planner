@@ -22,6 +22,7 @@ damit eine spätere Obsidian-Anbindung nahtlos passt.
 - **Befehlspalette** (`Strg+K`) – Termine, ToDos und Befehle durchsuchen
 - **Rückgängig statt Rückfragen** – `Strg+Z` / `Strg+Y` für alles, keine „Wirklich löschen?“-Dialoge
 - **Google Kalender** – 2-Wege-Sync mit eigenem Google-Konto, inkl. Serien, Erinnerungen und Offline-Warteschlange ([Einrichtung](docs/GOOGLE-SETUP.md))
+- **Ideen-Boards** – Brainstorm mit Zetteln, Rahmen, Pfeilen und Punkten; Zusammenfassen und als Obsidian-Notiz (+ `.canvas`) exportieren
 - **Übersicht** – Wochenauslastung, Deadline-Radar, Kategorien und Aktivitäts-Heatmap
 - **Themes** – „Ember“ (dunkel) und „Rosé“ (hell), weitere Styles folgen
 - **Daten in eigener Hand** – tägliche Sicherung, Export als JSON / ICS / Markdown, Import mit Rückgängig, Feiertage nach Bundesland
@@ -86,6 +87,7 @@ Export, Import und Wiederherstellen: *Optionen → Daten*.
 | `Entf` | Ausgewählten Termin löschen / ToDo in den Papierkorb |
 | `?` | Alle Tastenkürzel anzeigen |
 | ToDo-Seite: `↑` `↓`, `Leertaste`, `0`–`3` | wählen, abhaken, Priorität · Strg/Shift+Klick = Mehrfachauswahl |
+| Ideen: Doppelklick / `N`, `Enter`, `Tab`, `G` | Zettel · verbundener Zettel · Zettel darunter · Rahmen um Auswahl |
 
 **Maus:** Klick ins Raster → Schnell-Anlegen · Klick auf Termin → Vorschau · Doppelklick → Details · Rechtsklick → Menü ·
 ToDo ins Raster ziehen → einplanen · Deadline-Markierung ziehen → Deadline verschieben · ToDo auf eine Liste ziehen → verschieben

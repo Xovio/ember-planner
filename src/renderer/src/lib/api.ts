@@ -8,6 +8,12 @@ export interface FileFilter {
   extensions: string[]
 }
 
+/** file written into the same folder as the main file */
+export interface ExtraFile {
+  name: string
+  content: string
+}
+
 export interface BackupInfo {
   file: string
   at: string
@@ -29,7 +35,7 @@ export interface PlannerApi {
   readBackup(file: string): Promise<string>
   openBackupFolder(): Promise<string>
   /** returns the saved path, or null when cancelled */
-  saveFile(name: string, content: string, filters: FileFilter[]): Promise<string | null>
+  saveFile(name: string, content: string, filters: FileFilter[], extras?: ExtraFile[]): Promise<string | null>
   openFile(filters: FileFilter[]): Promise<{ name: string; content: string } | null>
   onReminder(cb: (p: ReminderPayload) => void): () => void
   onOpenEvent(cb: (eventId: string) => void): () => void
@@ -86,11 +92,13 @@ const browserApi: PlannerApi = {
   async openBackupFolder() {
     return ''
   },
-  async saveFile(name, content) {
-    const url = URL.createObjectURL(new Blob([content], { type: 'text/plain;charset=utf-8' }))
-    const a = Object.assign(document.createElement('a'), { href: url, download: name })
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
+  async saveFile(name, content, _filters, extras = []) {
+    for (const f of [{ name, content }, ...extras]) {
+      const url = URL.createObjectURL(new Blob([f.content], { type: 'text/plain;charset=utf-8' }))
+      const a = Object.assign(document.createElement('a'), { href: url, download: f.name })
+      a.click()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
+    }
     return name
   },
   openFile(filters) {

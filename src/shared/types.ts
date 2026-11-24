@@ -143,6 +143,53 @@ export const TRASH_DAYS = 30
 /** done ToDos older than this many days move to the archive view */
 export const ARCHIVE_DAYS = 14
 
+/* ───────────── Brainstorm boards ───────────── */
+
+/** sticky note on a board; position/size in board coordinates (px at zoom 1) */
+export interface BoardNote {
+  id: string
+  x: number
+  y: number
+  w: number
+  text: string
+  color: CalendarColor
+  /** dot votes */
+  votes: number
+  /** marked as a next step: exported as `- [ ]` */
+  action?: boolean
+  /** ToDo created from this note */
+  todoId?: string
+}
+
+/** frame that groups the notes whose center lies inside it */
+export interface BoardFrame {
+  id: string
+  x: number
+  y: number
+  w: number
+  h: number
+  title: string
+  color: CalendarColor
+}
+
+export interface BoardEdge {
+  id: string
+  from: string
+  to: string
+}
+
+export interface Board {
+  id: string
+  title: string
+  notes: BoardNote[]
+  frames: BoardFrame[]
+  edges: BoardEdge[]
+  /** the user's own conclusion, exported above the structure */
+  summary?: string
+  createdAt: ISODateTime
+  updatedAt: ISODateTime
+}
+
 export type CalendarViewKind = 'day' | 'week' | 'month' | 'agenda'
 
 export interface Settings {
@@ -177,6 +224,7 @@ export interface AppData {
   todos: Todo[]
   /** deleted ToDos, restorable for TRASH_DAYS; kept apart so no view or reminder sees them */
   trash: Todo[]
+  boards: Board[]
   settings: Settings
 }
 
@@ -245,6 +293,7 @@ export function createDefaultData(): AppData {
     ],
     todos: [],
     trash: [],
+    boards: [],
     settings: { ...DEFAULT_SETTINGS }
   }
 }
@@ -263,6 +312,7 @@ export function normalizeData(raw: Partial<AppData> | null | undefined): AppData
     categories: raw.categories ?? base.categories,
     todos: (raw.todos ?? []).map((t) => ({ ...t, subtasks: t.subtasks ?? [], priority: t.priority ?? 0 })),
     trash: raw.trash ?? [],
+    boards: (raw.boards ?? []).map((b) => ({ ...b, notes: b.notes ?? [], frames: b.frames ?? [], edges: b.edges ?? [] })),
     settings: { ...DEFAULT_SETTINGS, ...(raw.settings ?? {}) }
   }
 }
