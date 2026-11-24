@@ -1,6 +1,6 @@
 # Funktionen & Umfang
 
-Stand: Version 0.2 (24. November 2026: Discord-Anbindung, Serientermine einzeln, Termin-Vorlagen, Papierkorb für Termine, Auto-Update, Google-Sync, Schnelle Gewinne 2.6, Ideen-Boards 2.7, Windows-Installer). Was die App heute kann, wo ihre Grenzen liegen und was bewusst noch fehlt.
+Stand: Version 0.3 (24. November 2026: Discord-Anbindung mit Platzhalter für die nächste Session, Serientermine einzeln, Termin-Vorlagen, Papierkorb für Termine, Auto-Update, Google-Sync, Schnelle Gewinne 2.6, Ideen-Boards 2.7, Windows-Installer). Was die App heute kann, wo ihre Grenzen liegen und was bewusst noch fehlt.
 Ausblick und Ideen stehen in der [Roadmap](ROADMAP.md).
 
 ## Aufbau der Oberfläche
@@ -166,6 +166,13 @@ Technik und Entscheidungen: [GOOGLE-SYNC.md](GOOGLE-SYNC.md)
 - **Mitziehen:** Änderungen am Termin gehen nach ca. 2,5 Sekunden zu Discord; Änderungen in Discord kommen zurück (mit Hinweis)
 - **Absagen:** Löschen eines angekündigten Termins fragt vorher nach und sagt das Event in Discord ab (offline: später)
 - Abgleich beim Start, alle 5 Minuten, beim Zurückkehren ins Fenster und auf Knopfdruck (↻ neben *Discord*)
+- **Nächste Session vormerken:** Eine Termin-Vorlage bekommt unter *Optionen → Termin-Vorlagen* einen Rhythmus
+  (jede Woche bis alle 4 Wochen, Wochentag) und optional einen Discord-Server. Der Kalender zeigt dann die nächste Session
+  als grauen, gestrichelten Platzhalter („DnD-Session – noch planen“) – eine Runde nach der letzten echten Session, nie in
+  der Vergangenheit. Klick → **Fertig machen**: Titel eingeben, Uhrzeit anpassen, Haken „In Discord ankündigen“ → der
+  Ankündigen-Dialog öffnet sich mit Server und Kanal der Vorlage. Rechtsklick → **Fällt aus** schiebt ihn eine Runde weiter.
+  Platzhalter werden nicht gespeichert, nicht abgeglichen und erinnern nicht. Kanal oder Ort merkt sich die Vorlage beim
+  ersten Ankündigen
 
 Konzept und Entscheidungen: [DISCORD.md](DISCORD.md)
 

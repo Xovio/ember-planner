@@ -23,7 +23,14 @@ import { api, isDemo } from './lib/api'
 import { holidayOn } from '@shared/holidays'
 import { daysBetween, localDate, nextRecurrence, parseLocalDate } from '@shared/todo'
 import { detachOccurrence, endSeriesBefore, splitSeries } from '@shared/series'
-import { templateFromEvent, templateKey } from '@shared/templates'
+import {
+  isPlaceholderId,
+  placeholderEvent,
+  placeholderTemplateId,
+  skipPlaceholder,
+  templateFromEvent,
+  templateKey
+} from '@shared/templates'
 
 /* ───────────── UI types ───────────── */
 
@@ -48,6 +55,8 @@ export interface QuickCreateState {
   end: string
   allDay: boolean
   anchor: Anchor
+  /** "Fertig machen": turns the placeholder of this template into a real event */
+  placeholderOf?: string
 }
 
 export interface PreviewState {
@@ -186,6 +195,10 @@ interface State {
   /** saves an event as a template and returns its id */
   saveAsTemplate(eventId: string): string
   upsertTemplate(t: EventTemplate): void
+  /** "fällt aus": the placeholder of this template moves on one step */
+  skipPlaceholder(templateId: string): void
+  /** click on a placeholder: open "Fertig machen" at it */
+  openPlaceholder(templateId: string, anchor: Anchor): void
   removeTemplate(id: string): void
 
   upsertCalendar(c: CalendarInfo): void
@@ -392,7 +405,9 @@ export const useStore = create<State>((set, get) => {
       set({ selection, preview: null, quickCreate: null, ...(selection ? { rightTab: 'details' as const } : {}) })
       if (selection && !get().data?.settings.showTodoPanel) get().togglePanel(true)
     },
-    selectEvent: (id, occurrenceStart) => get().select({ kind: 'event', id, occurrenceStart }),
+    selectEvent: (id, occurrenceStart) =>
+      // placeholders are not events: they open "Fertig machen" instead (see clickOccurrence)
+      isPlaceholderId(id) ? undefined : get().select({ kind: 'event', id, occurrenceStart }),
     selectTodo: (id) => get().select({ kind: 'todo', id }),
     clearSelection() {
       const wasDetails = get().rightTab === 'details'
@@ -703,7 +718,15 @@ export const useStore = create<State>((set, get) => {
       const ev = get().data?.events.find((e) => e.id === eventId)
       if (!ev) return ''
       const t = templateFromEvent(ev, uid())
-      mutate((d) => ({ ...d, templates: [...d.templates, t] }), { label: `Vorlage „${t.name}“ gespeichert` })
+      // the event becomes the template's last session, so a rhythm continues from it
+      mutate(
+        (d) => ({
+          ...d,
+          templates: [...d.templates, t],
+          events: d.events.map((e) => (e.id === eventId && !e.templateId ? { ...e, templateId: t.id } : e))
+        }),
+        { label: `Vorlage „${t.name}“ gespeichert` }
+      )
       get().pushToast({
         kind: 'undo',
         title: `Vorlage „${t.name}“ gespeichert`,
@@ -721,6 +744,27 @@ export const useStore = create<State>((set, get) => {
         }),
         { label: 'Vorlage bearbeitet', coalesce: `tpl:${t.id}` }
       )
+    },
+    skipPlaceholder(templateId) {
+      const d0 = get().data
+      const t = d0?.templates.find((x) => x.id === templateId)
+      if (!d0 || !t) return
+      const next = skipPlaceholder(t, d0.events)
+      mutate((d) => ({ ...d, templates: d.templates.map((x) => (x.id === t.id ? next : x)) }), {
+        label: `„${t.name}“ fällt aus`,
+        undoToast: true
+      })
+    },
+    openPlaceholder(templateId, anchor) {
+      const d = get().data
+      const t = d?.templates.find((x) => x.id === templateId)
+      const ph = d && t ? placeholderEvent(t, d.events) : null
+      if (!ph) return
+      set({
+        quickCreate: { start: ph.start, end: ph.end, allDay: ph.allDay, anchor, placeholderOf: templateId },
+        preview: null,
+        contextMenu: null
+      })
     },
     removeTemplate(id) {
       const t = get().data?.templates.find((x) => x.id === id)
@@ -1184,6 +1228,26 @@ export function useVisibleEvents(): CalendarEvent[] {
     return data.events.filter((e) => visible.has(e.calendarId))
   }, [data])
 }
+
+/**
+ * Visible events plus the grey "next session" placeholders of templates with a rhythm.
+ * Only for drawing the calendar – placeholders are never stored, synced or reminded of.
+ */
+export function useCalendarEvents(): CalendarEvent[] {
+  const visible = useVisibleEvents()
+  const data = useStore((s) => s.data)
+  return useMemo(() => {
+    if (!data) return visible
+    const shown = new Set(data.calendars.filter((c) => c.visible).map((c) => c.id))
+    const phs = data.templates
+      .filter((t) => t.rhythm && shown.has(t.calendarId))
+      .map((t) => placeholderEvent(t, data.events))
+      .filter((e): e is CalendarEvent => !!e)
+    return phs.length ? [...visible, ...phs] : visible
+  }, [visible, data])
+}
+
+export { isPlaceholderId, placeholderTemplateId }
 
 /** holiday name for a day, or undefined when holidays are hidden */
 export function useHolidays(): (d: Date) => string | undefined {

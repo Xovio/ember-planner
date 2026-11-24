@@ -1173,3 +1173,57 @@ fieldset.details-body:disabled {
 .chip .dc-badge {
   margin-left: auto;
 }
+
+/* ───────────── "next session" placeholder ───────────── */
+/* grey and dashed: a date that is reserved, not yet a real event */
+.event-block.is-placeholder,
+.chip.is-placeholder {
+  background: transparent !important;
+  background-image: none !important;
+  border: 1.5px dashed color-mix(in srgb, var(--c) 55%, var(--text-3));
+  box-shadow: none;
+  color: var(--text-3);
+  opacity: 0.85;
+  cursor: pointer;
+}
+.event-block.is-placeholder .eb-title,
+.chip.is-placeholder .chip-title {
+  font-style: italic;
+  font-weight: 500;
+}
+.event-block.is-placeholder:hover,
+.chip.is-placeholder:hover {
+  opacity: 1;
+  background: color-mix(in srgb, var(--c) 8%, transparent) !important;
+}
+.agenda-item.is-placeholder {
+  opacity: 0.7;
+  font-style: italic;
+}
+.agenda-item.is-placeholder .agenda-bar {
+  background: none;
+  border-left: 2px dashed var(--c);
+}
+.qc-announce {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--text-2);
+  cursor: pointer;
+}
+.tpl-session {
+  font-size: 12.5px;
+}
+.tpl-session svg {
+  flex: 0 0 auto;
+}
+/* rhythm and Discord defaults: their own line under the fields, the delete button stays top right */
+.tpl-row > .icon-btn {
+  grid-column: 3;
+  grid-row: 1;
+}
+.tpl-session {
+  grid-column: 2 / 3;
+  color: var(--text-2);
+}

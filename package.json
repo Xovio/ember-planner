@@ -1,7 +1,7 @@
 {
   "name": "ember-planner",
   "productName": "Ember Planner",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Kalender, ToDos und Planung – Desktop-App",
   "main": "./out/main/index.js",
   "private": true,

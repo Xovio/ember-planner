@@ -9,7 +9,7 @@ damit eine spätere Obsidian-Anbindung nahtlos passt.
 
 ![Planen – Wochenansicht mit ToDo-Spalte](docs/screenshots/planen-woche.png)
 
-> Status: **frühe Version (0.2)** für Windows, als Installer baubar (`npm run dist`). Läuft lokal, Daten bleiben auf dem
+> Status: **frühe Version (0.3)** für Windows, als Installer baubar (`npm run dist`). Läuft lokal, Daten bleiben auf dem
 > eigenen Rechner – optional mit **2-Wege-Sync zu Google Kalender**. Obsidian-Anbindung ist geplant – siehe [Roadmap](docs/ROADMAP.md).
 
 ## Highlights
@@ -46,7 +46,7 @@ npm install
 npm run dist
 ```
 
-Das erzeugt `dist\Ember-Planner-Setup-0.2.0.exe`. Fertige Installer gibt es auch unter
+Das erzeugt `dist\Ember-Planner-Setup-0.3.0.exe`. Fertige Installer gibt es auch unter
 [Releases](https://github.com/Xovio/ember-planner/releases). Der Installer richtet die App für den aktuellen Benutzer ein
 (ohne Administratorrechte) und legt Startmenü- und Desktop-Verknüpfung an. Zum Anheften an die Taskleiste die App über das
 Startmenü starten, dann Rechtsklick auf das Taskleisten-Symbol → *An Taskleiste anheften*.

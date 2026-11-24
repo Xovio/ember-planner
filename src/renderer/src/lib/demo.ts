@@ -67,7 +67,8 @@ export function createDemoData(now = new Date()): AppData {
     ev('dnd', 'Weltenbau: Karte der Küste', at(3, 15), at(3, 17)),
     ev('dnd', 'DnD-Session #12', at(4, 19), at(4, 23), {
       location: 'Discord',
-      discord: { guildId: '900', eventId: 'demo-d1', own: true, kind: 'voice', status: 1, userCount: 4 }
+      discord: { guildId: '900', eventId: 'demo-d1', own: true, kind: 'voice', status: 1, userCount: 4 },
+      templateId: 'demo-tpl-dnd'
     }),
     // someone else's events on the Discord server
     ev('d:900', 'One-Shot: Die Glocke von Varn', at(5, 15), at(5, 19), {
@@ -130,6 +131,22 @@ export function createDemoData(now = new Date()): AppData {
   data.todos[1].linkedEventId = block.id
 
   data.boards = [demoBoard(ts)]
+  // weekly session: the next one shows as a grey placeholder ("noch planen")
+  data.templates = [
+    {
+      id: 'demo-tpl-dnd',
+      name: 'DnD-Session',
+      title: 'DnD-Session',
+      calendarId: 'dnd',
+      allDay: false,
+      startTime: '19:00',
+      durationMin: 240,
+      location: 'Discord',
+      reminders: [60],
+      rhythm: { weekday: (new Date(at(4, 19)).getDay() + 6) % 7, everyWeeks: 1 },
+      discord: { guildId: '900', kind: 'voice' }
+    }
+  ]
   return data
 }
 

@@ -8,6 +8,9 @@ export function discordClass(ev: CalendarEvent): string {
   return `${d.own ? 'dc-own' : 'dc-ext'} ${d.status === 4 ? 'dc-cancelled' : ''}`
 }
 
+/** grey, dashed "next session – noch planen" placeholder from a template with a rhythm */
+export const placeholderClass = (ev: CalendarEvent): string => (ev.id.startsWith('ph:') ? 'is-placeholder' : '')
+
 /** small mark with the number of interested people */
 export function DiscordBadge({ ev }: { ev: CalendarEvent }): React.JSX.Element | null {
   const d = ev.discord

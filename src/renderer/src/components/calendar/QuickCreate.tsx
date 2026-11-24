@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { addDays, addMinutes } from 'date-fns'
-import { BookMarked, Clock, Maximize2 } from 'lucide-react'
+import { BookMarked, Clock, Maximize2, Megaphone } from 'lucide-react'
 import { isCalendarLocked } from '@shared/google'
 import type { EventTemplate } from '@shared/types'
 import { useStore } from '../../store'
 import { calVar } from '../../lib/theme'
 import { fmt, fromLocal, toLocalDate, toLocalTime } from '../../lib/dates'
 import { Popover } from '../ui/Popover'
+import { api } from '../../lib/api'
 
 /** Small "new event" popover at the clicked slot (title, time, calendar). */
 export function QuickCreate(): React.JSX.Element | null {
@@ -16,14 +17,20 @@ export function QuickCreate(): React.JSX.Element | null {
   const calendars = allCalendars.filter((c) => !isCalendarLocked(c))
   const setQuickCreate = useStore((s) => s.setQuickCreate)
   const createEvent = useStore((s) => s.createEvent)
+  const openAnnounce = useStore((s) => s.openAnnounce)
   const firstVisible = calendars.find((c) => c.visible) ?? calendars[0] ?? allCalendars[0]
+  const templates = useStore((s) => s.data!.templates)
+  // "Fertig machen" on a placeholder: the template is set, the title is still to be written
+  const finishing = qc?.placeholderOf ? templates.find((t) => t.id === qc.placeholderOf) : undefined
   const [title, setTitle] = useState('')
-  const [calendarId, setCalendarId] = useState(firstVisible.id)
+  const [calendarId, setCalendarId] = useState(
+    finishing && calendars.some((c) => c.id === finishing.calendarId) ? finishing.calendarId : firstVisible.id
+  )
   const [times, setTimes] = useState(() =>
     qc ? { s: toLocalTime(new Date(qc.start)), e: toLocalTime(new Date(qc.end)) } : { s: '', e: '' }
   )
-  const templates = useStore((s) => s.data!.templates)
-  const [tpl, setTpl] = useState<EventTemplate | null>(null)
+  const [tpl, setTpl] = useState<EventTemplate | null>(finishing ?? null)
+  const [announce, setAnnounce] = useState(!!finishing?.discord && !!api.discord)
   if (!qc) return null
 
   /** a template fills title, calendar and length; place, notes and reminders follow on save */
@@ -56,11 +63,21 @@ export function QuickCreate(): React.JSX.Element | null {
           ...(tpl.notes ? { notes: tpl.notes } : {})
         }
       : {}
-    createEvent({ title: title.trim(), calendarId, allDay: qc.allDay, ...range(), ...extra }, { select: more })
+    if (finishing && !title.trim()) return
+    const id = createEvent(
+      { title: title.trim(), calendarId, allDay: qc.allDay, ...range(), ...extra, ...(tpl ? { templateId: tpl.id } : {}) },
+      { select: more && !(finishing && announce) }
+    )
+    if (id && finishing && announce) openAnnounce(id)
   }
 
   return (
-    <Popover anchor={qc.anchor} onClose={() => setQuickCreate(null)} width={330} label="Neuer Termin">
+    <Popover
+      anchor={qc.anchor}
+      onClose={() => setQuickCreate(null)}
+      width={330}
+      label={finishing ? `${finishing.name} fertig machen` : 'Neuer Termin'}
+    >
       <div
         className="qc"
         style={{ '--c': calVar(calendars.find((c) => c.id === calendarId)?.color ?? 'red') } as React.CSSProperties}
@@ -68,7 +85,8 @@ export function QuickCreate(): React.JSX.Element | null {
         <input
           autoFocus
           className="qc-title"
-          placeholder="Titel hinzufügen"
+          placeholder={finishing ? `Titel der ${finishing.name}` : 'Titel hinzufügen'}
+          aria-required={finishing ? true : undefined}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           onKeyDown={(e) => {
@@ -113,7 +131,13 @@ export function QuickCreate(): React.JSX.Element | null {
             </button>
           ))}
         </div>
-        {templates.length > 0 && (
+        {finishing && api.discord && (
+          <label className="qc-announce" title={finishing.discord ? undefined : 'Discord-Vorgaben stellst du in der Vorlage ein'}>
+            <input type="checkbox" checked={announce} onChange={(e) => setAnnounce(e.target.checked)} />
+            <Megaphone size={13} /> In Discord ankündigen
+          </label>
+        )}
+        {!finishing && templates.length > 0 && (
           <div className="qc-templates" role="group" aria-label="Vorlagen">
             <BookMarked size={13} />
             {templates.map((t) => (
@@ -138,8 +162,13 @@ export function QuickCreate(): React.JSX.Element | null {
             <Maximize2 size={13} /> Mehr Optionen
           </button>
           <span style={{ flex: 1 }} />
-          <button className="btn btn-primary sm" onClick={() => save()}>
-            Speichern <kbd>↵</kbd>
+          <button
+            className="btn btn-primary sm"
+            onClick={() => save()}
+            disabled={!!finishing && !title.trim()}
+            title={finishing && !title.trim() ? 'Gib der Session zuerst einen Titel' : undefined}
+          >
+            {finishing ? 'Fertig machen' : 'Speichern'} <kbd>↵</kbd>
           </button>
         </div>
       </div>

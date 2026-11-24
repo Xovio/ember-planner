@@ -159,6 +159,7 @@ export function patchFromGoogle({ cal, items, defaultReminders, local, full, pen
     // fields only the app knows (e.g. the link to a Discord event) survive Google's version
     const prev = localById.get(ev.id)
     if (prev?.discord) ev.discord = prev.discord
+    if (prev?.templateId) ev.templateId = prev.templateId
     upserts.set(ev.id, ev)
     removed.delete(ev.id)
     if (ev.seriesId) hide(ev.seriesId, ev.originalStart ?? null)

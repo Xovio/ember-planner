@@ -2,8 +2,8 @@ import { useMemo } from 'react'
 import { addDays, isToday, isTomorrow, startOfDay } from 'date-fns'
 import { MapPin, Repeat, Bell, CalendarPlus } from 'lucide-react'
 import { expandAll, type Occurrence } from '@shared/recurrence'
-import { DiscordBadge } from '../discord/DiscordBadge'
-import { useCalendarMap, useHolidays, useStore, useVisibleEvents } from '../../store'
+import { DiscordBadge, placeholderClass } from '../discord/DiscordBadge'
+import { useCalendarEvents, useCalendarMap, useHolidays, useStore } from '../../store'
 import { calVar } from '../../lib/theme'
 import { fmt, toLocalTime } from '../../lib/dates'
 import { clickOccurrence } from './TimeGrid'
@@ -13,7 +13,7 @@ const DAYS = 42
 
 export function AgendaList(): React.JSX.Element {
   const cursor = useStore((s) => s.cursor)
-  const events = useVisibleEvents()
+  const events = useCalendarEvents()
   const calendars = useCalendarMap()
   const holiday = useHolidays()
   const openAdd = useStore((s) => s.openAdd)
@@ -71,7 +71,7 @@ export function AgendaList(): React.JSX.Element {
               return (
                 <button
                   key={o.key + day.toISOString()}
-                  className="agenda-item"
+                  className={`agenda-item ${placeholderClass(o.event)}`}
                   style={{ '--c': calVar(cal?.color ?? 'red') } as React.CSSProperties}
                   onClick={(e) => clickOccurrence(o.event.id, o.start.toISOString(), e.currentTarget)}
                   onDoubleClick={() => selectEvent(o.event.id, o.start.toISOString())}

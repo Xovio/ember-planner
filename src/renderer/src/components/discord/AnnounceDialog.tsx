@@ -13,10 +13,14 @@ export function AnnounceDialog({ eventId }: { eventId: string }): React.JSX.Elem
   const close = useStore((s) => s.closeOverlay)
   const pushToast = useStore((s) => s.pushToast)
   const servers = useMemo(() => calendars.filter((c) => c.external?.provider === 'discord'), [calendars])
-  const [guildId, setGuildId] = useState(servers[0]?.external?.id ?? '')
-  const [kind, setKind] = useState<'voice' | 'external'>('voice')
+  // a session from a template starts with the template's Discord defaults
+  const template = useStore((s) => (ev?.templateId ? s.data!.templates.find((t) => t.id === ev.templateId) : undefined))
+  const upsertTemplate = useStore((s) => s.upsertTemplate)
+  const preset = template?.discord && servers.some((s) => s.external?.id === template.discord!.guildId) ? template.discord : undefined
+  const [guildId, setGuildId] = useState(preset?.guildId ?? servers[0]?.external?.id ?? '')
+  const [kind, setKind] = useState<'voice' | 'external'>(preset?.kind ?? 'voice')
   const [channels, setChannels] = useState<DiscordChannel[] | null>(null)
-  const [channelId, setChannelId] = useState('')
+  const [channelId, setChannelId] = useState(preset?.channelId ?? '')
   const [location, setLocation] = useState(ev?.location ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -71,6 +75,10 @@ export function AnnounceDialog({ eventId }: { eventId: string }): React.JSX.Elem
     if (!r.ok) {
       setError(r.error)
       return
+    }
+    // the first announcement of a template's session teaches the template where its sessions go
+    if (template && !template.discord) {
+      upsertTemplate({ ...template, discord: { guildId, kind, ...(kind === 'voice' ? { channelId } : {}) } })
     }
     const server = servers.find((s) => s.external?.id === guildId)?.name ?? 'Discord'
     pushToast({ kind: 'info', title: `„${ev.title || 'Termin'}“ auf ${server} angekündigt` })
