@@ -2,7 +2,7 @@ import { Check } from 'lucide-react'
 import type { CalendarViewKind } from '@shared/types'
 import { isCalendarLocked } from '@shared/google'
 import { useStore } from '../store'
-import { THEMES, nextThemeId } from '../lib/theme'
+import { THEMES, FONTS, CORNERS, nextThemeId } from '../lib/theme'
 import { REMINDER_PRESETS, reminderLabel } from '../lib/dates'
 import { api } from '../lib/api'
 import { playChime } from '../lib/chime'
@@ -58,6 +58,16 @@ export function SettingsPage(): React.JSX.Element {
             </div>
           </button>
         </div>
+        <Row label="Schriftart">
+          <select className="input" value={s.font ?? 'default'} onChange={(e) => update({ font: e.target.value })}>
+            {FONTS.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+          </select>
+        </Row>
+        <Row label="Ecken">
+          <select className="input" value={s.corners ?? 'soft'} onChange={(e) => update({ corners: e.target.value })}>
+            {CORNERS.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+          </select>
+        </Row>
         <StylePromptBuilder />
       </section>
 

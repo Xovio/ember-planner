@@ -254,6 +254,8 @@ export type CalendarViewKind = 'day' | 'week' | 'month' | 'agenda'
 
 export interface Settings {
   theme: string
+  font: string
+  corners: string
   defaultView: CalendarViewKind
   defaultReminders: number[]
   defaultDurationMin: number
@@ -334,6 +336,8 @@ export interface TitleBarTheme {
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: 'ember',
+  font: 'default',
+  corners: 'soft',
   defaultView: 'week',
   defaultReminders: [10],
   defaultDurationMin: 60,

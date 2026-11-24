@@ -25,11 +25,11 @@ export const THEMES: ThemeInfo[] = [
     swatches: ['#f6efec', '#ffffff', '#d93a3f', '#b52a30']
   },
   {
-    id: 'midnight',
-    name: 'Midnight',
-    description: 'Dunkel, kühles Blau',
+    id: 'neon',
+    name: 'Neon Ninja',
+    description: 'Cyberpunk: Neonpink, Cyan, tiefes Violett',
     dark: true,
-    swatches: ['#0d1220', '#1a2133', '#5b8def', '#8fb2ff']
+    swatches: ['#0b0714', '#261845', '#ff2d95', '#19f0ff']
   },
   {
     id: 'forest',
@@ -64,6 +64,23 @@ export const COLOR_NAMES: Record<CalendarColor, string> = {
 }
 
 export const calVar = (c: CalendarColor): string => `var(--cal-${c})`
+
+export const FONTS = [
+  { id: 'default', name: 'Standard' },
+  { id: 'rounded', name: 'Weich' },
+  { id: 'serif', name: 'Serif' },
+  { id: 'mono', name: 'Mono' }
+]
+export const CORNERS = [
+  { id: 'sharp', name: 'Eckig' },
+  { id: 'soft', name: 'Normal' },
+  { id: 'round', name: 'Rund' }
+]
+
+export function applyLook(font: string, corners: string): void {
+  document.documentElement.dataset.font = font
+  document.documentElement.dataset.corners = corners
+}
 
 export function applyTheme(id: string): { color: string; symbolColor: string } {
   const theme = THEMES.find((t) => t.id === id) ?? THEMES[0]
