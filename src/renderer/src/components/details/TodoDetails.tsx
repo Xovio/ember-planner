@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { addMinutes } from 'date-fns'
+import { addDays, addMinutes } from 'date-fns'
 import { AlignLeft, CalendarClock, Copy, Flag, Hourglass, List, ListChecks, Plus, Repeat, Signal, Tag, Timer, Trash2, X } from 'lucide-react'
 import type { Priority, Recurrence, RecurrenceFreq, Todo } from '@shared/types'
 import { localDate, nextRecurrence, parseLocalDate, toTasksLine } from '@shared/todo'
@@ -270,7 +270,13 @@ function TodoRepeat({ todo, onChange }: { todo: Todo; onChange: (r: Recurrence |
             const v = e.target.value
             if (v === 'none') return onChange(null)
             const freq = v as RecurrenceFreq
-            onChange({ interval: rec?.interval ?? 1, freq, ...(freq === 'weekly' ? { byWeekday: rec?.byWeekday } : {}) })
+            onChange({
+              interval: rec?.interval ?? 1,
+              freq,
+              ...(freq === 'weekly' ? { byWeekday: rec?.byWeekday } : {}),
+              ...(rec?.until ? { until: rec.until } : {}),
+              ...(rec?.count ? { count: rec.count } : {})
+            })
           }}
         >
           <option value="none">Wiederholt sich nicht</option>
@@ -315,10 +321,48 @@ function TodoRepeat({ todo, onChange }: { todo: Todo; onChange: (r: Recurrence |
                 })}
               </div>
             )}
+            <div className="rec-line">
+              Endet
+              <select
+                className="input sm"
+                value={rec.until ? 'until' : rec.count ? 'count' : 'never'}
+                onChange={(e) => {
+                  const v = e.target.value
+                  const from = todo.softDeadline ?? todo.hardDeadline ?? localDate(new Date())
+                  onChange({
+                    ...rec,
+                    until: v === 'until' ? localDate(addDays(parseLocalDate(from), 90)) : undefined,
+                    count: v === 'count' ? 10 : undefined
+                  })
+                }}
+              >
+                <option value="never">nie</option>
+                <option value="until">am</option>
+                <option value="count">nach</option>
+              </select>
+              {rec.until && <DatePicker value={rec.until} onChange={(v) => v && onChange({ ...rec, until: v })} />}
+              {rec.count && (
+                <>
+                  <input
+                    type="number"
+                    min={1}
+                    max={999}
+                    className="input xs"
+                    value={rec.count}
+                    onChange={(e) => onChange({ ...rec, count: Math.max(1, Number(e.target.value) || 1) })}
+                  />
+                  Mal
+                </>
+              )}
+            </div>
             <span className="field-hint">
-              {nextDay
-                ? `Beim Abhaken entsteht das nächste ToDo – fällig ${fmt(parseLocalDate(nextDay), 'EEE, d. MMM')}.`
-                : 'Beim Abhaken entsteht das nächste ToDo.'}
+              {todo.done
+                ? 'Beim Abhaken entsteht das nächste ToDo.'
+                : nextDay
+                  ? `Beim Abhaken entsteht das nächste ToDo – fällig ${fmt(parseLocalDate(nextDay), 'EEE, d. MMM')}${
+                      rec.count ? ` (noch ${rec.count - 1}× danach)` : ''
+                    }.`
+                  : 'Das ist das letzte Mal – beim Abhaken entsteht kein neues ToDo.'}
             </span>
           </div>
         )}
