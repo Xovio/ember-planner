@@ -46,7 +46,7 @@ npm install
 npm run dist
 ```
 
-Das erzeugt `dist\Ember-Planner-Setup-0.3.1.exe`. Fertige Installer gibt es auch unter
+Das erzeugt `dist\Ember-Planner-Setup-0.4.0.exe`. Fertige Installer gibt es auch unter
 [Releases](https://github.com/Xovio/ember-planner/releases). Der Installer richtet die App für den aktuellen Benutzer ein
 (ohne Administratorrechte) und legt Startmenü- und Desktop-Verknüpfung an. Zum Anheften an die Taskleiste die App über das
 Startmenü starten, dann Rechtsklick auf das Taskleisten-Symbol → *An Taskleiste anheften*.
