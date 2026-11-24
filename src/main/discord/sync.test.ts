@@ -131,8 +131,8 @@ describe('reading server events', () => {
       reminders: [30],
       discord: { guildId: GUILD, eventId: 'e1', own: false, userCount: 3, status: 1 }
     })
-    // no end at Discord: default length
-    expect(Date.parse(ev.end) - Date.parse(ev.start)).toBe(60 * 60_000)
+    // no end at Discord: a session's 4 hours
+    expect(Date.parse(ev.end) - Date.parse(ev.start)).toBe(4 * 60 * 60_000)
   })
 
   it('removes events gone from Discord, but keeps finished ones', async () => {

@@ -272,7 +272,7 @@ export class DiscordSync {
         const id = discordEventLocalId(d.id)
         seen.add(id)
         const before = local.get(id)
-        const ev = eventFromDiscord(d, cal, (cid) => channelNames.get(cid), data.settings.defaultDurationMin, before)
+        const ev = eventFromDiscord(d, cal, (cid) => channelNames.get(cid), before)
         if (!before || JSON.stringify(before) !== JSON.stringify(ev)) {
           upserts.push({ ...ev, updatedAt: before ? new Date(now).toISOString() : ev.updatedAt })
         }
