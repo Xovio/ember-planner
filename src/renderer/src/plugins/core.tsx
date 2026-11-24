@@ -16,6 +16,7 @@ import { PREP_WIDGET_ID } from '@shared/apptime'
 import { LAUNCHER_WIDGET_ID } from '@shared/launcher'
 import { PrepTracker, PrepTrackerSettings } from '../components/widgets/PrepTracker'
 import { Launcher, LauncherSettings } from '../components/widgets/Launcher'
+import { GoalsWidget, PointsWidget } from '../components/widgets/GoalWidgets'
 import { SESSION_WIDGET_ID, SessionCountdown, SessionCountdownSettings } from '../components/widgets/SessionCountdown'
 
 /** the overview, with the details column when an event or ToDo is selected */
@@ -39,6 +40,8 @@ registerPage({ ...core, id: 'settings', label: 'Optionen', icon: Settings, order
 
 /* ── overview widgets, in their default order ── */
 registerWidget({ ...core, id: 'todo-stats', title: 'ToDo-Zahlen', description: 'Offen, überfällig, diese Woche erledigt', size: 'full', order: 10, component: TodoStats })
+registerWidget({ ...core, id: 'goals', title: 'Wochenziele', description: 'Fortschritt der Wochenziele, Nachfrage bei verpassten Terminen', size: 'half', order: 12, component: GoalsWidget })
+registerWidget({ ...core, id: 'points', title: 'Punkte & Level', description: 'Punkte für Erledigtes, Wochenverlauf und Level', size: 'half', order: 14, component: PointsWidget })
 registerWidget({ ...core, id: 'agenda', title: 'Tagesplan', description: 'Die Termine von heute', size: 'half', tall: true, order: 20, component: AgendaWidget })
 registerWidget({ ...core, id: 'next-up', title: 'Als Nächstes', description: 'Countdown zum nächsten Termin', size: 'half', order: 30, component: NextUpWidget })
 registerWidget({ ...core, id: 'week-load', title: 'Wochenauslastung', description: 'Verplante Stunden pro Tag', size: 'half', order: 40, component: WeekLoad })

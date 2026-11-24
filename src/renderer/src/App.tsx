@@ -3,6 +3,7 @@ import { useStore } from './store'
 import { api } from './lib/api'
 import { applyTheme, applyLook } from './lib/theme'
 import { playChime } from './lib/chime'
+import { usePointsSync } from './lib/pointsSync'
 import { TitleBar } from './components/TitleBar'
 import { NavRail } from './components/NavRail'
 import { ActivePage } from './plugins/ActivePage'
@@ -28,6 +29,7 @@ export function App(): React.JSX.Element {
   useEffect(() => {
     void useStore.getState().init()
   }, [])
+  usePointsSync()
 
   useEffect(() => {
     if (!theme) return

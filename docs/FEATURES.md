@@ -110,6 +110,21 @@ Die linke Leiste filtert die ToDo-Spalte: Ein Klick auf eine Liste oder Kategori
 **Starter:** Programme, Verknüpfungen (auch Steam-Spiele vom Desktop) oder Ordner auf das Widget ziehen legt eine Kachel an;
 auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `steam://`, `obsidian://` trägst du unter ⚙ ein.
 
+## Wochenziele & Punkte
+
+- **Wochenziele** wie „3× Gym“ legst du in *Planen* in der linken Leiste an (+ bei *Wochenziele*) oder im Widget
+  *Wochenziele*: was, wie oft pro Woche, wie lange, in welchem Kalender
+- **Feste Zeiten** (z. B. Di und Do 15:30, je 2 h) trägt Ember jede Woche selbst als Termine ein (diese und nächste Woche);
+  die übrigen Bausteine ziehst du aus der Leiste in die Woche. Optional „Nur diese Woche“
+- Jeder Baustein ist ein normaler Termin (synct mit Google) mit Ziel-Symbol; abhaken in der Vorschau, den Details oder per Rechtsklick
+- Ist ein Baustein vorbei und nicht abgehakt, fragt Ember **„Hat’s geklappt?“** – *Ja*, *Verschieben* (zurück in den
+  Vorrat, neu einplanen) oder *Diese Woche nicht* (zählt in dieser Woche nicht mehr). Keine Strafe
+- Fortschritt als Punkte: ● geschafft, ◐ eingeplant, ○ offen
+- **Punkte** gibt es für erledigte ToDos (10, +5 je Prioritätsstufe), Ziel-Bausteine (15), ein komplettes Wochenziel (+25),
+  stattgefundene D&D-Sessions (30, gleiche Regel wie das Widget *Nächste Session*) und jede volle Prep-Stunde (5)
+- Punkte gehen nie verloren: Gelöschtes behält seine Punkte, nur Wieder-Öffnen nimmt sie zurück. Gezählt wird ab der Version 0.5
+- Widget **Punkte & Level**: Level aus allen Punkten, diese Woche mit Verlauf der letzten 8 Wochen, die letzten Punkte
+
 ## Ideen (Brainstorm-Boards)
 
 Eine freie Fläche zum Sammeln und Ordnen – in der Art von Miro, aber bewusst schlicht.

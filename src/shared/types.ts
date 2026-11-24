@@ -112,10 +112,63 @@ export interface CalendarEvent {
   discord?: DiscordLink
   /** created from this event template – the last one marks where the next placeholder goes */
   templateId?: string
+  /** one building block of a weekly goal, e.g. one of "3× Gym"; checked off on the event */
+  goal?: GoalLink
   /** set while the event lies in `AppData.eventTrash` */
   deletedAt?: ISODateTime
   createdAt: ISODateTime
   updatedAt: ISODateTime
+}
+
+export interface GoalLink {
+  goalId: string
+  done?: boolean
+  doneAt?: ISODateTime
+}
+
+/** "3× Gym" per week: blocks are dragged into the week as events and checked off there */
+export interface WeeklyGoal {
+  id: string
+  title: string
+  /** blocks per week */
+  count: number
+  calendarId: string
+  durationMin: number
+  /** fixed times, put into every week automatically (e.g. Di 15:30 and Do 15:30); the rest is planned by hand */
+  slots: GoalSlot[]
+  /** only for this ISO week ("2026-W48"); absent = every week */
+  week?: string
+  /** weeks whose fixed times were already put in, so deleted ones don't come back */
+  filledWeeks?: string[]
+  /** blocks struck for a week ("not this week"): week → number struck */
+  struck?: Record<string, number>
+  archived?: boolean
+  createdAt: ISODateTime
+  updatedAt: ISODateTime
+}
+
+export interface GoalSlot {
+  /** 0 = Mo … 6 = So */
+  day: number
+  /** "HH:mm" */
+  time: string
+  durationMin: number
+}
+
+export type PointKind = 'todo' | 'goal' | 'goal-week' | 'session' | 'prep'
+
+export interface PointEntry {
+  at: ISODateTime
+  kind: PointKind
+  points: number
+  label: string
+}
+
+/** points only ever grow: entries are keyed (e.g. "todo:<id>") so nothing counts twice */
+export interface PointsLedger {
+  /** nothing done before this moment earns points */
+  since: ISODateTime
+  entries: Record<string, PointEntry>
 }
 
 /** reusable presets for new events, e.g. "DnD-Session" (Fr 19:00, 4 h, Kalender DnD, Ort Discord) */
@@ -307,6 +360,8 @@ export interface AppData {
   eventTrash: CalendarEvent[]
   templates: EventTemplate[]
   boards: Board[]
+  goals: WeeklyGoal[]
+  points: PointsLedger
   settings: Settings
 }
 
@@ -383,6 +438,8 @@ export function createDefaultData(): AppData {
     eventTrash: [],
     templates: [],
     boards: [],
+    goals: [],
+    points: { since: new Date().toISOString(), entries: {} },
     settings: { ...DEFAULT_SETTINGS }
   }
 }
@@ -404,6 +461,8 @@ export function normalizeData(raw: Partial<AppData> | null | undefined): AppData
     eventTrash: raw.eventTrash ?? [],
     templates: raw.templates ?? [],
     boards: (raw.boards ?? []).map((b) => ({ ...b, notes: b.notes ?? [], frames: b.frames ?? [], edges: b.edges ?? [] })),
+    goals: raw.goals ?? [],
+    points: raw.points?.since ? { since: raw.points.since, entries: raw.points.entries ?? {} } : base.points,
     settings: { ...DEFAULT_SETTINGS, ...(raw.settings ?? {}) }
   }
 }
