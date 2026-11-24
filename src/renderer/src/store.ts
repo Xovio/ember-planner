@@ -27,7 +27,9 @@ import { templateFromEvent, templateKey } from '@shared/templates'
 
 /* ───────────── UI types ───────────── */
 
-export type Page = 'plan' | 'todos' | 'overview' | 'ideas' | 'settings'
+export type CorePage = 'plan' | 'todos' | 'overview' | 'ideas' | 'settings'
+/** a registered page id (see plugins/registry); core ids are listed for autocompletion */
+export type Page = CorePage | (string & {})
 export type RightTab = 'todos' | 'today' | 'details'
 
 export type Selection =

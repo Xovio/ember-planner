@@ -6,6 +6,7 @@ import './styles/app.css'
 import './styles/todos.css'
 import './styles/ux.css'
 import './styles/ideas.css'
+import './plugins/core'
 import { App } from './App'
 
 createRoot(document.getElementById('root')!).render(
