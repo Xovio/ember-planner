@@ -1,13 +1,18 @@
 # Discord-Anbindung – Konzept
 
-**Status: Entwurf zur Abstimmung.** Gebaut wird erst, wenn die offenen Fragen unten geklärt sind.
+**Status: abgestimmt am 24. November 2026** (Entscheidungen unten), noch nicht gebaut.
 Einrichtung des Bots: [DISCORD-SETUP.md](DISCORD-SETUP.md).
 
 ## Ziel
 
 1. **Lesen:** Die geplanten Events ausgewählter Discord-Server erscheinen im Kalender, z. B. die DnD-Runde, mit der Anzahl „Interessiert“.
 2. **Ankündigen:** Aus einem Termin wird mit einem Klick ein Server-Event („In Discord ankündigen“).
-3. **Mitziehen:** Verschiebst oder änderst du den Termin, wandert das Discord-Event mit. Löschst du ihn, wird das Event abgesagt.
+3. **Mitziehen:** Verschiebst oder änderst du den Termin, wandert das Discord-Event mit. Löschst du ihn, wird das Event
+   nach einer Warnung abgesagt.
+4. **Nächste Session vormerken:** Eine Vorlage mit Rhythmus zeigt die nächste Session als ausgegrauten Platzhalter, den du
+   mit einem eigenen Titel fertig machst und dann ankündigst.
+
+Es geht nur um **eigene Server**: Du lädst den Bot selbst ein.
 
 ## Zugang: eigener Bot
 
@@ -40,6 +45,15 @@ Einrichtung des Bots: [DISCORD-SETUP.md](DISCORD-SETUP.md).
 **Felder:** Titel → `name` (bis 100 Zeichen), Notizen → `description` (bis 1000), Beginn/Ende → `scheduled_start_time`/`scheduled_end_time`.
 Ein Server hat höchstens 100 geplante oder laufende Events gleichzeitig.
 
+## Darstellung
+
+- **Alle Events** der ausgewählten Server erscheinen, auch die anderer Mitglieder.
+- Discord-Events sehen **erkennbar anders** aus: Discord-Symbol am Titel, gestrichelter linker Rand in der Server-Farbe und
+  die Anzahl Interessierter als kleines Abzeichen („👥 12“). Nur die Anzahl, keine Namen.
+- Ein angekündigter eigener Termin zeigt dasselbe Symbol und die Anzahl, behält aber das Aussehen seines Kalenders.
+- Abgesagte Events werden durchgestrichen angezeigt, bis sie vorbei sind; beendete verschwinden nicht, sie sind normale vergangene Termine.
+- Erinnerungen: Events anderer bekommen die Standard-Erinnerung des Server-Kalenders (einstellbar oder abschaltbar wie bei Google-Kalendern).
+
 ## Datenmodell
 
 - **Ein Kalender pro ausgewähltem Server** im Abschnitt *Discord* der linken Leiste (wie *Google*), Farbe und Sichtbarkeit lokal.
@@ -49,7 +63,36 @@ Ein Server hat höchstens 100 geplante oder laufende Events gleichzeitig.
   Server-Kalender dann ausgeblendet, damit es nicht doppelt erscheint.
 - Der Abgleich nutzt das Fundament des Google-Syncs: Patches an die Oberfläche, eine Outbox für Änderungen, die noch hochgeladen
   werden müssen, Wiederholungen mit Fehlerzählung, Offline-Fall.
-- Anzeigen: In Vorschau und Details steht „👥 12 interessiert“ und ein Link „In Discord öffnen“ (`https://discord.com/events/{guild}/{event}`).
+- In Vorschau und Details: „👥 12 interessiert“ und ein Link „In Discord öffnen“ (`https://discord.com/events/{guild}/{event}`).
+
+## Ankündigen, Mitziehen, Absagen
+
+- **Ankündigen:** In Vorschau, Details und Rechtsklick-Menü „In Discord ankündigen“ → kleiner Dialog: Server, Art
+  (Sprachkanal mit Kanalauswahl oder Ort/Link), Beschreibung aus den Notizen. Erst „Ankündigen“ schickt das Event ab.
+- **Mitziehen:** Titel, Beginn, Ende, Ort und Notizen gehen nach einer Änderung (wie bei Google nach ca. 2,5 Sekunden) zu Discord.
+- **Änderungen in Discord** am angekündigten Event (z. B. du verschiebst es in Discord selbst): **die neuere Änderung gewinnt**,
+  mit Hinweis, wie beim Google-Sync.
+- **Löschen:** Statt sofort zu löschen erscheint eine **Warnung** im Lösch-Hinweis: „Das Event wird auch in Discord abgesagt –
+  alle Interessierten sehen die Absage.“ Erst die Bestätigung löscht den Termin und sagt das Event ab (`status: 4`).
+  Das ist bewusst eine Ausnahme von „keine Rückfragen“, weil die Absage für andere sichtbar ist und sich nicht zurücknehmen lässt.
+  `Strg+Z` oder der Papierkorb holen den Termin zurück; das Discord-Event muss dann neu angekündigt werden.
+- **Verknüpfung lösen:** „Nicht mehr mit Discord abgleichen“ lässt das Event in Discord unverändert stehen.
+
+## Nächste Session als Platzhalter
+
+Du legst jede Session einzeln an, weil jede ihren eigenen Titel bekommt. Damit die nächste nicht vergessen wird:
+
+- Eine **Termin-Vorlage** (gibt es seit 2.8) bekommt optional einen **Rhythmus** (z. B. wöchentlich, Freitag 19:00) und
+  optional **Discord-Vorgaben** (Server, Sprachkanal oder Ort).
+- Der Kalender zeigt dann die **nächste** Session nach der letzten echten als **ausgegrauten, gestrichelten Platzhalter**
+  („DnD-Session – noch planen“). Es gibt immer nur einen Platzhalter je Vorlage, nicht eine ganze Serie.
+- Klick auf den Platzhalter → Popup: **Titel** (leer, Pflicht), Uhrzeit anpassbar, Haken „In Discord ankündigen“
+  (an, wenn die Vorlage einen Server hat) → **Fertig machen**. Daraus wird ein normaler Termin, und der Platzhalter springt eine
+  Woche weiter.
+- „Diese Woche fällt aus“ im Rechtsklick-Menü schiebt den Platzhalter ohne Termin weiter.
+- Platzhalter sind keine Termine: kein Sync zu Google oder Discord, keine Erinnerung. Optional ein Hinweis in *Heute*,
+  wenn die nächste Session in weniger als 3 Tagen ansteht und noch nicht fertig ist.
+- Welcher Termin zu einer Vorlage gehört, merkt sich der Termin (`templateId`), damit „die letzte echte Session“ eindeutig ist.
 
 ## Grenzen (von Discord vorgegeben)
 
@@ -60,21 +103,22 @@ Ein Server hat höchstens 100 geplante oder laufende Events gleichzeitig.
 - **Kein Echtzeit-Abgleich** ohne Gateway: Änderungen anderer erscheinen beim nächsten Abruf (spätestens nach 5 Minuten).
 - **Teilnahme:** „Interessiert“ kann nur jeder selbst in Discord anklicken, nicht der Bot.
 
-## Offene Fragen
+## Entscheidungen (24. November 2026)
 
-1. **Welche Server?** Nur deine eigenen, oder auch fremde (dann lädt das Admin-Team den Bot ein)?
-2. **Löschen eines angekündigten Termins:** das Discord-Event **absagen** (Vorschlag: Mitglieder sehen die Absage) oder ganz **löschen**?
-3. **Serien (z. B. wöchentliche Session):** jeden Termin einzeln ankündigen, oder automatisch immer den **nächsten** Termin einer
-   Serie ankündigen, sobald der vorige vorbei ist?
-4. **Änderungen in Discord** an deinem angekündigten Event (jemand aus dem Admin-Team verschiebt es): in deinen Kalender übernehmen
-   (Vorschlag, wie bei Google: die neuere Änderung gewinnt, mit Hinweis) oder ignorieren?
-5. **Interessierte:** nur die Anzahl, oder auf Klick auch die Namen?
-6. **Erinnerungen** für Events anderer auf dem Server: wie normale Termine (Standard-Erinnerung des Kalenders) oder keine?
+1. **Nur eigene Server.**
+2. **Löschen** eines angekündigten Termins **sagt das Discord-Event ab** – mit Warnung und Bestätigung vorher.
+3. **Serien:** Sessions werden einzeln angelegt; die nächste erscheint als **ausgegrauter Platzhalter** aus einer Vorlage mit Rhythmus.
+4. **Änderungen in Discord:** die **neuere** Änderung gewinnt.
+5. **Interessierte:** nur die **Anzahl**.
+6. **Alle Events** der Server erscheinen, **äußerlich unterscheidbar**; Erinnerungen wie bei anderen Kalendern (Standard des Kalenders).
 
-## Umsetzungsschritte (nach Abstimmung)
+## Umsetzungsschritte
 
 1. Optionen → Discord: Application ID + Token, verschlüsselt speichern, Verbindung prüfen, Einladungslink, Server auswählen
-2. Lesen: Server-Kalender, Abruf, Anzeige mit Interessierten-Anzahl
+2. Lesen: Server-Kalender, Abruf, Darstellung (Symbol, gestrichelter Rand, „👥 12“), Erinnerungen
 3. Ankündigen: Dialog (Server, Sprachkanal oder Ort), Verknüpfung am Termin
-4. Mitziehen und Absagen über die Outbox; Konfliktregel nach Frage 4
-5. Tests mit nachgebautem Discord (wie `push.test.ts` für Google), Doku in FEATURES.md
+4. Mitziehen, Konflikte („neuere gewinnt“) und Absagen mit Warnung über die Outbox
+5. Platzhalter: Rhythmus und Discord-Vorgaben an Vorlagen, Platzhalter im Kalender, „Fertig machen“, „fällt aus“
+6. Tests mit nachgebautem Discord (wie `push.test.ts` für Google), Doku in FEATURES.md
+
+Schritt 5 hängt nicht an Discord und kann auch zuerst kommen.
