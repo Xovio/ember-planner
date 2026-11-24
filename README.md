@@ -45,19 +45,38 @@ npm install
 npm run dist
 ```
 
-Das erzeugt `dist\Ember Planner Setup 0.1.0.exe`. Der Installer richtet die App für den aktuellen Benutzer ein
+Das erzeugt `dist\Ember-Planner-Setup-0.1.0.exe`. Fertige Installer gibt es auch unter
+[Releases](https://github.com/Xovio/ember-planner/releases). Der Installer richtet die App für den aktuellen Benutzer ein
 (ohne Administratorrechte) und legt Startmenü- und Desktop-Verknüpfung an. Zum Anheften an die Taskleiste die App über das
 Startmenü starten, dann Rechtsklick auf das Taskleisten-Symbol → *An Taskleiste anheften*.
 
 - Die installierte App nutzt dieselben Daten wie `npm run dev` (`%APPDATA%\Ember Planner`).
 - Der Installer ist nicht signiert; Windows SmartScreen fragt deshalb beim ersten Start nach (*Weitere Informationen → Trotzdem ausführen*).
-- Nach Code-Änderungen: `npm run dist` erneut ausführen und den neuen Installer drüberinstallieren.
+- **Auto-Update:** Die installierte App sucht beim Start und alle 6 Stunden auf GitHub Releases nach einer neuen Version,
+  lädt sie im Hintergrund und installiert sie beim Beenden – oder sofort über *Optionen → Updates → Jetzt neu starten*.
+  Abschaltbar unter *Optionen → Updates*.
+- Lokale Code-Änderungen ohne Release: `npm run dist` erneut ausführen und den neuen Installer drüberinstallieren.
 - `npm run pack` baut nur den Ordner `dist\win-unpacked` (schneller, ohne Installer) – zum Ausprobieren.
 - Das App-Icon wird aus Code gezeichnet; `npm run icon` erzeugt daraus `build\icon.ico`.
 
 > Wer früher während `npm run dev` das Fenster angeheftet hat, hat damit `electron.exe` angeheftet – das öffnet nur das leere
 > Electron. Dieses Symbol lösen und die installierte App anheften. Entwicklungsstarts haben jetzt eine eigene
 > Taskleisten-Kennung, damit das nicht wieder passiert.
+
+### Neue Version veröffentlichen
+
+1. `version` in `package.json` erhöhen (z. B. `0.2.0`), committen und nach `master` bringen.
+2. Tag setzen und pushen:
+
+   ```powershell
+   git tag v0.2.0
+   git push origin v0.2.0
+   ```
+
+3. Die GitHub Action *Release* prüft, testet, baut den Installer und veröffentlicht ihn samt `latest.yml` als Release.
+   Installierte Apps finden die Version danach von selbst.
+
+Ohne GitHub Action geht es auch lokal: `$env:GH_TOKEN = '<token>'; npm run release` (Token mit Schreibrecht auf das Repo).
 
 ## Installation (aus dem Quellcode)
 
@@ -75,6 +94,7 @@ npm run dev
 | `npm run dev` | Desktop-App mit Hot-Reload |
 | `npm run build` / `npm run start` | Produktions-Bundle bauen / starten |
 | `npm run dist` / `npm run pack` | Windows-Installer bauen / nur entpackte App in `dist\win-unpacked` |
+| `npm run release` | Installer bauen und als GitHub Release veröffentlichen (braucht `GH_TOKEN`, sonst über Tag + Action) |
 | `npm run web` | Nur die Oberfläche im Browser (http://localhost:5199) – mit `?demo` und Beispieldaten |
 | `npm run typecheck` | TypeScript prüfen |
 | `npm test` | Automatisierte Tests (Vitest) |

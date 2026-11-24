@@ -23,7 +23,7 @@ Wohin sich Ember Planner entwickeln soll. Was schon da ist: [Funktionen & Umfang
 | 2.7 | Ideen-Boards: Brainstorm-Fläche mit Zetteln, Rahmen, Pfeilen und Punkten · Zusammenfassen · Export als Obsidian-Notiz und `.canvas` | ✅ fertig |
 | 3 | Google-Kalender-Sync (2-Wege, OAuth) | ✅ fertig |
 | 4 | Obsidian-Anbindung & Claude-Integration | geplant – Konzept vorher gemeinsam festlegen |
-| 5 | Verteilung: Installer ✅ (NSIS, `npm run dist`), Auto-Update | teilweise |
+| 5 | Verteilung: Installer ✅ (NSIS, `npm run dist`), Auto-Update ✅ (GitHub Releases), Code-Signatur | fast fertig |
 | 6 | Mobile-Version | geplant |
 
 ## Phase 3 – Google Kalender ✅
@@ -62,7 +62,7 @@ Ideen:
 
 - ~~Installer (electron-builder, NSIS) mit App-Icon, Startmenü-Eintrag und „Mit Windows starten“~~ ✅ – pro Benutzer, ohne Adminrechte
 - Code-Signatur, damit SmartScreen nicht nachfragt
-- Auto-Update über GitHub Releases
+- ~~Auto-Update über GitHub Releases~~ ✅ – Tag `vX.Y.Z` pushen, die Action baut und veröffentlicht
 - Optional: macOS-/Linux-Builds
 
 ## Phase 6 – Mobile

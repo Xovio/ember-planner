@@ -1,5 +1,6 @@
 import { api } from '../lib/api'
 import { Logo } from './Logo'
+import { UpdateReadyPill } from './settings/UpdateSection'
 
 export function TitleBar(): React.JSX.Element {
   return (
@@ -8,6 +9,7 @@ export function TitleBar(): React.JSX.Element {
         <Logo size={18} />
         <span>Ember Planner</span>
       </div>
+      <UpdateReadyPill />
     </header>
   )
 }

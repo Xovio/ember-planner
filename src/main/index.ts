@@ -1,5 +1,5 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, Tray, safeStorage, shell } from 'electron'
-import { readFileSync, writeFileSync } from 'fs'
+import { existsSync, readFileSync, writeFileSync } from 'fs'
 import { basename, dirname, join } from 'path'
 import { DataStore } from './store'
 import { ReminderScheduler } from './reminders'
@@ -8,6 +8,8 @@ import { createAppIcon } from './icon'
 import { GoogleAccount } from './google/account'
 import { registerGoogleIpc } from './google/ipc'
 import { GoogleSync } from './google/sync'
+import { autoUpdater } from 'electron-updater'
+import { Updater } from './updater'
 import type { GoogleStatus } from '@shared/google'
 import type { AppData, LoadResult, TitleBarTheme } from '@shared/types'
 
@@ -27,6 +29,7 @@ let store: DataStore
 let reminders: ReminderScheduler
 let backups: Backups
 let googleSync: GoogleSync | null = null
+let updater: Updater | null = null
 let quitting = false
 
 // separate data folder, e.g. for testing without touching the real data
@@ -131,6 +134,22 @@ function init(): void {
     }
   })
 
+  // only installer builds carry an app-update.yml (written by electron-builder); dev runs and `npm run pack` stay "unsupported"
+  const canUpdate = app.isPackaged && existsSync(join(process.resourcesPath, 'app-update.yml'))
+  updater = new Updater({
+    backend: canUpdate ? autoUpdater : null,
+    currentVersion: app.getVersion(),
+    enabled: () => store.get().settings.autoUpdate,
+    onStatus: (info) => win?.webContents.send('update:status', info),
+    beforeInstall: () => {
+      quitting = true
+    }
+  })
+  ipcMain.handle('update:info', () => updater!.info)
+  ipcMain.handle('update:check', () => updater!.check())
+  ipcMain.handle('update:install', () => updater!.install())
+  updater.start()
+
   createWindow()
   createTray()
 }
@@ -224,6 +243,7 @@ app.on('before-quit', () => {
   reminders?.stop()
   backups?.stop()
   googleSync?.stop()
+  updater?.stop()
   store?.flush()
 })
 
