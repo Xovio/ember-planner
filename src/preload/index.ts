@@ -1,10 +1,27 @@
 import { contextBridge, ipcRenderer, type IpcRendererEvent } from 'electron'
-import type { AppData, ReminderPayload, TitleBarTheme } from '@shared/types'
+import type { AppData, LoadResult, ReminderPayload, TitleBarTheme } from '@shared/types'
+import type { RemoteChange } from '@shared/patch'
+import type { GoogleApi, GoogleCalendarEntry, GoogleStatus } from '@shared/google'
 import type { BackupInfo } from '../main/backup'
 
 interface FileFilter {
   name: string
   extensions: string[]
+}
+
+const google: GoogleApi = {
+  status: () => ipcRenderer.invoke('google:status'),
+  configure: (clientId: string, clientSecret?: string) =>
+    ipcRenderer.invoke('google:configure', clientId, clientSecret),
+  connect: () => ipcRenderer.invoke('google:connect'),
+  cancel: () => ipcRenderer.invoke('google:cancel'),
+  disconnect: () => ipcRenderer.invoke('google:disconnect'),
+  reset: () => ipcRenderer.invoke('google:reset'),
+  calendars: () => ipcRenderer.invoke('google:calendars'),
+  setEnabled: (entry: GoogleCalendarEntry, enabled: boolean) => ipcRenderer.invoke('google:setEnabled', entry, enabled),
+  syncNow: () => ipcRenderer.invoke('google:syncNow'),
+  onStatus: (cb: (s: GoogleStatus) => void) => listen('google:status', cb),
+  onNotice: (cb: (text: string) => void) => listen('google:notice', cb)
 }
 
 function listen<T>(channel: string, cb: (payload: T) => void): () => void {
@@ -16,8 +33,9 @@ function listen<T>(channel: string, cb: (payload: T) => void): () => void {
 const api = {
   kind: 'electron' as const,
   platform: process.platform,
-  load: (): Promise<AppData> => ipcRenderer.invoke('data:load'),
-  save: (data: AppData): Promise<boolean> => ipcRenderer.invoke('data:save', data),
+  load: (): Promise<LoadResult> => ipcRenderer.invoke('data:load'),
+  save: (data: AppData, baseSeq: number): Promise<boolean> => ipcRenderer.invoke('data:save', data, baseSeq),
+  onRemoteChange: (cb: (c: RemoteChange) => void) => listen('data:remote', cb),
   setTitleBarTheme: (t: TitleBarTheme): void => ipcRenderer.send('window:theme', t),
   listBackups: (): Promise<BackupInfo[]> => ipcRenderer.invoke('backup:list'),
   createBackup: (): Promise<BackupInfo> => ipcRenderer.invoke('backup:create'),
@@ -30,7 +48,8 @@ const api = {
   onReminder: (cb: (p: ReminderPayload) => void) => listen('reminder:fired', cb),
   onOpenEvent: (cb: (eventId: string) => void) => listen('event:open', cb),
   onOpenTodo: (cb: (todoId: string) => void) => listen('todo:open', cb),
-  onNewEvent: (cb: () => void) => listen('event:new', cb)
+  onNewEvent: (cb: () => void) => listen('event:new', cb),
+  google
 }
 
 export type ElectronApi = typeof api

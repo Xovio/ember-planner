@@ -113,7 +113,7 @@ export function DataSection(): React.JSX.Element {
               </button>
             </div>
           ))}
-          <p className="settings-note">Wiederherstellen ersetzt alle Daten – mit Strg+Z geht es zurück.</p>
+          <p className="data-note">Wiederherstellen ersetzt alle Daten – mit Strg+Z geht es zurück.</p>
         </div>
       )}
 

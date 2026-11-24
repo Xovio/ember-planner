@@ -1,5 +1,7 @@
 import { createDemoData } from './demo'
-import { normalizeData, type AppData, type ReminderPayload, type TitleBarTheme } from '@shared/types'
+import { normalizeData, type AppData, type LoadResult, type ReminderPayload, type TitleBarTheme } from '@shared/types'
+import type { RemoteChange } from '@shared/patch'
+import type { GoogleApi } from '@shared/google'
 
 export interface FileFilter {
   name: string
@@ -16,8 +18,11 @@ export interface BackupInfo {
 export interface PlannerApi {
   kind: 'electron' | 'browser'
   platform: string
-  load(): Promise<AppData>
-  save(data: AppData): Promise<boolean>
+  load(): Promise<LoadResult>
+  /** `baseSeq`: number of the last remote change already contained in `data` */
+  save(data: AppData, baseSeq: number): Promise<boolean>
+  /** changes that did not come from the UI, e.g. pulled from Google */
+  onRemoteChange(cb: (c: RemoteChange) => void): () => void
   setTitleBarTheme(t: TitleBarTheme): void
   listBackups(): Promise<BackupInfo[]>
   createBackup(): Promise<BackupInfo | null>
@@ -30,6 +35,8 @@ export interface PlannerApi {
   onOpenEvent(cb: (eventId: string) => void): () => void
   onOpenTodo(cb: (todoId: string) => void): () => void
   onNewEvent(cb: () => void): () => void
+  /** only in the desktop app */
+  google?: GoogleApi
 }
 
 declare global {
@@ -49,11 +56,11 @@ const browserApi: PlannerApi = {
   kind: 'browser',
   platform: 'web',
   async load() {
-    if (isDemo) return normalizeData(createDemoData())
+    if (isDemo) return { data: normalizeData(createDemoData()), seq: 0 }
     try {
-      return normalizeData(JSON.parse(localStorage.getItem(KEY) ?? 'null'))
+      return { data: normalizeData(JSON.parse(localStorage.getItem(KEY) ?? 'null')), seq: 0 }
     } catch {
-      return normalizeData(null)
+      return { data: normalizeData(null), seq: 0 }
     }
   },
   async save(data) {
@@ -101,6 +108,7 @@ const browserApi: PlannerApi = {
     })
   },
   onReminder: noop,
+  onRemoteChange: noop,
   onOpenEvent: noop,
   onOpenTodo: noop,
   onNewEvent: noop

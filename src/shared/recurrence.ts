@@ -1,4 +1,5 @@
 import { addDays, addMonths, addWeeks, addYears, endOfDay, startOfWeek } from 'date-fns'
+import { RRule } from 'rrule'
 import type { CalendarEvent } from './types'
 
 export interface Occurrence {
@@ -40,6 +41,7 @@ export function expandEvent(event: CalendarEvent, rangeStart: Date, rangeEnd: Da
   if (!rec) {
     return overlaps(baseStart) ? [occurrence(event, baseStart, duration)] : []
   }
+  if (rec.rrule) return expandRaw(event, rec.rrule, baseStart, duration, rangeStart, rangeEnd, new Set(rec.exdates ?? []))
 
   const interval = Math.max(1, rec.interval || 1)
   const until = rec.until ? endOfDay(new Date(`${rec.until}T00:00:00`)) : null
@@ -97,6 +99,54 @@ export function expandEvent(event: CalendarEvent, rangeStart: Date, rangeEnd: Da
     if (!accept(step(i))) break
   }
   return result
+}
+
+/*
+ * Rules our own loop can't express go through the rrule library. It is used in "floating" mode:
+ * local wall-clock times are written into UTC fields, so occurrences keep their wall-clock time across DST.
+ */
+const floating = (d: Date): Date =>
+  new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds()))
+const unfloat = (d: Date): Date =>
+  new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds())
+
+const ruleCache = new Map<string, RRule | null>()
+function compileRule(rule: string, baseStart: Date): RRule | null {
+  const key = `${rule}|${baseStart.toISOString()}`
+  let r = ruleCache.get(key)
+  if (r === undefined) {
+    try {
+      const opts = RRule.parseString(rule)
+      opts.dtstart = floating(baseStart)
+      if (opts.until) opts.until = floating(opts.until)
+      r = new RRule(opts)
+    } catch {
+      r = null // unknown rule: show only the first occurrence
+    }
+    if (ruleCache.size > 2000) ruleCache.clear()
+    ruleCache.set(key, r)
+  }
+  return r
+}
+
+function expandRaw(
+  event: CalendarEvent,
+  rule: string,
+  baseStart: Date,
+  duration: number,
+  rangeStart: Date,
+  rangeEnd: Date,
+  exdates: Set<string>
+): Occurrence[] {
+  const r = compileRule(rule, baseStart)
+  const from = new Date(rangeStart.getTime() - Math.max(duration, 1))
+  const starts = r
+    ? r.between(floating(from), floating(rangeEnd), true).map(unfloat)
+    : [baseStart].filter((s) => s.getTime() >= from.getTime() && s.getTime() < rangeEnd.getTime())
+  return starts
+    .filter((s) => s.getTime() < rangeEnd.getTime() && s.getTime() + Math.max(duration, 1) > rangeStart.getTime())
+    .filter((s) => !exdates.has(s.toISOString()))
+    .map((s) => occurrence(event, s, duration))
 }
 
 export function expandAll(events: CalendarEvent[], rangeStart: Date, rangeEnd: Date): Occurrence[] {
