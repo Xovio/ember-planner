@@ -137,6 +137,21 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
 - **Shop** mit Anprobe (≈ 30 Kleidungsstücke, manche erst ab einem Attribut-Level) und **Kleiderschrank** zum Umziehen
 - Gezählt wird ab dem ersten Start von v0.5; Wieder-Öffnen nimmt Coins zurück, Löschen nicht
 
+### Zimmer
+
+- Oben auf der Charakter-Seite umschalten zwischen **Zimmer** und **Figur und Kleidung**
+- **Isometrisches Zimmer** (6×6 Kacheln, zwei Wände, Fenster mit Vorhängen) im Vektor-Chibi-Stil, die Figur steht im Raum
+- **Ab Werk:** Teppich, Sitzsack, Topfpflanze und Stehlampe; das Fenster ist fest eingebaut
+- **Möbel-Shop** mit 28 Formen in Farbvarianten (≈ 50 Teile): Kleinkram 20–50, Möbel 60–120, Groß 150–300 Coins,
+  Teppiche, Wandsachen (Bild, Uhr, Regal, Lichterkette) und Besonderes ab einem Attribut-Level (Hantelbank, Staffelei,
+  Korbregal, Hängesessel, Teleskop, Spieltisch). Gekauftes landet in der **Kiste**
+- **Einrichten-Modus** (Knopf *Einrichten*): Raster erscheint, Möbel anklicken und auf Kacheln ziehen (Wandsachen an der Wand
+  entlang); wo kein Platz ist, wird das Feld rot und das Möbel springt zurück. `R` dreht, `Entf` lagert in die Kiste,
+  Pfeiltasten verschieben, `Esc` beendet; `Strg+Z` macht jeden Schritt rückgängig. Teppiche liegen unter Möbeln
+- **Licht nach Uhrzeit** (Morgen, Tag, Abend, Nacht): Himmel im Fenster, Tönung, Lampen, Kerzen, Kamin und Lichterkette
+  leuchten abends; über den Licht-Knopf auch fest einstellbar
+- Pflanzen wiegen sich, Kerzen flackern (nur ohne „Bewegung reduzieren“); ist das Fenster verborgen, pausiert alles
+
 ## Ideen (Brainstorm-Boards)
 
 Eine freie Fläche zum Sammeln und Ordnen – in der Art von Miro, aber bewusst schlicht.

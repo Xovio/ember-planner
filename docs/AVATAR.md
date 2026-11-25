@@ -60,10 +60,32 @@ richtest du ihn und sein Zimmer ein. Motivierend, nie strafend (siehe ADHS-Grund
 1. **Charakter** ✅ (v0.5) – Figur erstellen (Hautton, Frisur, Haarfarbe, Augen, Startkleidung), Seite „Charakter“ + Widget,
    Attribute mit eigenem Level, Coins, Schwierigkeit an ToDos, Kleiderschrank und Shop (Start ≈ 30 Teile, viele als
    Farbvarianten), Atmen, Blinzeln, Winken und fünf Gesichtsausdrücke
-2. **Zimmer** – isometrischer Raum, Möbel kaufen und auf Kacheln stellen, drehen; später Erweiterungen
-   (zweites Zimmer, Garten, Tapeten, Böden)
+2. **Zimmer** ✅ – isometrischer Raum (6×6 Kacheln, siehe unten), Möbel kaufen, auf Kacheln stellen, drehen, einlagern;
+   später Erweiterungen (zweites Zimmer, Garten, Tapeten, Böden)
 3. **Abenteuer** – Autobattler/Idle: der Charakter zieht los, Attribute entscheiden über Erfolg, Beute sind Items und
    ein kleiner passiver Coin-Zuschuss. Details besprechen wir, wenn Stufe 2 steht
+
+## Zimmer (Stufe 2)
+
+Entschieden nach zwei Entwürfen (Isometrie gegen frontales Puppenhaus): **echte Isometrie**, weil Einrichten und Umräumen
+der Kern ist und Möbel aus Code-Körpern alle vier Drehrichtungen gratis bekommen.
+
+- **Technik:** `shared/room.ts` (Katalog, Platzregeln, Kiste, Zeichenreihenfolge, getestet) und
+  `components/character/room/` (Iso-Projektion, Möbel als Quader plus organische Formen, Szene, Kiste und Shop).
+  Ein Möbel = Teile in seinem eigenen Grundriss (Vorderseite +y) plus Deko über eine Punkt-Abbildung, die der Drehung folgt
+- **Raum:** 6×6 Kacheln, x entlang der rechten Wand, y entlang der linken; Fenster fest auf der rechten Wand (Plätze 2–3).
+  Diorama-Kante (Wandstärke, Bodenplatte), Sockelleiste, Dielen, Ecken-Verdunkelung, Lichtfleck vom Fenster, leichtes Korn
+- **Regeln:** Möbel belegen ganze Kacheln und stapeln sich nicht; Teppiche liegen darunter (eigene Ebene);
+  Wandsachen hängen an einer Wand, nicht auf dem Fenster. Tiefensortierung über die Grundrisse (topologisch)
+- **Bedienung:** eigener Einrichten-Modus, damit im Alltag nichts versehentlich verrutscht; die Figur sucht sich
+  einen freien Platz nahe der Mitte
+- **Ab Werk:** Sitzsack, Teppich, Topfpflanze, Stehlampe (das Bett ist der erste große Kauf)
+- **Preise:** Kleinkram 20–50, Möbel 60–120, Groß 150–300, Besonderes 120–250 (ab Attribut-Level 3–4);
+  ein voll eingerichtetes Zimmer in etwa 2–3 Wochen normaler Nutzung
+- **Nichts geht verloren:** Gekauftes lässt sich nicht verkaufen oder zerstören, Einlagern geht immer, jeder Schritt mit `Strg+Z`
+- **Später:** Tapeten (80–150), Böden (100–200), Fensterformen, größeres Zimmer 8×8 (≈ 600), zweites Zimmer (≈ 800),
+  Garten (≈ 1.200), Körbchen fürs Haustier, den ganzen Raum drehen, mehrere gleiche Teile, Zimmer-Widget,
+  Figur in Ruhe-Pose (statt Winken) und kleines Herumlaufen
 
 ## Offen
 

@@ -1,3 +1,5 @@
+import { defaultRoom } from './room'
+
 /** ISO-8601 timestamp, e.g. "2026-11-23T14:00:00.000Z" */
 export type ISODateTime = string
 /** Local calendar date, "yyyy-MM-dd" */
@@ -193,6 +195,22 @@ export interface Character {
   spent: number
   since: ISODateTime
   rewards: Record<string, Reward>
+  /** furniture standing in the room; owned furniture that is not placed waits in the chest */
+  room: Room
+}
+
+/** one piece of furniture in the room: floor tile (x, y) and turn 0–3, or a spot on a wall */
+export interface PlacedFurniture {
+  id: string
+  x: number
+  y: number
+  rot: number
+  /** wall items: left wall (along y) or right wall (along x); x is the spot along it */
+  wall?: 'l' | 'r'
+}
+
+export interface Room {
+  items: PlacedFurniture[]
 }
 
 export type PointKind = 'todo' | 'goal' | 'goal-week' | 'session' | 'prep'
@@ -467,7 +485,8 @@ export function defaultCharacter(): Character {
     owned: ['hoodie-coral', 'pants-navy', 'sneakers-cream'],
     spent: 0,
     since: new Date().toISOString(),
-    rewards: {}
+    rewards: {},
+    room: defaultRoom()
   }
 }
 
@@ -522,7 +541,9 @@ export function normalizeData(raw: Partial<AppData> | null | undefined): AppData
     boards: (raw.boards ?? []).map((b) => ({ ...b, notes: b.notes ?? [], frames: b.frames ?? [], edges: b.edges ?? [] })),
     goals: raw.goals ?? [],
     points: raw.points?.since ? { since: raw.points.since, entries: raw.points.entries ?? {} } : base.points,
-    character: raw.character ? { ...base.character, ...raw.character, look: { ...base.character.look, ...raw.character.look } } : base.character,
+    character: raw.character
+      ? { ...base.character, ...raw.character, look: { ...base.character.look, ...raw.character.look }, room: { items: raw.character.room?.items ?? base.character.room.items } }
+      : base.character,
     settings: { ...DEFAULT_SETTINGS, ...(raw.settings ?? {}) }
   }
 }
