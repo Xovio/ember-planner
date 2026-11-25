@@ -18,6 +18,7 @@ import {
   type TodoList,
   type PointsLedger,
   type Character,
+  type PlacedFurniture,
   type WeeklyGoal
 } from '@shared/types'
 import { applyPatch, type RemoteChange } from '@shared/patch'
@@ -29,6 +30,7 @@ import { completeRepeatable, cooldownLeft, formatLeft, isCoolingDown, undoRepeat
 import { detachOccurrence, endSeriesBefore, splitSeries } from '@shared/series'
 import { goalEvent, markFilled, slotsToFill, weekKey } from '@shared/goals'
 import { attrLevel, attrXp, coinBalance } from '@shared/character'
+import { furnitureById, ownsFurniture } from '@shared/room'
 import { itemById } from '@shared/wardrobe'
 import {
   isPlaceholderId,
@@ -256,6 +258,9 @@ interface State {
   buyItem(id: string): boolean
   /** put on an owned item, or take off an optional slot (null) */
   equip(slot: string, id: string | null): void
+  /** buys furniture into the chest */
+  buyFurniture(id: string): boolean
+  setRoomItems(items: PlacedFurniture[], label: string): void
   /** silent: rewards after reconciling */
   setRewards(rewards: Character['rewards']): void
 
@@ -1259,6 +1264,23 @@ export const useStore = create<State>((set, get) => {
         },
         { label: 'Outfit geändert', coalesce: 'outfit' }
       )
+    },
+
+    buyFurniture(id) {
+      const ch = get().data?.character
+      const f = furnitureById(id)
+      if (!ch || !f || ownsFurniture(ch, f)) return false
+      if (coinBalance(ch) < f.price) return false
+      if (f.unlock && attrLevel(attrXp(ch)[f.unlock.attr]).level < f.unlock.level) return false
+      mutate(
+        (d) => ({ ...d, character: { ...d.character, owned: [...d.character.owned, id], spent: d.character.spent + f.price } }),
+        { label: `${f.name} gekauft`, undoToast: true }
+      )
+      return true
+    },
+
+    setRoomItems(items, label) {
+      mutate((d) => ({ ...d, character: { ...d.character, room: { ...d.character.room, items } } }), { label })
     },
 
     setRewards(rewards) {

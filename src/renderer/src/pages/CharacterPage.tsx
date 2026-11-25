@@ -24,6 +24,7 @@ import { useStore } from '../store'
 import { calVar } from '../lib/theme'
 import { fmt } from '../lib/dates'
 import { Avatar, type Expression } from '../components/character/Avatar'
+import { RoomView } from '../components/character/room/RoomView'
 
 type Tab = 'look' | 'wardrobe' | 'shop' | 'attrs'
 
@@ -40,6 +41,7 @@ const BUILDS = ['schmal', 'mittel', 'breit']
 export function CharacterPage(): React.JSX.Element {
   const ch = useStore((s) => s.data!.character)
   const update = useStore((s) => s.updateCharacter)
+  const [view, setView] = useState<'figure' | 'room'>(ch.created ? 'room' : 'figure')
   const [tab, setTab] = useState<Tab>(ch.created ? 'wardrobe' : 'look')
   const [tryOn, setTryOn] = useState<Item | null>(null)
   const [mood, setMood] = useState<Expression>('happy')
@@ -55,8 +57,28 @@ export function CharacterPage(): React.JSX.Element {
     [ch.rewards]
   )
 
+  const switcher = (
+    <div className="segmented char-view" role="tablist" aria-label="Ansicht">
+      <button role="tab" aria-selected={view === 'room'} className={view === 'room' ? 'on' : ''} onClick={() => setView('room')}>
+        Zimmer
+      </button>
+      <button role="tab" aria-selected={view === 'figure'} className={view === 'figure' ? 'on' : ''} onClick={() => setView('figure')}>
+        Figur und Kleidung
+      </button>
+    </div>
+  )
+
+  if (view === 'room')
+    return (
+      <div className="character-page room-mode">
+        {switcher}
+        <RoomView />
+      </div>
+    )
+
   return (
     <div className="character-page">
+      {switcher}
       <section className="char-stage card">
         <div className="char-stage-head">
           <div>

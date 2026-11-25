@@ -3449,3 +3449,105 @@ input[type='time'].input {
   gap: 10px;
   flex-wrap: wrap;
 }
+
+/* room (character stage 2) */
+.char-view {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+.character-page.room-mode {
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+}
+.room-stage {
+  padding: 20px;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.room-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.room-canvas {
+  border-radius: var(--radius-lg);
+  background: radial-gradient(ellipse at 50% 55%, color-mix(in srgb, #ffd58a 16%, transparent), transparent 70%);
+  outline: none;
+}
+.room-canvas:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+.room-scene {
+  display: block;
+  width: 100%;
+  max-height: calc(100vh - 230px);
+  touch-action: none;
+  user-select: none;
+}
+.room-scene.editing .room-item.editable {
+  cursor: grab;
+}
+.room-scene.editing .room-item.dragging {
+  cursor: grabbing;
+  opacity: 0.82;
+}
+.room-scene .room-item.selected {
+  filter: drop-shadow(0 0 1.5px #fff3d6) drop-shadow(0 0 1px #e0a43c);
+}
+.room-footprint {
+  fill: #ffd98a;
+  fill-opacity: 0.35;
+  stroke: #e0a43c;
+  stroke-width: 1;
+  pointer-events: none;
+}
+.room-footprint.blocked {
+  fill: #e5615a;
+  stroke: #c9473f;
+}
+.room-scene .room-avatar {
+  pointer-events: none;
+}
+.room-scene .avatar.animated .av-wave {
+  animation: none;
+}
+.room-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+  font-size: 13px;
+}
+.room-hint {
+  color: var(--text-3);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .room-scene .rf-sway {
+    animation: rf-sway 5s ease-in-out infinite;
+  }
+  .room-scene .rf-flicker {
+    animation: rf-flicker 1.6s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+  }
+  .room-scene .rf-twinkle {
+    animation: rf-twinkle 3s ease-in-out infinite;
+  }
+  .room-scene.paused *,
+  .room-scene.paused {
+    animation-play-state: paused !important;
+  }
+}
+@keyframes rf-sway {
+  0%, 100% { transform: rotate(-1.5deg); }
+  50% { transform: rotate(1.5deg); }
+}
+@keyframes rf-flicker {
+  0%, 100% { transform: scale(1, 1); }
+  40% { transform: scale(0.92, 1.08); }
+  70% { transform: scale(1.05, 0.94); }
+}
+@keyframes rf-twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
