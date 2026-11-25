@@ -289,10 +289,19 @@ export interface Todo {
   source?: { kind: 'obsidian'; vault: string; file: string; line: number }
   /** repeating ToDo: completing it creates the next instance (exdates unused) */
   recurrence?: Recurrence | null
+  /** can be ticked off again and again (after a cooldown); such a ToDo is never `done` */
+  repeatable?: Repeatable | null
   /** set while the ToDo lies in `AppData.trash` */
   deletedAt?: ISODateTime
   createdAt: ISODateTime
   updatedAt: ISODateTime
+}
+
+export interface Repeatable {
+  /** minutes after a completion before it can be ticked off again; 0 = right away */
+  cooldownMin: number
+  /** every completion, oldest first */
+  completions: ISODateTime[]
 }
 
 /** days a deleted ToDo stays in the trash */
@@ -380,7 +389,8 @@ export interface Settings {
   widgetConfig: Record<string, Record<string, unknown>>
 }
 
-export type WidgetSize = 'half' | 'full'
+/** half = one column, wide = two columns, full = the whole row */
+export type WidgetSize = 'half' | 'wide' | 'full'
 
 /** user's arrangement of registered widgets; ids that are no longer registered are ignored */
 export interface OverviewLayout {
@@ -389,6 +399,8 @@ export interface OverviewLayout {
   hidden: string[]
   /** size chosen by the user, overriding the widget's default */
   sizes: Record<string, WidgetSize>
+  /** number of grid columns; absent or 0 = as many as fit */
+  columns?: number
 }
 
 export interface AppData {

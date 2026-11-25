@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { cooldownLeft } from '@shared/repeatable'
 import { addDays, isThisYear } from 'date-fns'
 import { ARCHIVE_DAYS, type Category, type LocalDate, type Todo, type TodoList } from '@shared/types'
 import { compareTodos, daysBetween, deadlineStatus, effectiveDeadline, localDate, parseLocalDate, type DeadlineStatus } from '@shared/todo'
@@ -13,6 +14,19 @@ export function useCategoryMap(): Map<string, Category> {
 export function useListMap(): Map<string, TodoList> {
   const lists = useStore((s) => s.data?.lists)
   return useMemo(() => new Map((lists ?? []).map((l) => [l.id, l])), [lists])
+}
+
+/** ms until a repeatable ToDo can be ticked off again (0 = now); re-renders when that changes */
+export function useCooldown(t: Todo): number {
+  const [, tick] = useState(0)
+  const left = t.repeatable ? cooldownLeft(t) : 0
+  useEffect(() => {
+    if (left <= 0) return
+    // once a minute for the countdown text, exactly at the end for the checkbox
+    const id = setTimeout(() => tick((n) => n + 1), Math.min(left + 50, 60_000))
+    return () => clearTimeout(id)
+  })
+  return left
 }
 
 /** all open todos sorted by earliest deadline */

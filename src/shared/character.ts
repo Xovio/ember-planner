@@ -2,6 +2,7 @@ import { ANY, type AppTimeLog } from './apptime'
 import { goalWeek, weekKey } from './goals'
 import { pastSessions, type SessionRule } from './points'
 import { localDate } from './todo'
+import { completionsSince, staleCompletionKeys } from './repeatable'
 import type { AppData, AttrId, Category, Character, Difficulty, Reward, Todo, WeeklyGoal } from './types'
 
 /**
@@ -93,6 +94,18 @@ export function reconcileRewards(
 
   for (const t of data.todos) {
     const key = `todo:${t.id}`
+    if (t.repeatable) {
+      const r = todoReward(t.difficulty, todoMinutes(t, data.events))
+      const attr = categoryAttr(cats.get(t.categoryId ?? '')) ?? 'order'
+      const live = new Set<string>()
+      for (const c of completionsSince(t, since)) {
+        live.add(c.key)
+        put(c.key, { at: c.at, ...r, attr, label: t.title })
+      }
+      for (const k of staleCompletionKeys(t, out, live)) drop(k)
+      drop(key)
+      continue
+    }
     if (t.done && t.doneAt && t.doneAt >= since) {
       const r = todoReward(t.difficulty, todoMinutes(t, data.events))
       put(key, { at: t.doneAt, ...r, attr: categoryAttr(cats.get(t.categoryId ?? '')) ?? 'order', label: t.title })

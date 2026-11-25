@@ -1,3 +1,4 @@
+import { isCoolingDown } from './repeatable'
 import type { Category, LocalDate, Priority, Recurrence, RecurrenceFreq, Todo } from './types'
 
 /* ───────────── Deadlines ───────────── */
@@ -47,6 +48,9 @@ const STATUS_RANK: Record<DeadlineStatus, number> = {
 export function compareTodos(a: Todo, b: Todo): number {
   if (a.done !== b.done) return a.done ? 1 : -1
   if (a.done && b.done) return (b.doneAt ?? '').localeCompare(a.doneAt ?? '')
+  // repeatable ToDos that were just ticked off wait at the end of the open ones
+  const ca = isCoolingDown(a)
+  if (ca !== isCoolingDown(b)) return ca ? 1 : -1
   const ea = effectiveDeadline(a)
   const eb = effectiveDeadline(b)
   if (ea && eb && ea !== eb) return ea < eb ? -1 : 1

@@ -23,11 +23,44 @@ export const EMPTY_LAYOUT: OverviewLayout = { order: [], hidden: [], sizes: {} }
 
 /** tolerate partial or foreign data from older settings files */
 function clean(layout: Partial<OverviewLayout> | undefined): OverviewLayout {
+  const cols = layout?.columns
   return {
     order: Array.isArray(layout?.order) ? layout.order : [],
     hidden: Array.isArray(layout?.hidden) ? layout.hidden : [],
-    sizes: layout?.sizes && typeof layout.sizes === 'object' ? layout.sizes : {}
+    sizes: layout?.sizes && typeof layout.sizes === 'object' ? layout.sizes : {},
+    ...(typeof cols === 'number' && cols >= 1 && cols <= MAX_COLUMNS ? { columns: Math.round(cols) } : {})
   }
+}
+
+export const MAX_COLUMNS = 4
+/** a column is at least this wide (px) when the count is automatic */
+export const MIN_COLUMN_WIDTH = 400
+const SIZES = new Set(['half', 'wide', 'full'])
+
+/** columns the grid gets: the user's choice, else as many as fit into `width` */
+export function columnCount(layout: Partial<OverviewLayout> | undefined, width: number, gap = 18): number {
+  const fit = Math.max(1, Math.min(MAX_COLUMNS, Math.floor((width + gap) / (MIN_COLUMN_WIDTH + gap))))
+  const chosen = clean(layout).columns
+  // a chosen count still shrinks on a narrow window, otherwise the widgets get squeezed
+  return chosen ? Math.max(1, Math.min(chosen, Math.floor((width + gap) / (260 + gap)))) : fit
+}
+
+export function setColumns(widgets: WidgetMeta[], layout: Partial<OverviewLayout> | undefined, columns: number): OverviewLayout {
+  const next = commit(widgets, layout, orderedIds(widgets, layout))
+  if (columns >= 1 && columns <= MAX_COLUMNS) next.columns = columns
+  else delete next.columns
+  return next
+}
+
+/** grid columns a widget spans */
+export const spanOf = (size: WidgetSize, columns: number): number =>
+  size === 'full' ? columns : size === 'wide' ? Math.min(2, columns) : 1
+
+/** next size for the resize button; „wide“ only exists with more than two columns */
+export function nextSize(size: WidgetSize, columns: number): WidgetSize {
+  if (size === 'half') return columns > 2 ? 'wide' : 'full'
+  if (size === 'wide') return 'full'
+  return 'half'
 }
 
 /** full order of the registered widgets: arranged ones first, then new ones in registry order */
@@ -48,7 +81,7 @@ export function resolveLayout(widgets: WidgetMeta[], layout: Partial<OverviewLay
   for (const id of orderedIds(widgets, l)) {
     const w = byId.get(id)!
     if (isHidden(w)) out.hidden.push(id)
-    else out.visible.push({ id, size: l.sizes[id] === 'half' || l.sizes[id] === 'full' ? l.sizes[id] : w.size })
+    else out.visible.push({ id, size: SIZES.has(l.sizes[id]) ? l.sizes[id] : w.size })
   }
   return out
 }
@@ -64,7 +97,7 @@ function commit(widgets: WidgetMeta[], layout: Partial<OverviewLayout> | undefin
   // a defaultHidden widget that was never arranged stays hidden once it enters the order
   for (const w of widgets) if (w.defaultHidden && !l.order.includes(w.id)) hidden.add(w.id)
   const foreign = l.order.filter((id) => !known.has(id))
-  return { order: [...order, ...foreign], hidden: [...hidden], sizes: { ...l.sizes } }
+  return { order: [...order, ...foreign], hidden: [...hidden], sizes: { ...l.sizes }, ...(l.columns ? { columns: l.columns } : {}) }
 }
 
 /** move `id` to the position of `targetId` (before it when moving up, after it when moving down) */
