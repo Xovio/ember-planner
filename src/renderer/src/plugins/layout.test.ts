@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { moveWidget, resolveLayout, setHidden, setSize, stepWidget, type WidgetMeta } from './layout'
+import { columnCount, moveWidget, nextSize, resolveLayout, setColumns, setHidden, setSize, spanOf, stepWidget, type WidgetMeta } from './layout'
 
 const W: WidgetMeta[] = [
   { id: 'a', size: 'full' },
@@ -61,5 +61,38 @@ describe('layout changes', () => {
   it('stores only sizes that differ from the default', () => {
     expect(setSize(W, undefined, 'b', 'full').sizes).toEqual({ b: 'full' })
     expect(setSize(W, { order: [], hidden: [], sizes: { b: 'full' } }, 'b', 'half').sizes).toEqual({})
+  })
+})
+
+describe('columns', () => {
+  it('fits as many columns as the width allows, at most four', () => {
+    expect(columnCount(undefined, 700)).toBe(1)
+    expect(columnCount(undefined, 1000)).toBe(2)
+    expect(columnCount(undefined, 1400)).toBe(3)
+    expect(columnCount(undefined, 2200)).toBe(4)
+  })
+
+  it('uses the chosen count but shrinks on narrow windows', () => {
+    const l = setColumns(W, undefined, 3)
+    expect(l.columns).toBe(3)
+    expect(columnCount(l, 2200)).toBe(3)
+    expect(columnCount(l, 600)).toBe(2)
+    expect(setColumns(W, l, 0).columns).toBeUndefined()
+    expect(columnCount({ order: [], hidden: [], sizes: {}, columns: 9 }, 2200)).toBe(4)
+  })
+
+  it('keeps the column choice when widgets move', () => {
+    expect(moveWidget(W, setColumns(W, undefined, 4), 'c', 'a').columns).toBe(4)
+  })
+
+  it('spans and cycles sizes; wide only with more than two columns', () => {
+    expect(spanOf('full', 4)).toBe(4)
+    expect(spanOf('wide', 4)).toBe(2)
+    expect(spanOf('wide', 1)).toBe(1)
+    expect(nextSize('half', 3)).toBe('wide')
+    expect(nextSize('half', 2)).toBe('full')
+    expect(nextSize('wide', 3)).toBe('full')
+    expect(nextSize('full', 3)).toBe('half')
+    expect(resolveLayout(W, { order: [], hidden: [], sizes: { b: 'wide' } }).visible.find((w) => w.id === 'b')?.size).toBe('wide')
   })
 })

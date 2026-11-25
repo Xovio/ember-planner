@@ -1,9 +1,10 @@
-import { CalendarClock, Check, Flag, Hourglass, ListChecks, MoreHorizontal, Sun, Sunrise, CalendarArrowUp, Repeat, Timer } from 'lucide-react'
+import { CalendarClock, Check, Flag, RotateCw, Hourglass, ListChecks, MoreHorizontal, Sun, Sunrise, CalendarArrowUp, Repeat, Timer } from 'lucide-react'
 import type { Todo } from '@shared/types'
 import { deadlineStatus, localDate, recurrenceLabel } from '@shared/todo'
 import { useStore } from '../../store'
 import { calVar } from '../../lib/theme'
-import { deadlineLabel, formatEstimate, useCategoryMap, useListMap } from '../../lib/todos'
+import { deadlineLabel, formatEstimate, useCategoryMap, useCooldown, useListMap } from '../../lib/todos'
+import { cooldownLabel, formatLeft } from '@shared/repeatable'
 import { fmt } from '../../lib/dates'
 import { TODO_MIME, todoDrag } from '../../lib/dnd'
 import { dayPresets, todoMenu } from '../../lib/menus'
@@ -12,20 +13,44 @@ export const DEADLINE_MIME = 'application/x-deadline'
 
 export function TodoCheck({ todo, size = 18 }: { todo: Todo; size?: number }): React.JSX.Element {
   const toggle = useStore((s) => s.toggleTodo)
+  const left = useCooldown(todo)
+  // a repeatable ToDo shows as ticked off while it cools down
+  const checked = todo.done || left > 0
+  const label = todo.repeatable
+    ? left > 0
+      ? `Wieder in ${formatLeft(left)} – klicken nimmt das letzte Abhaken zurück`
+      : 'Erledigt (wiederholbar)'
+    : todo.done
+      ? 'Als offen markieren'
+      : 'Erledigt'
   return (
     <button
-      className={`todo-check p${todo.priority} ${todo.done ? 'done' : ''}`}
+      className={`todo-check p${todo.priority} ${checked ? 'done' : ''} ${todo.repeatable ? 'repeatable' : ''}`}
       style={{ width: size, height: size }}
       onClick={(e) => {
         e.stopPropagation()
         toggle(todo.id)
       }}
       onPointerDown={(e) => e.stopPropagation()}
-      aria-label={todo.done ? 'Als offen markieren' : 'Erledigt'}
-      aria-pressed={todo.done}
+      aria-label={label}
+      title={todo.repeatable ? label : undefined}
+      aria-pressed={checked}
     >
       <Check size={size - 6} strokeWidth={3.2} />
     </button>
+  )
+}
+
+/** „3×“ and, while cooling down, when it can be ticked off again */
+function RepeatBadge({ todo }: { todo: Todo }): React.JSX.Element {
+  const left = useCooldown(todo)
+  const n = todo.repeatable!.completions.length
+  const tip = `Beliebig oft abhakbar · Abklingzeit ${cooldownLabel(todo.repeatable!.cooldownMin)} · ${n}× erledigt`
+  return (
+    <span className={`meta-plain repeat-badge ${left > 0 ? 'cooling' : ''}`} title={tip} aria-label={tip}>
+      <RotateCw size={12} /> {n > 0 && `${n}×`}
+      {left > 0 && <span> · wieder in {formatLeft(left)}</span>}
+    </span>
   )
 }
 
@@ -111,10 +136,11 @@ export function TodoItem({
   const quick = (date: string, label: string): void =>
     useStore.getState().updateTodos([todo.id], { softDeadline: date }, `Wunschtag ${label}: „${todo.title}“`)
   const presets = dayPresets()
+  const cooling = useCooldown(todo) > 0
 
   return (
     <div
-      className={`todo-item ${compact ? 'compact' : ''} ${todo.done ? 'is-done' : ''} ${selected ? 'selected' : ''} ${picked ? 'picked' : ''}`}
+      className={`todo-item ${compact ? 'compact' : ''} ${todo.done ? 'is-done' : ''} ${cooling ? 'is-cooling' : ''} ${selected ? 'selected' : ''} ${picked ? 'picked' : ''}`}
       data-todo-id={todo.id}
       onClick={onClick}
       onContextMenu={(e) => {
@@ -152,6 +178,7 @@ export function TodoItem({
               {cat.name}
             </span>
           )}
+          {todo.repeatable && <RepeatBadge todo={todo} />}
           {todo.recurrence && (
             <span className="meta-plain" title={recurrenceLabel(todo.recurrence)} aria-label={recurrenceLabel(todo.recurrence)}>
               <Repeat size={12} />

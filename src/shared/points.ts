@@ -3,6 +3,7 @@ import { ANY, type AppTimeLog } from './apptime'
 import { expandAll } from './recurrence'
 import { goalWeek, weekKey } from './goals'
 import { localDate } from './todo'
+import { completionsSince, staleCompletionKeys } from './repeatable'
 import type { AppData, CalendarEvent, PointEntry, PointsLedger, Todo } from './types'
 
 /**
@@ -73,6 +74,17 @@ export function reconcilePoints(
 
   for (const t of data.todos) {
     const key = `todo:${t.id}`
+    if (t.repeatable) {
+      // every completion of a repeatable ToDo counts on its own
+      const live = new Set<string>()
+      for (const c of completionsSince(t, sinceIso)) {
+        live.add(c.key)
+        put(c.key, { at: c.at, kind: 'todo', points: todoPoints(t), label: t.title })
+      }
+      for (const k of staleCompletionKeys(t, entries, live)) drop(k)
+      drop(key)
+      continue
+    }
     if (t.done && t.doneAt && t.doneAt >= sinceIso) put(key, { at: t.doneAt, kind: 'todo', points: todoPoints(t), label: t.title })
     else if (!t.done) drop(key)
   }

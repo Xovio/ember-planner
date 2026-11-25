@@ -10,6 +10,8 @@ import { ESTIMATE_PRESETS, PRIORITY_LABEL, formatEstimate } from '../../lib/todo
 import { WEEKDAY_SHORT, fmt, fromLocal, toLocalTime } from '../../lib/dates'
 import { TodoCheck } from '../todos/TodoItem'
 import { DatePicker } from '../ui/DatePicker'
+import { COOLDOWN_OPTIONS, cooldownLabel, formatLeft, lastCompletion, makeRepeatable } from '@shared/repeatable'
+import { useCooldown } from '../../lib/todos'
 
 /** ToDo editor inside the right panel. Every change saves immediately and is undoable. */
 export function TodoDetails({ id }: { id: string }): React.JSX.Element {
@@ -85,7 +87,7 @@ export function TodoDetails({ id }: { id: string }): React.JSX.Element {
           </div>
         </div>
 
-        <TodoRepeat todo={todo} onChange={(recurrence) => set({ recurrence }, 'rec')} />
+        <TodoRepeat todo={todo} set={(patch) => set(patch, 'rec')} />
 
         <div className="field">
           <Signal size={16} className="field-icon" />
@@ -269,10 +271,11 @@ const REPEAT_UNITS: Record<RecurrenceFreq, [string, string]> = {
 }
 
 /** Repeat rule of a ToDo: completing it creates the next instance. */
-function TodoRepeat({ todo, onChange }: { todo: Todo; onChange: (r: Recurrence | null) => void }): React.JSX.Element {
+function TodoRepeat({ todo, set }: { todo: Todo; set: (patch: Partial<Todo>) => void }): React.JSX.Element {
   const rec = todo.recurrence
   const next = rec && !todo.done ? nextRecurrence(todo) : null
   const nextDay = next?.softDeadline ?? next?.hardDeadline
+  const onChange = (r: Recurrence | null): void => set({ recurrence: r, ...(todo.repeatable ? { repeatable: null } : {}) })
 
   return (
     <div className="field">
@@ -280,10 +283,11 @@ function TodoRepeat({ todo, onChange }: { todo: Todo; onChange: (r: Recurrence |
       <div className="field-stack">
         <select
           className="input"
-          value={rec?.freq ?? 'none'}
+          value={todo.repeatable ? 'free' : (rec?.freq ?? 'none')}
           onChange={(e) => {
             const v = e.target.value
-            if (v === 'none') return onChange(null)
+            if (v === 'none') return set({ recurrence: null, repeatable: null })
+            if (v === 'free') return set(makeRepeatable(todo, todo.repeatable?.cooldownMin))
             const freq = v as RecurrenceFreq
             onChange({
               interval: rec?.interval ?? 1,
@@ -299,7 +303,9 @@ function TodoRepeat({ todo, onChange }: { todo: Todo; onChange: (r: Recurrence |
           <option value="weekly">Wöchentlich</option>
           <option value="monthly">Monatlich</option>
           <option value="yearly">Jährlich</option>
+          <option value="free">Beliebig oft (mit Abklingzeit)</option>
         </select>
+        {todo.repeatable && <RepeatableBox todo={todo} set={set} />}
         {rec && (
           <div className="rec-box">
             <div className="rec-line">
@@ -382,6 +388,39 @@ function TodoRepeat({ todo, onChange }: { todo: Todo; onChange: (r: Recurrence |
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+/** settings and stats of a repeatable ToDo */
+function RepeatableBox({ todo, set }: { todo: Todo; set: (patch: Partial<Todo>) => void }): React.JSX.Element {
+  const r = todo.repeatable!
+  const left = useCooldown(todo)
+  const last = lastCompletion(todo)
+  const today = localDate(new Date())
+  const todayCount = r.completions.filter((at) => localDate(new Date(at)) === today).length
+  return (
+    <div className="rec-box">
+      <div className="rec-line">
+        Abklingzeit
+        <select
+          className="input sm"
+          value={r.cooldownMin}
+          onChange={(e) => set({ repeatable: { ...r, cooldownMin: Number(e.target.value) } })}
+        >
+          {(COOLDOWN_OPTIONS.includes(r.cooldownMin) ? COOLDOWN_OPTIONS : [...COOLDOWN_OPTIONS, r.cooldownMin].sort((a, b) => a - b)).map((m) => (
+            <option key={m} value={m}>
+              {cooldownLabel(m)}
+            </option>
+          ))}
+        </select>
+      </div>
+      <span className="field-hint">
+        {r.completions.length === 0
+          ? 'Bleibt in der Liste und bringt bei jedem Abhaken Punkte und Coins.'
+          : `${r.completions.length}× erledigt${todayCount ? `, heute ${todayCount}×` : ''} · zuletzt ${fmt(new Date(last!), 'EEE, d. MMM HH:mm')}`}
+        {left > 0 && ` · wieder abhakbar in ${formatLeft(left)}`}
+      </span>
     </div>
   )
 }

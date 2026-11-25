@@ -1,9 +1,25 @@
-import { useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, Eye, EyeOff, GripVertical, Maximize2, Minimize2, Plus, Settings2 } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { ChevronLeft, ChevronRight, Columns3, Eye, EyeOff, GripVertical, Maximize2, Minimize2, Plus, Settings2 } from 'lucide-react'
 import type { OverviewLayout } from '@shared/types'
 import { useStore } from '../../store'
 import { useWidgets } from '../../plugins/registry'
-import { moveWidget, resolveLayout, setHidden, setSize, stepWidget } from '../../plugins/layout'
+import { MAX_COLUMNS, columnCount, moveWidget, nextSize, resolveLayout, setColumns, setHidden, setSize, spanOf, stepWidget } from '../../plugins/layout'
+
+const SIZE_LABEL = { half: '1 Spalte', wide: '2 Spalten', full: 'volle Breite' }
+const GAP = 18
+
+/** width of the element, kept current */
+function useWidth(ref: React.RefObject<HTMLElement | null>): number {
+  const [w, setW] = useState(0)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const ro = new ResizeObserver(([e]) => setW(Math.round(e.contentRect.width)))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [ref])
+  return w
+}
 
 /** the overview's widget grid; in edit mode widgets can be dragged, resized and hidden */
 export function Dashboard({ editing }: { editing: boolean }): React.JSX.Element {
@@ -14,6 +30,10 @@ export function Dashboard({ editing }: { editing: boolean }): React.JSX.Element 
   const [overId, setOverId] = useState<string | null>(null)
   const [settingsId, setSettingsId] = useState<string | null>(null)
 
+  const gridRef = useRef<HTMLDivElement>(null)
+  const width = useWidth(gridRef)
+  // until the first measurement, assume the old two columns
+  const cols = width ? columnCount(layout, width, GAP) : 2
   const resolved = useMemo(() => resolveLayout(widgets, layout), [widgets, layout])
   const byId = useMemo(() => new Map(widgets.map((w) => [w.id, w])), [widgets])
   const save = (next: OverviewLayout): void => updateSettings({ overviewLayout: next })
@@ -25,7 +45,40 @@ export function Dashboard({ editing }: { editing: boolean }): React.JSX.Element 
 
   return (
     <>
-      <div className={`dash-grid ${editing ? 'editing' : ''}`}>
+      {editing && (
+        <div className="dash-columns" role="group" aria-label="Spalten">
+          <Columns3 size={15} />
+          <span>Spalten</span>
+          <div className="segmented small">
+            {[0, ...Array.from({ length: MAX_COLUMNS }, (_, i) => i + 1)].map((n) => (
+              <button
+                key={n}
+                className={(layout?.columns ?? 0) === n ? 'on' : ''}
+                title={n ? `${n} Spalten` : 'So viele, wie auf den Bildschirm passen'}
+                onClick={() => save(setColumns(widgets, layout, n))}
+              >
+                {n || 'Auto'}
+              </button>
+            ))}
+          </div>
+          {cols < (layout?.columns ?? 0) && <span className="field-hint">Fenster zu schmal – gerade {cols}</span>}
+        </div>
+      )}
+      <div
+        ref={gridRef}
+        className={`dash-grid ${editing ? 'editing' : ''} ${cols === 1 ? 'one-col' : ''}`}
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        // dropping on a free spot moves the widget to the end
+        onDragOver={(e) => {
+          if (dragId) e.preventDefault()
+        }}
+        onDrop={(e) => {
+          e.preventDefault()
+          const last = resolved.visible.at(-1)?.id
+          if (dragId && last && dragId !== last) save(moveWidget(widgets, layout, dragId, last))
+          endDrag()
+        }}
+      >
         {resolved.visible.map(({ id, size }, i) => {
           const w = byId.get(id)!
           const Comp = w.component
@@ -34,6 +87,7 @@ export function Dashboard({ editing }: { editing: boolean }): React.JSX.Element 
               key={id}
               className={`dash-item ${w.tall ? 'tall' : ''} ${dragId === id ? 'dragging' : ''} ${overId === id && dragId !== id ? 'drop-target' : ''}`}
               data-size={size}
+              style={{ gridColumn: `span ${spanOf(size, cols)}` }}
               draggable={editing}
               onDragStart={(e) => {
                 e.dataTransfer.effectAllowed = 'move'
@@ -47,6 +101,7 @@ export function Dashboard({ editing }: { editing: boolean }): React.JSX.Element 
               }}
               onDrop={(e) => {
                 e.preventDefault()
+                e.stopPropagation()
                 if (dragId && dragId !== id) save(moveWidget(widgets, layout, dragId, id))
                 endDrag()
               }}
@@ -76,14 +131,16 @@ export function Dashboard({ editing }: { editing: boolean }): React.JSX.Element 
                   >
                     <ChevronRight size={15} />
                   </button>
-                  <button
-                    className="icon-btn"
-                    title={size === 'full' ? 'Halbe Breite' : 'Volle Breite'}
-                    aria-label={`${w.title}: ${size === 'full' ? 'halbe' : 'volle'} Breite`}
-                    onClick={() => save(setSize(widgets, layout, id, size === 'full' ? 'half' : 'full'))}
-                  >
-                    {size === 'full' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-                  </button>
+                  {cols > 1 && (
+                    <button
+                      className="icon-btn"
+                      title={`Breite: ${SIZE_LABEL[size]} → ${SIZE_LABEL[nextSize(size, cols)]}`}
+                      aria-label={`${w.title}: Breite ${SIZE_LABEL[nextSize(size, cols)]}`}
+                      onClick={() => save(setSize(widgets, layout, id, nextSize(size, cols)))}
+                    >
+                      {size === 'full' ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+                    </button>
+                  )}
                   {w.settings && (
                     <button
                       className={`icon-btn ${settingsId === id ? 'active' : ''}`}

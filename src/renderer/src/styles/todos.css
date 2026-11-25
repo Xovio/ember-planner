@@ -1021,3 +1021,11 @@ body.dragging-todo .tg-cols {
   vertical-align: -1px;
   color: var(--text-3);
 }
+
+/* repeatable ToDo that was just ticked off: stays visible but steps back */
+.todo-item.is-cooling .todo-title {
+  color: var(--text-2);
+}
+.repeat-badge.cooling {
+  color: var(--text-3);
+}

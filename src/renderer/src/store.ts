@@ -25,6 +25,7 @@ import { isCalendarLocked } from '@shared/google'
 import { api, isDemo } from './lib/api'
 import { holidayOn } from '@shared/holidays'
 import { daysBetween, localDate, nextRecurrence, parseLocalDate } from '@shared/todo'
+import { completeRepeatable, cooldownLeft, formatLeft, isCoolingDown, undoRepeatable } from '@shared/repeatable'
 import { detachOccurrence, endSeriesBefore, splitSeries } from '@shared/series'
 import { goalEvent, markFilled, slotsToFill, weekKey } from '@shared/goals'
 import { attrLevel, attrXp, coinBalance } from '@shared/character'
@@ -885,7 +886,8 @@ export const useStore = create<State>((set, get) => {
     toggleTodo(id) {
       const t = get().data?.todos.find((x) => x.id === id)
       if (!t) return
-      get().toggleTodos([id], !t.done)
+      // a repeatable ToDo counts as ticked off while it cools down; ticking it then takes the completion back
+      get().toggleTodos([id], t.repeatable ? !isCoolingDown(t) : !t.done)
     },
 
     toggleTodos(ids, done) {
@@ -915,13 +917,28 @@ export const useStore = create<State>((set, get) => {
       }
       const nextDay = spawned.length === 1 ? (spawned[0].softDeadline ?? spawned[0].hardDeadline) : undefined
       const base = ids.length > 1 ? `${ids.length} ToDos ${done ? 'erledigt' : 'wieder geöffnet'}` : `„${first?.title}“ ${done ? 'erledigt' : 'wieder geöffnet'}`
+      // repeatable ToDos collect completions instead of being done
+      const repeat = (t: Todo): Todo => {
+        const next = done ? completeRepeatable(t, ts) : isCoolingDown(t) ? undoRepeatable(t) : t
+        return next === t ? t : { ...next, updatedAt: ts }
+      }
+      let label = nextDay ? `${base} · nächstes Mal ${deadlineText(nextDay, today)}` : base
+      if (ids.length === 1 && first?.repeatable) {
+        const after = repeat(first)
+        if (after === first) return
+        const left = cooldownLeft(after, new Date(ts).getTime())
+        label = done ? `„${first.title}“ erledigt${left ? ` · wieder in ${formatLeft(left)}` : ''}` : `„${first.title}“: letztes Abhaken zurückgenommen`
+      }
       mutate(
         (d) => ({
           ...d,
           todos: [
             ...d.todos.map((t) =>
-              set_.has(t.id)
-                ? {
+              !set_.has(t.id)
+                ? t
+                : t.repeatable
+                  ? repeat(t)
+                  : {
                     ...t,
                     done,
                     doneAt: done ? ts : undefined,
@@ -929,15 +946,11 @@ export const useStore = create<State>((set, get) => {
                     ...(done && t.recurrence && !t.done ? { recurrence: null } : {}),
                     updatedAt: ts
                   }
-                : t
             ),
             ...spawned
           ]
         }),
-        {
-          label: nextDay ? `${base} · nächstes Mal ${deadlineText(nextDay, today)}` : base,
-          undoToast: done
-        }
+        { label, undoToast: done }
       )
     },
 
