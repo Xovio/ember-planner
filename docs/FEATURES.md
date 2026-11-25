@@ -64,6 +64,9 @@ Die linke Leiste filtert die ToDo-Spalte: Ein Klick auf eine Liste oder Kategori
 - **Schnellaktionen beim Darüberfahren:** Wunschtag heute / morgen / nächste Woche, weitere Aktionen im „…“-Menü
 - **Rechtsklick-Menü:** erledigt, Wunschtag, harte Deadline, jetzt einplanen, Priorität, Kategorie, Liste, löschen
 - **Mehrfachauswahl** (Strg/Shift+Klick) mit Aktionsleiste
+- **Wiederholbare ToDos** (v0.6): *Wiederholung → Beliebig oft (mit Abklingzeit)* – z. B. „Waschmaschine befüllen“. Jedes
+  Abhaken bringt Punkte und Coins, das ToDo bleibt offen. Während der Abklingzeit (keine bis 1 Woche, Standard 1 h) ist es
+  abgehakt und rückt nach unten; ein Klick darauf nimmt das letzte Abhaken zurück
 - **Tastatur:** `↑` `↓` / `j` `k` wählen, `Leertaste` abhaken, `Entf` in den Papierkorb, `0`–`3` Priorität
 - **Obsidian-Tasks-Format:** jede Aufgabe zeigt ihre Zeile im Tasks-Format (zum Kopieren, mit `🔁 every week …` für
   Wiederholungen); die Schnelleingabe versteht die Syntax
@@ -102,6 +105,9 @@ Die linke Leiste filtert die ToDo-Spalte: Ein Klick auf eine Liste oder Kategori
 | Aktivität | Heatmap über 12 Monate – Termine oder erledigte ToDos |
 | Prep-Zeit | wie lange Obsidian, OneNote und Foundry offen waren – heute, Woche, Monat, gesamt; pro App und zusammen (Überschneidungen einmal), plus „Stunden bisher“ und nächster Meilenstein |
 | Starter | Kacheln für Programme, Spiele, Ordner und Links; eine Kachel mit mehreren Zielen ist eine Szene (z. B. „D&D-Abend“) |
+
+**Anordnen:** Widgets ziehen, ein- und ausblenden, Breite 1 Spalte / 2 Spalten / volle Breite. Die Spaltenzahl richtet sich
+nach der Fensterbreite (bis 4) oder wird unter *Anordnen → Spalten* fest gewählt (v0.6).
 
 **Prep-Zeit:** Die Desktop-App prüft einmal pro Minute die laufenden Programme (`tasklist`) und speichert die Zeiten in
 `apptime.json` neben den Daten. Welche Programme zählen (Prozessnamen), die Stunden vor dem Tracking und ob abwesende Zeit
