@@ -261,6 +261,8 @@ interface State {
   /** buys furniture into the chest */
   buyFurniture(id: string): boolean
   setRoomItems(items: PlacedFurniture[], label: string): void
+  /** puts up an owned wallpaper or flooring */
+  setRoomSurface(id: string): void
   /** silent: rewards after reconciling */
   setRewards(rewards: Character['rewards']): void
 
@@ -1277,6 +1279,15 @@ export const useStore = create<State>((set, get) => {
         { label: `${f.name} gekauft`, undoToast: true }
       )
       return true
+    },
+
+    setRoomSurface(id) {
+      const f = furnitureById(id)
+      const ch = get().data?.character
+      if (!f || !ch || !ownsFurniture(ch, f)) return
+      const key = f.kind === 'wallpaper' ? 'wall' : f.kind === 'flooring' ? 'floor' : null
+      if (!key) return
+      mutate((d) => ({ ...d, character: { ...d.character, room: { ...d.character.room, [key]: id } } }), { label: `${f.name} angebracht` })
     },
 
     setRoomItems(items, label) {

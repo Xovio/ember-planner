@@ -8,6 +8,7 @@ import { IdeasPage } from '../pages/IdeasPage'
 import { SettingsPage } from '../pages/SettingsPage'
 import { CharacterPage } from '../pages/CharacterPage'
 import { CharacterWidget } from '../components/widgets/CharacterWidget'
+import { RoomWidget } from '../components/widgets/RoomWidget'
 import { RightPanel } from '../components/RightPanel'
 import { AgendaWidget, NextUpWidget } from '../components/widgets/TodayWidgets'
 import { CategoryBars, FocusTodos, TodoStats } from '../components/widgets/TodoWidgets'
@@ -44,6 +45,7 @@ registerPage({ ...core, id: 'settings', label: 'Optionen', icon: Settings, order
 /* ── overview widgets, in their default order ── */
 registerWidget({ ...core, id: 'todo-stats', title: 'ToDo-Zahlen', description: 'Offen, überfällig, diese Woche erledigt', size: 'full', order: 10, component: TodoStats })
 registerWidget({ ...core, id: 'character', title: 'Charakter', description: 'Dein Charakter mit Level, Coins und stärksten Attributen', size: 'half', order: 11, component: CharacterWidget })
+registerWidget({ ...core, id: 'room', title: 'Zimmer', description: 'Das Zimmer deines Charakters zum Anschauen', size: 'half', order: 11.5, component: RoomWidget })
 registerWidget({ ...core, id: 'goals', title: 'Wochenziele', description: 'Fortschritt der Wochenziele, Nachfrage bei verpassten Terminen', size: 'half', order: 12, component: GoalsWidget })
 registerWidget({ ...core, id: 'points', title: 'Punkte & Level', description: 'Punkte für Erledigtes, Wochenverlauf und Level', size: 'half', order: 14, component: PointsWidget })
 registerWidget({ ...core, id: 'agenda', title: 'Tagesplan', description: 'Die Termine von heute', size: 'half', tall: true, order: 20, component: AgendaWidget })

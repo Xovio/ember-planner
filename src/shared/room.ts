@@ -12,8 +12,9 @@ export const ROOM_SIZE = 6
 /** the window is built in: right wall, spots 2–3 */
 export const WINDOW = { wall: 'r' as const, x: 2, w: 2 }
 
-export type FurnKind = 'floor' | 'rug' | 'wall'
-export type FurnGroup = 'small' | 'medium' | 'large' | 'rug' | 'wall' | 'special'
+/** floor, rug and wall items are placed; wallpaper and flooring cover the whole room */
+export type FurnKind = 'floor' | 'rug' | 'wall' | 'wallpaper' | 'flooring'
+export type FurnGroup = 'small' | 'medium' | 'large' | 'rug' | 'wall' | 'special' | 'surface'
 
 export const FURN_GROUPS: { id: FurnGroup; name: string }[] = [
   { id: 'small', name: 'Kleinkram' },
@@ -21,7 +22,8 @@ export const FURN_GROUPS: { id: FurnGroup; name: string }[] = [
   { id: 'large', name: 'Groß' },
   { id: 'rug', name: 'Teppiche' },
   { id: 'wall', name: 'Wand' },
-  { id: 'special', name: 'Besonderes' }
+  { id: 'special', name: 'Besonderes' },
+  { id: 'surface', name: 'Tapeten und Böden' }
 ]
 
 export interface Furniture {
@@ -130,7 +132,30 @@ export const FURNITURE: Furniture[] = [
   ...furn('basketshelf', 'Korbregal', 'special', 'floor', [2, 1], 120, { wood: ['Holz', '#c9a27a'] }, { unlock: { attr: 'order', level: 3 } }),
   ...furn('hangchair', 'Hängesessel', 'special', 'floor', [1, 1], 180, { cream: ['Creme', '#efe2c8'] }, { unlock: { attr: 'stamina', level: 4 } }),
   ...furn('telescope', 'Teleskop', 'special', 'floor', [1, 1], 200, { navy: ['Nachtblau', '#4a5a8c'] }, { unlock: { attr: 'mind', level: 4 } }),
-  ...furn('gametable', 'Spieltisch', 'special', 'floor', [2, 2], 250, { green: ['Grün', '#5f9a6a'], wine: ['Weinrot', '#9c4a5a'] }, { unlock: { attr: 'social', level: 4 } })
+  ...furn('gametable', 'Spieltisch', 'special', 'floor', [2, 2], 250, { green: ['Grün', '#5f9a6a'], wine: ['Weinrot', '#9c4a5a'] }, { unlock: { attr: 'social', level: 4 } }),
+
+  /* wallpaper 80–150 (style = pattern) */
+  ...furn('plain', 'Tapete', 'surface', 'wallpaper', [0, 0], 80, {
+    cream: ['Creme', '#f2d9c0'],
+    sage: ['Salbei', '#cfe0c8'],
+    rose: ['Rosé', '#f3cfd2'],
+    sky: ['Himmel', '#cfe2f0']
+  }, { starter: 'cream' }),
+  ...furn('stripes', 'Streifentapete', 'surface', 'wallpaper', [0, 0], 120, { mustard: ['Senf', '#f2dcae'], mint: ['Mint', '#cfeadf'] }),
+  ...furn('dots', 'Punkttapete', 'surface', 'wallpaper', [0, 0], 120, { lavender: ['Lavendel', '#ddd3f0'], peach: ['Pfirsich', '#f7d6c0'] }),
+  ...furn('flowers', 'Blümchentapete', 'surface', 'wallpaper', [0, 0], 150, { cream: ['Creme', '#f4e6cf'], sage: ['Salbei', '#d6e4cf'] }),
+  ...furn('panel', 'Holzvertäfelung', 'surface', 'wallpaper', [0, 0], 150, { oak: ['Eiche', '#d9b48a'] }),
+
+  /* flooring 100–200 (style = pattern) */
+  ...furn('planks', 'Dielen', 'surface', 'flooring', [0, 0], 100, {
+    oak: ['Eiche', '#c98d5f'],
+    walnut: ['Nussbaum', '#8f5f40'],
+    birch: ['Birke', '#e2c39a']
+  }, { starter: 'oak' }),
+  ...furn('herringbone', 'Fischgrätparkett', 'surface', 'flooring', [0, 0], 160, { honey: ['Honig', '#d49a62'] }),
+  ...furn('tiles', 'Fliesen', 'surface', 'flooring', [0, 0], 140, { terracotta: ['Terrakotta', '#d4876a'], sage: ['Salbei', '#a9c4a4'] }),
+  ...furn('carpet', 'Teppichboden', 'surface', 'flooring', [0, 0], 120, { sage: ['Salbei', '#a9c2a0'], rose: ['Rosé', '#e3b2b4'] }),
+  ...furn('checker', 'Schachbrettboden', 'surface', 'flooring', [0, 0], 180, { cream: ['Creme', '#e8d6bc'] })
 ]
 
 export const furnitureById = (id: string | undefined): Furniture | undefined => (id ? FURNITURE.find((f) => f.id === id) : undefined)
@@ -142,10 +167,25 @@ export const LIGHT_STYLES = new Set(['lamp', 'candles', 'fireplace', 'lights'])
 
 export const ownsFurniture = (ch: Pick<Character, 'owned'>, f: Furniture): boolean => !!f.starter || ch.owned.includes(f.id)
 
-/** owned furniture that is not in the room */
+export const isSurface = (f: Furniture): boolean => f.kind === 'wallpaper' || f.kind === 'flooring'
+
+/** owned furniture that is not in the room (wallpaper and flooring are never in the chest) */
 export function chest(ch: Pick<Character, 'owned' | 'room'>): Furniture[] {
   const placed = new Set(ch.room.items.map((p) => p.id))
-  return FURNITURE.filter((f) => ownsFurniture(ch, f) && !placed.has(f.id))
+  return FURNITURE.filter((f) => !isSurface(f) && ownsFurniture(ch, f) && !placed.has(f.id))
+}
+
+export const DEFAULT_WALL = 'f-plain-cream'
+export const DEFAULT_FLOOR = 'f-planks-oak'
+
+/** the wallpaper and flooring in use (falls back to the built-in ones) */
+export function surfaces(room: Pick<Room, 'wall' | 'floor'>): { wall: Furniture; floor: Furniture } {
+  const w = furnitureById(room.wall)
+  const f = furnitureById(room.floor)
+  return {
+    wall: w?.kind === 'wallpaper' ? w : furnitureById(DEFAULT_WALL)!,
+    floor: f?.kind === 'flooring' ? f : furnitureById(DEFAULT_FLOOR)!
+  }
 }
 
 /* ── space ── */
@@ -168,7 +208,7 @@ const overlaps = (a: Rect, b: Rect): boolean => a.x < b.x + b.w && b.x < a.x + a
 /** whether p fits: inside the room, not on the window, not on anything of its kind */
 export function canPlace(room: Room, p: PlacedFurniture, ignore?: string): boolean {
   const f = furnitureById(p.id)
-  if (!f) return false
+  if (!f || isSurface(f)) return false
   const r = footprint(p, f)
   if (!Number.isInteger(r.x) || !Number.isInteger(r.y) || r.x < 0 || r.x + r.w > ROOM_SIZE) return false
   if (f.kind === 'wall') {
@@ -186,6 +226,7 @@ export function canPlace(room: Room, p: PlacedFurniture, ignore?: string): boole
 
 /** a free spot for f, closest to the middle of the room (or the first free spot on a wall) */
 export function findSpot(room: Room, f: Furniture): PlacedFurniture | null {
+  if (isSurface(f)) return null
   if (f.kind === 'wall') {
     for (const wall of ['l', 'r'] as const)
       for (let x = 0; x <= ROOM_SIZE - f.w; x++) {
