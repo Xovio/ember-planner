@@ -7,8 +7,10 @@ import {
   chest,
   findSpot,
   furnitureById,
+  isSurface,
   ownsFurniture,
   rotated,
+  surfaces,
   canPlace,
   type FurnGroup,
   type Furniture
@@ -24,7 +26,7 @@ const LIGHT_MODES: LightMode[] = ['auto', 'morning', 'day', 'evening', 'night']
 const LIGHT_ICON = { morning: Sunrise, day: Sun, evening: Sunset, night: Moon }
 
 /** pauses animation while the window is hidden */
-function useHidden(): boolean {
+export function useHidden(): boolean {
   const [hidden, setHidden] = useState(document.visibilityState === 'hidden')
   useEffect(() => {
     const on = (): void => setHidden(document.visibilityState === 'hidden')
@@ -34,7 +36,7 @@ function useHidden(): boolean {
   return hidden
 }
 
-function useClockPhase(paused: boolean): Phase {
+export function useClockPhase(paused: boolean): Phase {
   const [phase, setPhase] = useState(() => phaseAt(new Date()))
   useEffect(() => {
     if (paused) return
@@ -49,6 +51,7 @@ function useClockPhase(paused: boolean): Phase {
 export function RoomView(): React.JSX.Element {
   const ch = useStore((s) => s.data!.character)
   const setRoomItems = useStore((s) => s.setRoomItems)
+  const setSurface = useStore((s) => s.setRoomSurface)
   const [editing, setEditing] = useState(false)
   const [selected, setSelected] = useState<string | null>(null)
   const [hint, setHint] = useState<string | null>(null)
@@ -83,6 +86,7 @@ export function RoomView(): React.JSX.Element {
       label
     )
   const place = (f: Furniture): void => {
+    if (isSurface(f)) return setSurface(f.id)
     const spot = findSpot(ch.room, f)
     if (!spot) return setHint('Kein freier Platz. Lagere erst etwas in die Kiste.')
     setRoomItems([...items, spot], `${f.name} aufgestellt`)
@@ -164,6 +168,8 @@ export function RoomView(): React.JSX.Element {
         <div className="room-canvas" ref={stage} tabIndex={0} onKeyDown={onKey} aria-label="Zimmer">
           <RoomScene
             items={items}
+            wall={ch.room.wall}
+            floor={ch.room.floor}
             look={ch.look}
             outfit={ch.outfit}
             phase={phase}
@@ -244,6 +250,7 @@ function Chest({
           ))}
         </div>
       </div>
+      <SurfacePicker />
       <div className="item-group">
         <h4>Im Zimmer</h4>
         <div className="look-chips">
@@ -256,6 +263,31 @@ function Chest({
             ) : null
           })}
         </div>
+      </div>
+    </div>
+  )
+}
+
+/** owned wallpapers and floors, the ones in use marked */
+function SurfacePicker(): React.JSX.Element {
+  const ch = useStore((s) => s.data!.character)
+  const setSurface = useStore((s) => s.setRoomSurface)
+  const now = surfaces(ch.room)
+  const owned = FURNITURE.filter((f) => isSurface(f) && ownsFurniture(ch, f))
+  return (
+    <div className="item-group">
+      <h4>Tapeten und Böden</h4>
+      <div className="item-grid">
+        {owned.map((f) => {
+          const on = now.wall.id === f.id || now.floor.id === f.id
+          return (
+            <button key={f.id} className={`item-tile ${on ? 'on' : ''}`} onClick={() => setSurface(f.id)} title={`${f.name} anbringen`}>
+              <FurniturePreview f={f} size={70} />
+              <span className="item-name">{f.name}</span>
+              <span className="item-price">{on ? 'In Gebrauch' : 'Anbringen'}</span>
+            </button>
+          )
+        })}
       </div>
     </div>
   )
@@ -335,9 +367,9 @@ function FurnitureShop({ onPlace, coins }: { onPlace(f: Furniture): void; coins:
       )}
       {bought && !pick && (
         <div className="shop-buy">
-          <span>{bought.name} liegt in deiner Kiste.</span>
+          <span>{isSurface(bought) ? `${bought.name} gehört dir.` : `${bought.name} liegt in deiner Kiste.`}</span>
           <button className="btn sm" onClick={() => (onPlace(bought), setBought(null))}>
-            Gleich aufstellen
+            {isSurface(bought) ? 'Gleich anbringen' : 'Gleich aufstellen'}
           </button>
         </div>
       )}

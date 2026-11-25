@@ -1,8 +1,9 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import type { Furniture } from '@shared/room'
+import { isSurface, type Furniture } from '@shared/room'
 import { ramp } from '@shared/wardrobe'
 import { FurnitureShape } from './furniture'
 import { H, P, pts } from './iso'
+import { RoomScene } from './RoomScene'
 
 /** one item on a little patch of floor (or wall), for the chest and the shop; the view hugs the drawing */
 export function FurniturePreview({ f, size = 84 }: { f: Furniture; size?: number }): React.JSX.Element {
@@ -15,6 +16,12 @@ export function FurniturePreview({ f, size = 84 }: { f: Furniture; size?: number
     setBox(`${b.x + b.width / 2 - side / 2} ${b.y + b.height / 2 - side / 2} ${side} ${side}`)
   }, [f])
   const { w, d } = f
+  if (isSurface(f))
+    return (
+      <div className="surface-preview" style={{ width: size, height: size }} aria-hidden="true">
+        <RoomScene items={[]} wall={f.kind === 'wallpaper' ? f.id : undefined} floor={f.kind === 'flooring' ? f.id : undefined} phase="day" paused label={f.name} />
+      </div>
+    )
   return (
     <svg viewBox={box ?? '0 0 300 260'} width={size} height={size} aria-hidden="true" style={{ visibility: box ? 'visible' : 'hidden' }}>
       <g ref={g}>

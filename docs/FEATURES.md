@@ -134,7 +134,14 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
 ## Charakter
 
 - Eigene Seite **Charakter** (linke Leiste) und Widget in der Übersicht: süße Vektor-Figur, die atmet, blinzelt und winkt
-- **Aussehen kostenlos**: Name, 12 Hauttöne, 5 Frisuren, 9 Haarfarben, 6 Augenfarben, Statur, Brille, Hörgerät
+- **Aussehen kostenlos** und frei kombinierbar, ohne festen Geschlechts-Schalter:
+  - Schnellstart-Vorlagen *eher weiblich*, *eher männlich*, *neutral* (setzen nur ein paar Formen)
+  - Körper: Statur, Körperform (gerade, kurvig, breite Schultern), Größe, Hautton (12 Töne oder eigener Farbwähler)
+  - Gesicht: Gesichtsform, Augenform, Augenfarbe (auch frei), Brauen, Wimpern, Wangenröte, Sommersprossen, Muttermal,
+    Make-up (Lippen, Lidstrich)
+  - Haare: 13 Frisuren (u. a. Afro, Lange Locken, Zopf, Zwei Zöpfe, Flechtzopf, Undercut, Raspel, Glatze),
+    Haarfarbe (auch frei), 6 Bärte
+  - Hilfsmittel: Brille, Hörgerät, Rollstuhl
 - **Sechs Attribute** (Fitness, Ausdauer, Köpfchen, Kreativität, Ordnung, Sozial), jedes mit eigenem Level; Charakter-Level = 1 + alle Attribut-Aufstiege
 - **Coins** für erledigte ToDos nach **Schwierigkeit** (leicht · mittel · schwer · episch, im ToDo einstellbar) **× Zeit**
   (abgehakter Zeitblock, sonst Schätzung, sonst 15 min; bis 4 h), dazu Ziel-Bausteine, komplette Wochenziele, Sessions und Prep-Stunden
@@ -147,7 +154,10 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
 
 - Oben auf der Charakter-Seite umschalten zwischen **Zimmer** und **Figur und Kleidung**
 - **Isometrisches Zimmer** (6×6 Kacheln, zwei Wände, Fenster mit Vorhängen) im Vektor-Chibi-Stil, die Figur steht im Raum
-- **Ab Werk:** Teppich, Sitzsack, Topfpflanze und Stehlampe; das Fenster ist fest eingebaut
+- **Ab Werk:** Teppich, Sitzsack, Topfpflanze und Stehlampe, cremefarbene Tapete und Eichendielen; das Fenster ist fest eingebaut
+- **Tapeten** (80–150 Coins: einfarbig, Streifen, Punkte, Blümchen, Holzvertäfelung) und **Böden** (100–200: Dielen, Fischgrät,
+  Fliesen, Teppichboden, Schachbrett) im Shop; in der Kiste jederzeit wechseln
+- Im Zimmer steht die Figur in Ruhe-Pose; **Zimmer-Widget** in der Übersicht (Klick öffnet das Zimmer)
 - **Möbel-Shop** mit 28 Formen in Farbvarianten (≈ 50 Teile): Kleinkram 20–50, Möbel 60–120, Groß 150–300 Coins,
   Teppiche, Wandsachen (Bild, Uhr, Regal, Lichterkette) und Besonderes ab einem Attribut-Level (Hantelbank, Staffelei,
   Korbregal, Hängesessel, Teleskop, Spieltisch). Gekauftes landet in der **Kiste**

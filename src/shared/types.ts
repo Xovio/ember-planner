@@ -172,16 +172,34 @@ export interface Reward {
   label: string
 }
 
-/** look = identity, always free; outfit = bought items */
+/** look = identity, always free; outfit = bought items. No gender switch: every feature combines freely */
 export interface AvatarLook {
   skin: number
+  /** custom skin colour from the picker; wins over `skin` */
+  skinHex?: string
   hair: string
+  /** a HAIR_COLORS key or a custom '#rrggbb' */
   hairColor: string
+  /** an EYE_COLORS key or a custom '#rrggbb' */
   eyes: string
   /** body width 0 (slim) … 2 (round) */
   build: number
+  /** shoulders and hips */
+  body: 'straight' | 'curvy' | 'broad'
+  /** 0 small, 1 medium, 2 tall */
+  height: number
+  face: 'round' | 'oval' | 'square'
+  eyeShape: 'round' | 'almond' | 'soft'
+  brows: 'thin' | 'soft' | 'thick'
+  lashes: boolean
+  beard: 'none' | 'stubble' | 'short' | 'full' | 'mustache' | 'goatee'
+  freckles: boolean
+  mole: boolean
+  blush: boolean
+  makeup: 'none' | 'lips' | 'liner' | 'both'
   glasses: boolean
   hearingAid: boolean
+  wheelchair: boolean
 }
 
 export interface Character {
@@ -211,6 +229,9 @@ export interface PlacedFurniture {
 
 export interface Room {
   items: PlacedFurniture[]
+  /** wallpaper and flooring ids; absent = the built-in cream wall and oak planks */
+  wall?: string
+  floor?: string
 }
 
 export type PointKind = 'todo' | 'goal' | 'goal-week' | 'session' | 'prep'
@@ -492,7 +513,27 @@ export function defaultCharacter(): Character {
   return {
     created: false,
     name: '',
-    look: { skin: 3, hair: 'bob', hairColor: 'ginger', eyes: 'plum', build: 1, glasses: false, hearingAid: false },
+    look: {
+      skin: 3,
+      hair: 'bob',
+      hairColor: 'ginger',
+      eyes: 'plum',
+      build: 1,
+      body: 'straight',
+      height: 1,
+      face: 'round',
+      eyeShape: 'round',
+      brows: 'soft',
+      lashes: false,
+      beard: 'none',
+      freckles: false,
+      mole: false,
+      blush: true,
+      makeup: 'none',
+      glasses: false,
+      hearingAid: false,
+      wheelchair: false
+    },
     outfit: { top: 'hoodie-coral', bottom: 'pants-navy', shoes: 'sneakers-cream' },
     owned: ['hoodie-coral', 'pants-navy', 'sneakers-cream'],
     spent: 0,
@@ -554,7 +595,7 @@ export function normalizeData(raw: Partial<AppData> | null | undefined): AppData
     goals: raw.goals ?? [],
     points: raw.points?.since ? { since: raw.points.since, entries: raw.points.entries ?? {} } : base.points,
     character: raw.character
-      ? { ...base.character, ...raw.character, look: { ...base.character.look, ...raw.character.look }, room: { items: raw.character.room?.items ?? base.character.room.items } }
+      ? { ...base.character, ...raw.character, look: { ...base.character.look, ...raw.character.look }, room: { ...raw.character.room, items: raw.character.room?.items ?? base.character.room.items } }
       : base.character,
     settings: { ...DEFAULT_SETTINGS, ...(raw.settings ?? {}) }
   }

@@ -83,14 +83,22 @@ der Kern ist und Möbel aus Code-Körpern alle vier Drehrichtungen gratis bekomm
 - **Preise:** Kleinkram 20–50, Möbel 60–120, Groß 150–300, Besonderes 120–250 (ab Attribut-Level 3–4);
   ein voll eingerichtetes Zimmer in etwa 2–3 Wochen normaler Nutzung
 - **Nichts geht verloren:** Gekauftes lässt sich nicht verkaufen oder zerstören, Einlagern geht immer, jeder Schritt mit `Strg+Z`
-- **Später:** Tapeten (80–150), Böden (100–200), Fensterformen, größeres Zimmer 8×8 (≈ 600), zweites Zimmer (≈ 800),
-  Garten (≈ 1.200), Körbchen fürs Haustier, den ganzen Raum drehen, mehrere gleiche Teile, Zimmer-Widget,
-  Figur in Ruhe-Pose (statt Winken) und kleines Herumlaufen
+- **Tapeten und Böden** ✅ als ganze Flächen (Muster aus Code in der Wand- bzw. Bodenebene), ab Werk Creme und Eiche
+- **Ruhe-Pose** im Zimmer ✅ und **Zimmer-Widget** ✅
+- **Später:** Fensterformen, größeres Zimmer 8×8 (≈ 600), zweites Zimmer (≈ 800), Garten (≈ 1.200), Körbchen fürs Haustier,
+  den ganzen Raum drehen, mehrere gleiche Teile, kleines Herumlaufen
+
+## Aussehen
+
+Kein Geschlechts-Schalter: Jedes Merkmal (Körperform, Größe, Gesichts- und Augenform, Brauen, Wimpern, Bart, Make-up,
+Frisur …) ist einzeln wählbar und frei kombinierbar. Drei Schnellstart-Vorlagen setzen nur ein paar Formen und sperren nichts.
+Haut-, Haar- und Augenfarbe gibt es als Palette und als freien Farbwähler. Rollstuhl, Brille und Hörgerät sind kostenlos.
+Neue Merkmale haben Standardwerte, ältere gespeicherte Figuren sehen unverändert aus.
 
 ## Offen
 
-- Rollstuhl und weitere Hilfsmittel als kostenlose Option (Hörgerät und Brille gibt es schon)
-- Mehr Frisuren und Gesichtsausdrücke, Begleit-Haustier (nur positiv reagierend)
+- Weitere Hilfsmittel (Gehstock, Prothese) als kostenlose Option
+- Mehr Gesichtsausdrücke, Begleit-Haustier (nur positiv reagierend)
 - Rive als Ausbaustufe für ausdrucksstärkere Animation (offizieller MCP-Server)
 - Animation beim Aufstieg eines Attributs
 - Startwerte und genaue Formeln (nach den ersten Wochen echter Nutzung nachjustieren)

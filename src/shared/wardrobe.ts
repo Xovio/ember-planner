@@ -1,4 +1,4 @@
-import type { AttrId } from './types'
+import type { AttrId, AvatarLook } from './types'
 
 /**
  * Looks (always free) and clothes (bought with coins). Every item is a drawn style plus a colour;
@@ -15,8 +15,46 @@ export const HAIR_STYLES: { id: string; name: string }[] = [
   { id: 'short', name: 'Kurz' },
   { id: 'long', name: 'Lang' },
   { id: 'curly', name: 'Locken' },
-  { id: 'bun', name: 'Dutt' }
+  { id: 'longcurly', name: 'Lange Locken' },
+  { id: 'afro', name: 'Afro' },
+  { id: 'bun', name: 'Dutt' },
+  { id: 'ponytail', name: 'Zopf' },
+  { id: 'pigtails', name: 'Zwei Zöpfe' },
+  { id: 'braid', name: 'Flechtzopf' },
+  { id: 'undercut', name: 'Undercut' },
+  { id: 'buzz', name: 'Raspel' },
+  { id: 'bald', name: 'Glatze' }
 ]
+
+export const BEARDS: { id: AvatarLook['beard']; name: string }[] = [
+  { id: 'none', name: 'Keiner' },
+  { id: 'stubble', name: 'Stoppeln' },
+  { id: 'short', name: 'Kurz' },
+  { id: 'full', name: 'Voll' },
+  { id: 'mustache', name: 'Schnurrbart' },
+  { id: 'goatee', name: 'Kinnbart' }
+]
+
+/**
+ * Quick starting points. They only set shape features (no colours) and every one of them
+ * stays freely changeable afterwards: there is no gender switch that locks anything.
+ */
+export const LOOK_PRESETS: { id: string; name: string; look: Partial<AvatarLook> }[] = [
+  { id: 'fem', name: 'Eher weiblich', look: { body: 'curvy', face: 'oval', eyeShape: 'almond', brows: 'thin', lashes: true, beard: 'none', hair: 'long' } },
+  { id: 'masc', name: 'Eher männlich', look: { body: 'broad', face: 'square', eyeShape: 'round', brows: 'thick', lashes: false, beard: 'stubble', hair: 'short', makeup: 'none' } },
+  { id: 'neutral', name: 'Neutral', look: { body: 'straight', face: 'round', eyeShape: 'round', brows: 'soft', lashes: false, beard: 'none', hair: 'bob' } }
+]
+
+const isHex = (v: string | undefined): v is string => !!v && /^#[0-9a-f]{6}$/i.test(v)
+
+/** the colours a look resolves to: palette entries or custom picks */
+export function lookColors(look: Pick<AvatarLook, 'skin' | 'skinHex' | 'hairColor' | 'eyes'>): { skin: string; hair: string; eyes: string } {
+  return {
+    skin: isHex(look.skinHex) ? look.skinHex : (SKIN_TONES[look.skin] ?? SKIN_TONES[3]),
+    hair: HAIR_COLORS[look.hairColor] ?? (isHex(look.hairColor) ? look.hairColor : HAIR_COLORS.ginger),
+    eyes: EYE_COLORS[look.eyes] ?? (isHex(look.eyes) ? look.eyes : EYE_COLORS.plum)
+  }
+}
 
 export const HAIR_COLORS: Record<string, string> = {
   ginger: '#d9824a',

@@ -1,13 +1,12 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { ROOM_SIZE as N, WINDOW, avatarSpot, canPlace, depthOrder, footprint, furnitureById, type Furniture } from '@shared/room'
+import { ROOM_SIZE as N, WINDOW, avatarSpot, canPlace, depthOrder, footprint, furnitureById, surfaces, type Furniture } from '@shared/room'
 import type { AvatarLook, PlacedFurniture } from '@shared/types'
 import { ramp } from '@shared/wardrobe'
 import { Avatar } from '../Avatar'
 import { FLOOR_MATRIX, H, OX, P, PHASE_LOOK, T, pathOf, pts, toFloor, type Phase, type Pt } from './iso'
 import { FurnitureShape, glowsOf } from './furniture'
+import { FloorSurface, WallSurface } from './surfaces'
 
-const WALL = '#f2d9c0'
-const FLOOR = '#c98d5f'
 const CURTAIN = '#e5807a'
 const VIEW = { x: 0, y: -4, w: 300, h: 262 }
 
@@ -25,24 +24,31 @@ interface Drag {
  */
 export function RoomScene({
   items,
+  wall: wallId,
+  floor: floorId,
   look,
   outfit,
   phase,
-  editing,
-  selected,
-  onSelect,
-  onMove,
-  paused
+  editing = false,
+  selected = null,
+  onSelect = () => undefined,
+  onMove = () => undefined,
+  paused,
+  label = 'Dein Zimmer'
 }: {
   items: PlacedFurniture[]
-  look: AvatarLook
-  outfit: Record<string, string>
+  wall?: string
+  floor?: string
+  /** without a look the room is shown empty (shop preview) */
+  look?: AvatarLook
+  outfit?: Record<string, string>
   phase: Phase
-  editing: boolean
-  selected: string | null
-  onSelect(id: string | null): void
-  onMove(p: PlacedFurniture): void
+  editing?: boolean
+  selected?: string | null
+  onSelect?(id: string | null): void
+  onMove?(p: PlacedFurniture): void
   paused: boolean
+  label?: string
 }): React.JSX.Element {
   const uid = useId().replace(/:/g, '')
   const svg = useRef<SVGSVGElement>(null)
@@ -131,7 +137,8 @@ export function RoomScene({
     key: p.id,
     node: itemNode(f, p)
   }))
-  drawn.push({
+  if (look)
+    drawn.push({
     x: spot.x + 0.2,
     y: spot.y + 0.2,
     w: 0.6,
@@ -159,7 +166,7 @@ export function RoomScene({
     const w = (h * 220) / 310
     return (
       <g key="avatar" transform={`translate(${x - w / 2} ${y - (h * 296) / 310})`} className="room-avatar">
-        <Avatar look={look} outfit={outfit} animate={!paused} size={w} title="Dein Charakter im Zimmer" />
+        <Avatar look={look!} outfit={outfit ?? {}} animate={!paused} pose="rest" size={w} title="Dein Charakter im Zimmer" />
       </g>
     )
   }
@@ -201,8 +208,9 @@ export function RoomScene({
     out.push(P(outer, 0.02, bottom))
     return out
   }
-  const wr = ramp(WALL)
-  const fr = ramp(FLOOR)
+  const surf = surfaces({ wall: wallId, floor: floorId })
+  const wr = ramp(surf.wall.color)
+  const fr = ramp(surf.floor.color)
   const cr = ramp(CURTAIN)
   const glows = placed.flatMap(({ f, p }) => glowsOf(f, p))
 
@@ -212,7 +220,7 @@ export function RoomScene({
       viewBox={`${VIEW.x} ${VIEW.y} ${VIEW.w} ${VIEW.h}`}
       className={`room-scene ${editing ? 'editing' : ''} ${paused ? 'paused' : ''}`}
       role="img"
-      aria-label="Dein Zimmer"
+      aria-label={label}
       onPointerMove={move}
       onPointerUp={up}
       onPointerCancel={() => setDrag(null)}
@@ -253,13 +261,13 @@ export function RoomScene({
       <polygon points={pts([P(N, -0.3, 0), P(N, N, 0), P(N, N, -8), P(N, -0.3, -8)])} fill={ramp(fr.shade).shade} />
 
       {/* walls */}
-      <polygon points={pts([P(0, 0), P(0, N), P(0, N, H), P(0, 0, H)])} fill={wr.shade} />
-      <polygon points={pts([P(0, 0), P(N, 0), P(N, 0, H), P(0, 0, H)])} fill={wr.base} />
+      <WallSurface f={surf.wall} side="l" />
+      <WallSurface f={surf.wall} side="r" />
       <polygon points={pts([P(0, 0), P(0, N), P(0, N, 34), P(0, 0, 34)])} fill={ramp(wr.shade).shade} opacity=".35" />
       <polygon points={pts([P(0, 0), P(N, 0), P(N, 0, 34), P(0, 0, 34)])} fill={wr.shade} opacity=".35" />
       <polyline points={pts([P(0, N, 34), P(0, 0, 34), P(N, 0, 34)])} fill="none" stroke={wr.light} strokeWidth="1.4" />
-      <polygon points={pts([P(0, 0), P(0, N), P(0, N, 5), P(0, 0, 5)])} fill={ramp(WALL).line} opacity=".35" />
-      <polygon points={pts([P(0, 0), P(N, 0), P(N, 0, 5), P(0, 0, 5)])} fill={ramp(WALL).line} opacity=".25" />
+      <polygon points={pts([P(0, 0), P(0, N), P(0, N, 5), P(0, 0, 5)])} fill={wr.line} opacity=".35" />
+      <polygon points={pts([P(0, 0), P(N, 0), P(N, 0, 5), P(0, 0, 5)])} fill={wr.line} opacity=".25" />
       {/* wall tops and ends */}
       <polygon points={pts([P(-0.3, N, H), P(-0.3, -0.3, H), P(N, -0.3, H), P(N, 0, H), P(0, 0, H), P(0, N, H)])} fill={wr.light} />
       <polygon points={pts([P(-0.3, N, 0), P(0, N, 0), P(0, N, H), P(-0.3, N, H)])} fill={ramp(wr.shade).shade} />
@@ -326,37 +334,7 @@ export function RoomScene({
 
       {/* floor */}
       <g transform={FLOOR_MATRIX}>
-        <rect x="0" y="0" width={N} height={N} fill={FLOOR} />
-        {Array.from({ length: N * 2 }, (_, i) => (
-          <g key={i}>
-            <line
-              x1="0"
-              y1={i / 2}
-              x2={N}
-              y2={i / 2}
-              stroke={fr.line}
-              strokeOpacity=".22"
-              strokeWidth=".7"
-              vectorEffect="non-scaling-stroke"
-            />
-            {[0.8, 2.3, 3.9, 5.1].map((j, k) => {
-              const x = (j + (i % 3) * 0.55) % N
-              return (
-                <line
-                  key={k}
-                  x1={x}
-                  y1={i / 2}
-                  x2={x}
-                  y2={i / 2 + 0.5}
-                  stroke={fr.line}
-                  strokeOpacity=".16"
-                  strokeWidth=".7"
-                  vectorEffect="non-scaling-stroke"
-                />
-              )
-            })}
-          </g>
-        ))}
+        <FloorSurface f={surf.floor} />
         <rect x="0" y="0" width={N} height=".9" fill={`url(#aoY${uid})`} />
         <rect x="0" y="0" width=".9" height={N} fill={`url(#aoX${uid})`} />
         <polygon

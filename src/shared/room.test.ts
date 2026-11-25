@@ -10,7 +10,9 @@ import {
   findSpot,
   footprint,
   furnitureById,
-  rotated
+  isSurface,
+  rotated,
+  surfaces
 } from './room'
 import { ITEMS } from './wardrobe'
 import { defaultCharacter, normalizeData } from './types'
@@ -31,13 +33,15 @@ describe('furniture catalogue', () => {
       else if (x.group === 'small') expect(x.price).toBeGreaterThanOrEqual(20), expect(x.price).toBeLessThanOrEqual(50)
       else if (x.group === 'medium') expect(x.price).toBeGreaterThanOrEqual(60), expect(x.price).toBeLessThanOrEqual(120)
       else if (x.group === 'large') expect(x.price).toBeGreaterThanOrEqual(150), expect(x.price).toBeLessThanOrEqual(300)
+      else if (x.kind === 'wallpaper') expect(x.price).toBeGreaterThanOrEqual(80), expect(x.price).toBeLessThanOrEqual(150)
+      else if (x.kind === 'flooring') expect(x.price).toBeGreaterThanOrEqual(100), expect(x.price).toBeLessThanOrEqual(200)
     }
-    expect(FURNITURE.filter((x) => x.starter).map((x) => x.style).sort()).toEqual(['beanbag', 'lamp', 'plant', 'rug'])
+    expect(FURNITURE.filter((x) => x.starter).map((x) => x.style).sort()).toEqual(['beanbag', 'lamp', 'planks', 'plain', 'plant', 'rug'].sort())
   })
 
   it('places every starter item in the default room, validly', () => {
     for (const p of room.items) expect(canPlace(room, p)).toBe(true)
-    expect(room.items.map((p) => p.id).sort()).toEqual(FURNITURE.filter((x) => x.starter).map((x) => x.id).sort())
+    expect(room.items.map((p) => p.id).sort()).toEqual(FURNITURE.filter((x) => x.starter && !isSurface(x)).map((x) => x.id).sort())
   })
 })
 
@@ -100,6 +104,17 @@ describe('chest', () => {
   it('holds owned furniture that is not placed, starters included', () => {
     const ch = { owned: ['f-sofa-sage', 'hoodie-coral'], room: { items: room.items.filter((p) => p.id !== 'f-plant-green') } }
     expect(chest(ch).map((x) => x.id).sort()).toEqual(['f-plant-green', 'f-sofa-sage'])
+  })
+})
+
+describe('wallpaper and flooring', () => {
+  it('fall back to the built-in ones and never go to the chest or the floor', () => {
+    expect(surfaces({}).wall.id).toBe('f-plain-cream')
+    expect(surfaces({ wall: 'f-dots-lavender', floor: 'f-tiles-sage' })).toMatchObject({ wall: { id: 'f-dots-lavender' }, floor: { id: 'f-tiles-sage' } })
+    expect(surfaces({ wall: 'f-tiles-sage', floor: 'nope' })).toMatchObject({ wall: { id: 'f-plain-cream' }, floor: { id: 'f-planks-oak' } })
+    expect(chest({ owned: ['f-dots-lavender'], room }).some((f) => isSurface(f))).toBe(false)
+    expect(canPlace(room, { id: 'f-dots-lavender', x: 0, y: 0, rot: 0 })).toBe(false)
+    expect(findSpot(room, f('f-tiles-sage'))).toBeNull()
   })
 })
 

@@ -10,9 +10,11 @@ import {
   goalAttr
 } from '@shared/character'
 import {
+  BEARDS,
   EYE_COLORS,
   HAIR_COLORS,
   HAIR_STYLES,
+  LOOK_PRESETS,
   ITEMS,
   SKIN_TONES,
   SLOTS,
@@ -23,7 +25,7 @@ import type { AttrId, AvatarLook } from '@shared/types'
 import { useStore } from '../store'
 import { calVar } from '../lib/theme'
 import { fmt } from '../lib/dates'
-import { Avatar, type Expression } from '../components/character/Avatar'
+import { Avatar, LOOK_DEFAULTS, type Expression } from '../components/character/Avatar'
 import { RoomView } from '../components/character/room/RoomView'
 
 type Tab = 'look' | 'wardrobe' | 'shop' | 'attrs'
@@ -179,24 +181,159 @@ export function CharacterPage(): React.JSX.Element {
   )
 }
 
-function LookEditor({ look, name, onChange }: { look: AvatarLook; name: string; onChange(look: AvatarLook, name: string): void }): React.JSX.Element {
+type Opt<T> = [T, string][]
+
+function Seg<T extends string | number>({ value, options, onChange }: { value: T; options: Opt<T>; onChange(v: T): void }): React.JSX.Element {
+  return (
+    <div className="segmented small">
+      {options.map(([v, label]) => (
+        <button key={String(v)} className={value === v ? 'on' : ''} onClick={() => onChange(v)}>
+          {label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+/** palette swatches plus a free colour picker; `custom` is the picked colour when it is not from the palette */
+function Swatches({
+  colors,
+  active,
+  custom,
+  label,
+  onPick,
+  onCustom
+}: {
+  colors: [string, string][]
+  active: string | null
+  custom: string | null
+  label: string
+  onPick(id: string): void
+  onCustom(hex: string): void
+}): React.JSX.Element {
+  return (
+    <div className="look-swatches">
+      {colors.map(([id, c]) => (
+        <button key={id} className={`swatch ${active === id ? 'on' : ''}`} style={{ '--c': c } as React.CSSProperties} onClick={() => onPick(id)} aria-label={`${label} ${id}`} />
+      ))}
+      <label className={`swatch look-picker ${custom ? 'on' : ''}`} style={{ '--c': custom ?? 'transparent' } as React.CSSProperties} title="Eigene Farbe">
+        <input type="color" value={custom ?? colors[0][1]} onChange={(e) => onCustom(e.target.value)} aria-label={`${label}: eigene Farbe`} />
+      </label>
+    </div>
+  )
+}
+
+const BODY_OPTS: Opt<AvatarLook['body']> = [
+  ['straight', 'gerade'],
+  ['curvy', 'kurvig'],
+  ['broad', 'breite Schultern']
+]
+const HEIGHT_OPTS: Opt<number> = [
+  [0, 'klein'],
+  [1, 'mittel'],
+  [2, 'groß']
+]
+const FACE_OPTS: Opt<AvatarLook['face']> = [
+  ['round', 'rund'],
+  ['oval', 'oval'],
+  ['square', 'kantig']
+]
+const EYE_OPTS: Opt<AvatarLook['eyeShape']> = [
+  ['round', 'rund'],
+  ['almond', 'mandel'],
+  ['soft', 'sanft']
+]
+const BROW_OPTS: Opt<AvatarLook['brows']> = [
+  ['thin', 'fein'],
+  ['soft', 'mittel'],
+  ['thick', 'kräftig']
+]
+const MAKEUP_OPTS: Opt<AvatarLook['makeup']> = [
+  ['none', 'keins'],
+  ['lips', 'Lippen'],
+  ['liner', 'Lidstrich'],
+  ['both', 'beides']
+]
+
+const isHex = (v: string): string | null => (/^#[0-9a-f]{6}$/i.test(v) ? v : null)
+
+function LookEditor({ look: raw, name, onChange }: { look: AvatarLook; name: string; onChange(look: AvatarLook, name: string): void }): React.JSX.Element {
+  const look = { ...LOOK_DEFAULTS, ...raw }
   const set = (p: Partial<AvatarLook>): void => onChange({ ...look, ...p }, name)
+  const flag = (key: 'lashes' | 'blush' | 'freckles' | 'mole' | 'glasses' | 'hearingAid' | 'wheelchair', label: string): React.JSX.Element => (
+    <button className={`look-chip ${look[key] ? 'on' : ''}`} onClick={() => set({ [key]: !look[key] })}>
+      {label}
+    </button>
+  )
+  const row = (label: string, child: React.ReactNode): React.JSX.Element => (
+    <div className="look-row">
+      <span>{label}</span>
+      {child}
+    </div>
+  )
   return (
     <div className="look-editor">
       <label className="look-row">
         <span>Name</span>
         <input className="input sm" value={name} placeholder="Wie heißt dein Charakter?" onChange={(e) => onChange(look, e.target.value)} />
       </label>
-      <div className="look-row">
-        <span>Hautton</span>
-        <div className="look-swatches">
-          {SKIN_TONES.map((c, i) => (
-            <button key={c} className={`swatch ${look.skin === i ? 'on' : ''}`} style={{ '--c': c } as React.CSSProperties} onClick={() => set({ skin: i })} aria-label={`Hautton ${i + 1}`} />
+      {row(
+        'Schnellstart',
+        <div className="look-chips">
+          {LOOK_PRESETS.map((p) => (
+            <button key={p.id} className="look-chip" onClick={() => set(p.look)}>
+              {p.name}
+            </button>
           ))}
         </div>
-      </div>
-      <div className="look-row">
-        <span>Frisur</span>
+      )}
+      <p className="widget-settings-hint look-hint">Vorlagen setzen nur ein paar Formen. Jedes Merkmal lässt sich danach frei kombinieren.</p>
+
+      <h4 className="look-section">Körper</h4>
+      {row('Statur', <Seg value={look.build} options={BUILDS.map((l, i) => [i, l])} onChange={(build) => set({ build })} />)}
+      {row('Körperform', <Seg value={look.body} options={BODY_OPTS} onChange={(body) => set({ body })} />)}
+      {row('Größe', <Seg value={look.height} options={HEIGHT_OPTS} onChange={(height) => set({ height })} />)}
+      {row(
+        'Hautton',
+        <Swatches
+          colors={SKIN_TONES.map((c, i) => [String(i), c])}
+          active={look.skinHex ? null : String(look.skin)}
+          custom={look.skinHex ?? null}
+          label="Hautton"
+          onPick={(i) => set({ skin: Number(i), skinHex: undefined })}
+          onCustom={(c) => set({ skinHex: c })}
+        />
+      )}
+
+      <h4 className="look-section">Gesicht</h4>
+      {row('Gesichtsform', <Seg value={look.face} options={FACE_OPTS} onChange={(face) => set({ face })} />)}
+      {row('Augenform', <Seg value={look.eyeShape} options={EYE_OPTS} onChange={(eyeShape) => set({ eyeShape })} />)}
+      {row(
+        'Augenfarbe',
+        <Swatches
+          colors={Object.entries(EYE_COLORS)}
+          active={EYE_COLORS[look.eyes] ? look.eyes : null}
+          custom={isHex(look.eyes)}
+          label="Augenfarbe"
+          onPick={(eyes) => set({ eyes })}
+          onCustom={(eyes) => set({ eyes })}
+        />
+      )}
+      {row('Brauen', <Seg value={look.brows} options={BROW_OPTS} onChange={(brows) => set({ brows })} />)}
+      {row('Make-up', <Seg value={look.makeup} options={MAKEUP_OPTS} onChange={(makeup) => set({ makeup })} />)}
+      {row(
+        'Details',
+        <div className="look-chips">
+          {flag('lashes', 'Wimpern')}
+          {flag('blush', 'Wangenröte')}
+          {flag('freckles', 'Sommersprossen')}
+          {flag('mole', 'Muttermal')}
+        </div>
+      )}
+
+      <h4 className="look-section">Haare</h4>
+      {row(
+        'Frisur',
         <div className="look-chips">
           {HAIR_STYLES.map((h) => (
             <button key={h.id} className={`look-chip ${look.hair === h.id ? 'on' : ''}`} onClick={() => set({ hair: h.id })}>
@@ -204,45 +341,39 @@ function LookEditor({ look, name, onChange }: { look: AvatarLook; name: string; 
             </button>
           ))}
         </div>
-      </div>
-      <div className="look-row">
-        <span>Haarfarbe</span>
-        <div className="look-swatches">
-          {Object.entries(HAIR_COLORS).map(([id, c]) => (
-            <button key={id} className={`swatch ${look.hairColor === id ? 'on' : ''}`} style={{ '--c': c } as React.CSSProperties} onClick={() => set({ hairColor: id })} aria-label={`Haarfarbe ${id}`} />
-          ))}
-        </div>
-      </div>
-      <div className="look-row">
-        <span>Augen</span>
-        <div className="look-swatches">
-          {Object.entries(EYE_COLORS).map(([id, c]) => (
-            <button key={id} className={`swatch ${look.eyes === id ? 'on' : ''}`} style={{ '--c': c } as React.CSSProperties} onClick={() => set({ eyes: id })} aria-label={`Augenfarbe ${id}`} />
-          ))}
-        </div>
-      </div>
-      <div className="look-row">
-        <span>Statur</span>
-        <div className="segmented small">
-          {BUILDS.map((label, i) => (
-            <button key={label} className={look.build === i ? 'on' : ''} onClick={() => set({ build: i })}>
-              {label}
+      )}
+      {row(
+        'Haarfarbe',
+        <Swatches
+          colors={Object.entries(HAIR_COLORS)}
+          active={HAIR_COLORS[look.hairColor] ? look.hairColor : null}
+          custom={isHex(look.hairColor)}
+          label="Haarfarbe"
+          onPick={(hairColor) => set({ hairColor })}
+          onCustom={(hairColor) => set({ hairColor })}
+        />
+      )}
+      {row(
+        'Bart',
+        <div className="look-chips">
+          {BEARDS.map((b) => (
+            <button key={b.id} className={`look-chip ${look.beard === b.id ? 'on' : ''}`} onClick={() => set({ beard: b.id })}>
+              {b.name}
             </button>
           ))}
         </div>
-      </div>
-      <div className="look-row">
-        <span>Extras</span>
+      )}
+
+      <h4 className="look-section">Hilfsmittel</h4>
+      {row(
+        'Dabei',
         <div className="look-chips">
-          <button className={`look-chip ${look.glasses ? 'on' : ''}`} onClick={() => set({ glasses: !look.glasses })}>
-            Brille
-          </button>
-          <button className={`look-chip ${look.hearingAid ? 'on' : ''}`} onClick={() => set({ hearingAid: !look.hearingAid })}>
-            Hörgerät
-          </button>
+          {flag('glasses', 'Brille')}
+          {flag('hearingAid', 'Hörgerät')}
+          {flag('wheelchair', 'Rollstuhl')}
         </div>
-      </div>
-      <p className="widget-settings-hint">Aussehen ist immer kostenlos. Coins gibt es nur für Kleidung und später fürs Zimmer.</p>
+      )}
+      <p className="widget-settings-hint">Aussehen ist immer kostenlos. Coins gibt es nur für Kleidung und fürs Zimmer.</p>
     </div>
   )
 }
