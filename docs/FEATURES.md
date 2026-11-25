@@ -135,7 +135,7 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
 - Erfahrung geht ans Attribut der Kategorie (unter *Charakter → Attribute* zuordnen; Ember rät aus dem Namen, ohne Kategorie: Ordnung);
   Wochenziele ebenso, Sessions → Sozial, Prep → Kreativität
 - **Shop** mit Anprobe (≈ 30 Kleidungsstücke, manche erst ab einem Attribut-Level) und **Kleiderschrank** zum Umziehen
-- Gezählt wird ab dem ersten Start von v0.6; Wieder-Öffnen nimmt Coins zurück, Löschen nicht
+- Gezählt wird ab dem ersten Start von v0.5; Wieder-Öffnen nimmt Coins zurück, Löschen nicht
 
 ## Ideen (Brainstorm-Boards)
 

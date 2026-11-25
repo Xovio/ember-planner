@@ -57,7 +57,7 @@ richtest du ihn und sein Zimmer ein. Motivierend, nie strafend (siehe ADHS-Grund
 
 ## Stufen
 
-1. **Charakter** ✅ (v0.6) – Figur erstellen (Hautton, Frisur, Haarfarbe, Augen, Startkleidung), Seite „Charakter“ + Widget,
+1. **Charakter** ✅ (v0.5) – Figur erstellen (Hautton, Frisur, Haarfarbe, Augen, Startkleidung), Seite „Charakter“ + Widget,
    Attribute mit eigenem Level, Coins, Schwierigkeit an ToDos, Kleiderschrank und Shop (Start ≈ 30 Teile, viele als
    Farbvarianten), Atmen, Blinzeln, Winken und fünf Gesichtsausdrücke
 2. **Zimmer** – isometrischer Raum, Möbel kaufen und auf Kacheln stellen, drehen; später Erweiterungen
