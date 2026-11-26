@@ -20,6 +20,7 @@ import { LAUNCHER_WIDGET_ID } from '@shared/launcher'
 import { PrepTracker, PrepTrackerSettings } from '../components/widgets/PrepTracker'
 import { Launcher, LauncherSettings } from '../components/widgets/Launcher'
 import { GoalsWidget, PointsWidget } from '../components/widgets/GoalWidgets'
+import { WeeklyReviewWidget } from '../components/widgets/WeeklyReview'
 import { SESSION_WIDGET_ID, SessionCountdown, SessionCountdownSettings } from '../components/widgets/SessionCountdown'
 
 /** the overview, with the details column when an event or ToDo is selected */
@@ -47,6 +48,7 @@ registerWidget({ ...core, id: 'todo-stats', title: 'ToDo-Zahlen', description: '
 registerWidget({ ...core, id: 'character', title: 'Charakter', description: 'Dein Charakter mit Level, Coins und stärksten Attributen', size: 'half', order: 11, component: CharacterWidget })
 registerWidget({ ...core, id: 'room', title: 'Zimmer', description: 'Das Zimmer deines Charakters zum Anschauen', size: 'half', order: 11.5, component: RoomWidget })
 registerWidget({ ...core, id: 'goals', title: 'Wochenziele', description: 'Fortschritt der Wochenziele, Nachfrage bei verpassten Terminen', size: 'half', order: 12, component: GoalsWidget })
+registerWidget({ ...core, id: 'weekly-review', title: 'Wochenrückblick', description: 'Was du letzte (oder sonntags diese) Woche geschafft hast – Coins, ToDos, Ziele, Completionist', size: 'half', order: 13, component: WeeklyReviewWidget })
 registerWidget({ ...core, id: 'points', title: 'Punkte & Level', description: 'Punkte für Erledigtes, Wochenverlauf und Level', size: 'half', order: 14, component: PointsWidget })
 registerWidget({ ...core, id: 'agenda', title: 'Tagesplan', description: 'Die Termine von heute', size: 'half', tall: true, order: 20, component: AgendaWidget })
 registerWidget({ ...core, id: 'next-up', title: 'Als Nächstes', description: 'Countdown zum nächsten Termin', size: 'half', order: 30, component: NextUpWidget })

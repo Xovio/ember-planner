@@ -1,23 +1,39 @@
 import { useMemo, useState } from 'react'
-import { CornerDownLeft, Flag, Hourglass, Plus, Repeat, Tag, Timer, List } from 'lucide-react'
-import { CALENDAR_COLORS } from '@shared/types'
+import { ClipboardList, CornerDownLeft, Flag, Hourglass, Plus, Repeat, Tag, Timer, List } from 'lucide-react'
+import { CALENDAR_COLORS, type Todo } from '@shared/types'
 import { uid, useStore } from '../../store'
-import { parseQuickAdd } from '../../lib/quickAdd'
+import { parseQuickAdd, splitTemplate } from '../../lib/quickAdd'
 import { recurrenceLabel } from '@shared/todo'
 import { deadlineLabel, formatEstimate, PRIORITY_LABEL } from '../../lib/todos'
 
 export function QuickAdd({ compact, autoFocus }: { compact?: boolean; autoFocus?: boolean }): React.JSX.Element {
   const data = useStore((s) => s.data!)
   const addTodo = useStore((s) => s.addTodo)
+  const applyTemplate = useStore((s) => s.applyTodoTemplate)
   const upsertCategory = useStore((s) => s.upsertCategory)
   const [text, setText] = useState('')
   const [focused, setFocused] = useState(false)
 
-  const parsed = useMemo(() => parseQuickAdd(text, data.categories, data.lists), [text, data.categories, data.lists])
+  // "/putzen bis Freitag": a ToDo template, the rest of the text adjusts it
+  const { template, rest } = useMemo(() => splitTemplate(text, data.todoTemplates), [text, data.todoTemplates])
+  const parsed = useMemo(() => parseQuickAdd(rest, data.categories, data.lists), [rest, data.categories, data.lists])
   const list = parsed.listId ? data.lists.find((l) => l.id === parsed.listId) : undefined
   const cat = parsed.categoryId ? data.categories.find((c) => c.id === parsed.categoryId) : undefined
 
   const submit = (): void => {
+    if (template) {
+      const o: Partial<Todo> = {}
+      if (parsed.title) o.title = parsed.title
+      if (parsed.hardDeadline) o.hardDeadline = parsed.hardDeadline
+      if (parsed.softDeadline) o.softDeadline = parsed.softDeadline
+      if (parsed.priority) o.priority = parsed.priority
+      if (parsed.categoryId) o.categoryId = parsed.categoryId
+      if (parsed.listId) o.listId = parsed.listId
+      if (parsed.estimateMin) o.estimateMin = parsed.estimateMin
+      applyTemplate(template.id, o)
+      setText('')
+      return
+    }
     if (!parsed.title) return
     let categoryId = parsed.categoryId
     if (!categoryId && parsed.newCategory) {
@@ -42,6 +58,7 @@ export function QuickAdd({ compact, autoFocus }: { compact?: boolean; autoFocus?
   }
 
   const hasTokens =
+    template ||
     parsed.hardDeadline || parsed.softDeadline || parsed.priority || cat || parsed.newCategory || list || parsed.estimateMin || parsed.recurrence
 
   return (
@@ -71,6 +88,12 @@ export function QuickAdd({ compact, autoFocus }: { compact?: boolean; autoFocus?
       </div>
       {text && hasTokens && (
         <div className="quickadd-preview">
+          {template && (
+            <span className="qa-chip">
+              <ClipboardList size={12} /> Vorlage: {template.name}
+              {template.subtasks.length > 0 && ` · ${template.subtasks.length} Punkte`}
+            </span>
+          )}
           {parsed.hardDeadline && (
             <span className="qa-chip">
               <Flag size={12} /> hart: {deadlineLabel(parsed.hardDeadline)}
@@ -109,6 +132,12 @@ export function QuickAdd({ compact, autoFocus }: { compact?: boolean; autoFocus?
           <code>bis Freitag</code> harte Deadline · <code>~Mittwoch</code> weiche · <code>#kategorie</code> ·{' '}
           <code>@liste</code> · <code>!</code>–<code>!!!</code> Priorität · <code>2h</code> Schätzung · auch{' '}
           <code>📅 2026-11-30</code>
+          {data.todoTemplates.length > 0 && (
+            <>
+              {' '}
+              · <code>/{data.todoTemplates[0].name.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')}</code> Vorlage
+            </>
+          )}
         </div>
       )}
     </div>

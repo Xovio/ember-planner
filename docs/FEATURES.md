@@ -71,6 +71,11 @@ Die linke Leiste filtert die ToDo-Spalte: Ein Klick auf eine Liste oder Kategori
   linken Leiste unter *Vorlagen* (+) anlegen – Titel, Checkliste, Liste, Kategorie, Priorität, Schwierigkeit, Dauer und
   Wunschtag/Deadline relativ zum Anlegetag („nach 2 Tagen“). Ein Klick auf die Vorlage legt ein neues ToDo mit frischer
   Checkliste an; jedes kann normal abgehakt werden. Meistbenutzte Vorlagen stehen oben
+- **Vorlagen per Schnelleingabe:** `/name` legt ein ToDo aus der Vorlage an, der Rest passt es an –
+  z. B. `/putzen bis Freitag !!` (Deadline und Priorität), ein Wort ohne Kürzel wird zum Titel
+- **Sonntagsreset:** wöchentliche ToDos, die in ihrer Woche nicht geschafft wurden, stehen nicht als überfällig herum,
+  sondern rücken still in die neue Woche (im eigenen Rhythmus, beide Deadlines mit gleichem Abstand; die Anzahl der Serie
+  wird nicht verbraucht). Wochenziele fangen ohnehin jeden Montag neu an
 - **Wochenziele in den ToDos:** die linke Leiste zeigt die Ziele dieser Woche mit Fortschritt und „Hat’s geklappt?“;
   bearbeiten per Stift, *in der Woche einplanen →* springt in die Wochenansicht
 - **Tastatur:** `↑` `↓` / `j` `k` wählen, `Leertaste` abhaken, `Entf` in den Papierkorb, `0`–`3` Priorität
@@ -132,6 +137,9 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
 - Ist ein Baustein vorbei und nicht abgehakt, fragt Ember **„Hat’s geklappt?“** – *Ja*, *Verschieben* (zurück in den
   Vorrat, neu einplanen) oder *Diese Woche nicht* (zählt in dieser Woche nicht mehr). Keine Strafe
 - Fortschritt als Punkte: ● geschafft, ◐ eingeplant, ○ offen
+- **Widget Wochenrückblick** (Übersicht): was in der letzten Woche geschafft wurde – sonntags die laufende Woche –
+  mit Coins, erledigten ToDos, kompletten Wochenzielen, Completionist, Sessions, Prep-Stunden und dem Attribut, das am
+  meisten gewachsen ist. Nur Erreichtes, nichts Verpasstes; *Nächste Woche planen →* öffnet die Wochenansicht
 - **Coin-Boni für Wochenziele:** ein komplettes Wochenziel bringt +25 Coins (Anzeige „+25“ neben jedem Ziel, golden wenn
   verdient). Sind **alle** Wochenziele einer Woche geschafft (ab zwei Zielen), gibt es den **Completionist-Bonus** von +50 Coins
   und 40 Ausdauer-XP, mit eigenem Toast. Die Leisten in *Planen* und *ToDos* und das Widget zeigen den Stand („1/2 Ziele
