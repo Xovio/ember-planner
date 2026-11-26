@@ -20,6 +20,8 @@ import {
   type PointsLedger,
   type Character,
   type PlacedFurniture,
+  type OutfitCycle,
+  type SavedOutfit,
   type WeeklyGoal
 } from '@shared/types'
 import { applyPatch, type RemoteChange } from '@shared/patch'
@@ -33,7 +35,8 @@ import { goalEvent, markFilled, slotsToFill, weekKey } from '@shared/goals'
 import { attrLevel, attrXp, coinBalance } from '@shared/character'
 import { furnitureById, ownsFurniture } from '@shared/room'
 import { idleById, idleKey, ownsIdle } from '@shared/idle'
-import { itemById } from '@shared/wardrobe'
+import { itemById, ownsItem } from '@shared/wardrobe'
+import { cycleKey, cyclePick, wearable } from '@shared/outfits'
 import {
   isPlaceholderId,
   placeholderEvent,
@@ -268,6 +271,14 @@ interface State {
   buyItem(id: string): boolean
   /** put on an owned item, or take off an optional slot (null) */
   equip(slot: string, id: string | null): void
+  /** puts on a whole set of pieces (random outfit, saved outfit) */
+  wearItems(items: Record<string, string>, label: string): void
+  saveOutfit(name: string): void
+  updateOutfit(id: string, patch: Partial<Omit<SavedOutfit, 'id'>>): void
+  deleteOutfit(id: string): void
+  setOutfitCycle(mode: OutfitCycle): void
+  /** silent: switches to the next rotating outfit when a new time window starts */
+  applyOutfitCycle(now?: Date): void
   /** buys furniture into the chest */
   buyFurniture(id: string): boolean
   setRoomItems(items: PlacedFurniture[], label: string): void
@@ -1300,7 +1311,7 @@ export const useStore = create<State>((set, get) => {
     buyItem(id) {
       const ch = get().data?.character
       const it = itemById(id)
-      if (!ch || !it || ch.owned.includes(id)) return false
+      if (!ch || !it || ownsItem(ch, it)) return false
       if (coinBalance(ch) < it.price) return false
       if (it.unlock && attrLevel(attrXp(ch)[it.unlock.attr]).level < it.unlock.level) return false
       mutate(
@@ -1316,6 +1327,47 @@ export const useStore = create<State>((set, get) => {
         { label: `${it.name} gekauft`, undoToast: true }
       )
       return true
+    },
+
+    wearItems(items, label) {
+      mutate((d) => ({ ...d, character: { ...d.character, outfit: wearable(items, d.character) } }), { label, undoToast: true })
+    },
+
+    saveOutfit(name) {
+      const ch = get().data?.character
+      if (!ch) return
+      const o: SavedOutfit = { id: uid(), name: name.trim() || `Outfit ${(ch.outfits?.length ?? 0) + 1}`, items: { ...ch.outfit } }
+      mutate((d) => ({ ...d, character: { ...d.character, outfits: [...(d.character.outfits ?? []), o] } }), { label: `„${o.name}“ gespeichert` })
+    },
+
+    updateOutfit(id, patch) {
+      mutate(
+        (d) => ({ ...d, character: { ...d.character, outfits: (d.character.outfits ?? []).map((o) => (o.id === id ? { ...o, ...patch } : o)) } }),
+        { label: 'Outfit geändert', coalesce: `outfit-${id}` }
+      )
+    },
+
+    deleteOutfit(id) {
+      const o = get().data?.character.outfits?.find((x) => x.id === id)
+      if (!o) return
+      mutate((d) => ({ ...d, character: { ...d.character, outfits: (d.character.outfits ?? []).filter((x) => x.id !== id) } }), {
+        label: `„${o.name}“ gelöscht`,
+        undoToast: true
+      })
+    },
+
+    setOutfitCycle(mode) {
+      mutate((d) => ({ ...d, character: { ...d.character, outfitCycle: mode, outfitCycleKey: undefined } }), { label: 'Outfit-Wechsel geändert' })
+      get().applyOutfitCycle()
+    },
+
+    applyOutfitCycle(now = new Date()) {
+      const ch = get().data?.character
+      const key = ch && cycleKey(ch.outfitCycle, now)
+      if (!ch || !key || key === ch.outfitCycleKey) return
+      const o = cyclePick(ch.outfits, key, ch.outfit)
+      if (!o) return
+      mutate((d) => ({ ...d, character: { ...d.character, outfit: wearable(o.items, d.character), outfitCycleKey: key } }), { history: false })
     },
 
     equip(slot, id) {

@@ -133,8 +133,9 @@ Zimmer steht eine Hantelbank, stemmt sie Hanteln. Passt nichts, laufen einfach d
 - **Zeigen:** kleiner Hinweis beim Darüberfahren („trainiert gerade – Gym bis 18:30“), Schalter in den Optionen zum Abstellen
 - **Logik testbar** in `shared/idle.ts`: `activityFor(events, now)` → Tätigkeit oder nichts, dann wie bisher die
   verfügbaren Animationen der Gruppe suchen
-- **Später:** eigene Animationen nur für Termine (Kochen mit Küche, Laufband, Gitarre), Kleidung passend zur Tätigkeit
-  (Sportsachen beim Gym), Belohnungs-Moment wenn ein Termin vorbei ist
+- **Später:** eigene Animationen nur für Termine (Kochen mit Küche, Laufband, Gitarre); Outfits mit Tätigkeits-Tag
+  gibt es schon (`shared/outfits.ts`, im Zimmer bei passender Animation) – beim Termin ebenso anziehen
+  (Sportsachen beim Gym); Belohnungs-Moment wenn ein Termin vorbei ist
 
 ### Figur als Begleiter in anderen Ansichten (Idee)
 

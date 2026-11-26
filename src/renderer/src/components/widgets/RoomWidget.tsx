@@ -19,7 +19,7 @@ export function RoomWidget(): React.JSX.Element {
         </div>
       </div>
       <button className="room-card-view" onClick={() => setPage('character')} title="Zum Zimmer">
-        <RoomScene items={ch.room.items} wall={ch.room.wall} floor={ch.room.floor} look={ch.look} outfit={ch.outfit} phase={phase} paused={hidden} actor={actor} />
+        <RoomScene items={ch.room.items} wall={ch.room.wall} floor={ch.room.floor} look={ch.look} outfit={ch.outfit} outfits={ch.outfits} phase={phase} paused={hidden} actor={actor} />
       </button>
     </section>
   )

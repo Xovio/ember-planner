@@ -184,6 +184,7 @@ export function RoomView(): React.JSX.Element {
             floor={ch.room.floor}
             look={ch.look}
             outfit={ch.outfit}
+            outfits={ch.outfits}
             phase={phase}
             editing={editing}
             selected={selected}

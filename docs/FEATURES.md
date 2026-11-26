@@ -159,7 +159,14 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
   (abgehakter Zeitblock, sonst Schätzung, sonst 15 min; bis 4 h), dazu Ziel-Bausteine, komplette Wochenziele, Sessions und Prep-Stunden
 - Erfahrung geht ans Attribut der Kategorie (unter *Charakter → Attribute* zuordnen; Ember rät aus dem Namen, ohne Kategorie: Ordnung);
   Wochenziele ebenso, Sessions → Sozial, Prep → Kreativität
-- **Shop** mit Anprobe (≈ 30 Kleidungsstücke, manche erst ab einem Attribut-Level) und **Kleiderschrank** zum Umziehen
+- **Startkleidung gratis:** 8 T-Shirts, 5 Hosen, 2 Shorts, 2 Sneaker
+- **Shop** mit Anprobe (≈ 50 Teile: u. a. Hemd, Karohemd, Jacke, Lederjacke, Kleid, Lederrüstung, Jogging- und Cargohose,
+  Stirnband, Baskenmütze, Rucksack, Abenteurer-Umhang; manche erst ab einem Attribut-Level) und **Kleiderschrank** zum Umziehen
+- **Schmuck** als eigener Platz: Kette, Anhänger, dicke Kette (Ohrringe und Piercings sind kostenlos beim Aussehen)
+- **Zufall:** Knopf für ein zufälliges Aussehen (Hilfsmittel bleiben unverändert) und für ein Zufallsoutfit aus dem Kleiderschrank
+- **Outfits speichern**, mit einem Klick anziehen, überschreiben, löschen. Outfits „im Wechsel“ zieht die Figur
+  selbst an (täglich oder alle 3 Stunden). Ein Outfit mit **Tätigkeit** (Fitness, Arbeit, Lernen, Kreativ, D&D, Entspannen,
+  Feiern) trägt sie im Zimmer, solange sie etwas Passendes macht – z. B. das Gym-Outfit beim Hanteln
 - Gezählt wird ab dem ersten Start von v0.5; Wieder-Öffnen nimmt Coins zurück, Löschen nicht
 
 ### Zimmer (v0.7)

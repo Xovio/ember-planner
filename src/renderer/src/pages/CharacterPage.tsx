@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Coins, Lock, Sparkles } from 'lucide-react'
+import { Coins, Dices, Lock, Repeat, Save, Sparkles, Trash2 } from 'lucide-react'
 import {
   ATTRS,
   attrLevel,
@@ -16,11 +16,14 @@ import {
   HAIR_STYLES,
   LOOK_PRESETS,
   ITEMS,
+  ownsItem,
   SKIN_TONES,
   SLOTS,
   type Item,
   type Slot
 } from '@shared/wardrobe'
+import { OUTFIT_CYCLES, OUTFIT_TAGS, randomLook, randomOutfit } from '@shared/outfits'
+import type { OutfitTag } from '@shared/types'
 import type { AttrId, AvatarLook } from '@shared/types'
 import { useStore } from '../store'
 import { calVar } from '../lib/theme'
@@ -315,6 +318,9 @@ function LookEditor({ look: raw, name, onChange }: { look: AvatarLook; name: str
               {p.name}
             </button>
           ))}
+          <button className="look-chip" onClick={() => set(randomLook())} title="Würfelt ein neues Aussehen. Brille, Hörgerät und Rollstuhl bleiben, wie sie sind.">
+            <Dices size={13} /> Zufall
+          </button>
         </div>
       )}
       <p className="widget-settings-hint look-hint">Vorlagen setzen nur ein paar Formen. Jedes Merkmal lässt sich danach frei kombinieren.</p>
@@ -423,13 +429,99 @@ function ItemTile({ it, active, onClick, children }: { it: Item; active: boolean
   )
 }
 
+function Outfits(): React.JSX.Element {
+  const ch = useStore((s) => s.data!.character)
+  const st = useStore.getState
+  const [name, setName] = useState('')
+  const outfits = ch.outfits ?? []
+  const cycle = ch.outfitCycle ?? 'off'
+  return (
+    <div className="item-group outfits">
+      <h4>Outfits</h4>
+      <div className="outfit-actions">
+        <input
+          className="input sm"
+          value={name}
+          placeholder="Name, z. B. Gym"
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              st().saveOutfit(name)
+              setName('')
+            }
+          }}
+        />
+        <button
+          className="btn sm"
+          onClick={() => {
+            st().saveOutfit(name)
+            setName('')
+          }}
+        >
+          <Save size={13} /> Aktuelles speichern
+        </button>
+        <button className="btn sm" onClick={() => st().wearItems(randomOutfit(ch), 'Zufallsoutfit')}>
+          <Dices size={13} /> Zufallsoutfit
+        </button>
+      </div>
+      {outfits.length > 0 && (
+        <div className="outfit-list">
+          {outfits.map((o) => (
+            <div key={o.id} className="outfit-card">
+              <button className="outfit-wear" onClick={() => st().wearItems(o.items, `„${o.name}“ angezogen`)} title="Anziehen">
+                <Avatar look={ch.look} outfit={o.items} size={64} title={o.name} />
+              </button>
+              <div className="outfit-meta">
+                <input className="input sm" value={o.name} onChange={(e) => st().updateOutfit(o.id, { name: e.target.value })} aria-label="Name" />
+                <select
+                  className="input sm"
+                  value={o.tag ?? ''}
+                  onChange={(e) => st().updateOutfit(o.id, { tag: (e.target.value || undefined) as OutfitTag | undefined })}
+                  aria-label="Tätigkeit"
+                >
+                  <option value="">keine Tätigkeit</option>
+                  {OUTFIT_TAGS.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="outfit-row">
+                  <button className={`look-chip ${o.rotate ? 'on' : ''}`} onClick={() => st().updateOutfit(o.id, { rotate: !o.rotate })} title="Darf beim automatischen Wechsel drankommen">
+                    <Repeat size={12} /> im Wechsel
+                  </button>
+                  <button className="icon-btn" onClick={() => st().updateOutfit(o.id, { items: { ...ch.outfit } })} title="Mit dem aktuellen Outfit überschreiben">
+                    <Save size={14} />
+                  </button>
+                  <button className="icon-btn" onClick={() => st().deleteOutfit(o.id)} title="Löschen">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="look-row">
+        <span>Wechsel</span>
+        <Seg value={cycle} options={OUTFIT_CYCLES} onChange={(m) => st().setOutfitCycle(m)} />
+      </div>
+      <p className="widget-settings-hint">
+        Beim Wechsel sucht sich die Figur selbst eins der Outfits „im Wechsel“ aus. Outfits mit Tätigkeit zieht sie im Zimmer an, wenn sie gerade
+        etwas Passendes macht – z. B. das Fitness-Outfit beim Hanteln.
+      </p>
+    </div>
+  )
+}
+
 function Wardrobe(): React.JSX.Element {
   const ch = useStore((s) => s.data!.character)
   const equip = useStore((s) => s.equip)
   return (
     <div className="wardrobe">
+      <Outfits />
       {SLOTS.map((slot) => {
-        const owned = ITEMS.filter((i) => i.slot === slot.id && ch.owned.includes(i.id))
+        const owned = ITEMS.filter((i) => i.slot === slot.id && ownsItem(ch, i))
         if (owned.length === 0 && !slot.optional) return null
         return (
           <div key={slot.id} className="item-group">
@@ -460,7 +552,7 @@ function Shop({ tryOn, setTryOn }: { tryOn: Item | null; setTryOn(i: Item | null
   const coins = coinBalance(ch)
   const xp = attrXp(ch)
   const [slot, setSlot] = useState<Slot>('top')
-  const items = ITEMS.filter((i) => i.slot === slot && !ch.owned.includes(i.id))
+  const items = ITEMS.filter((i) => i.slot === slot && !ownsItem(ch, i))
   return (
     <div className="shop">
       <div className="look-chips">

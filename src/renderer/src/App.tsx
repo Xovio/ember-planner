@@ -30,6 +30,7 @@ export function App(): React.JSX.Element {
     void useStore.getState().init()
   }, [])
   usePointsSync()
+  useOutfitCycle()
 
   useEffect(() => {
     if (!theme) return
@@ -94,6 +95,17 @@ export function App(): React.JSX.Element {
       <Toasts />
     </div>
   )
+}
+
+/** puts on the next rotating outfit when a new time window starts (checked once a minute) */
+function useOutfitCycle(): void {
+  const mode = useStore((s) => s.data?.character.outfitCycle)
+  useEffect(() => {
+    if (!mode || mode === 'off') return
+    useStore.getState().applyOutfitCycle()
+    const t = window.setInterval(() => useStore.getState().applyOutfitCycle(), 60_000)
+    return () => window.clearInterval(t)
+  }, [mode])
 }
 
 const isTextField = (el: EventTarget | null): boolean =>

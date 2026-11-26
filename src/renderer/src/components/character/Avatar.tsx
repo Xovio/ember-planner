@@ -47,12 +47,14 @@ export function Avatar({
   const shoes = itemById(outfit.shoes)
   const hat = itemById(outfit.hat)
   const extra = itemById(outfit.extra)
+  const jewel = itemById(outfit.jewelry)
   const t = ramp(top?.color ?? '#e5615a')
   const b = ramp(bottom?.color ?? '#4a5578')
   const s = ramp(shoes?.color ?? '#f3ece0')
   const dx = (Math.max(0, Math.min(2, look.build)) - 1) * 6
   const sh = look.body === 'broad' ? 5 : 0
   const robe = top?.style === 'robe'
+  const dress = top?.style === 'dress'
   const cheer = expression === 'cheer' && !action
   const blushColor = mixBlush(skin.base)
   const scale = [0.93, 1, 1.06][Math.max(0, Math.min(2, look.height))] ?? 1
@@ -92,15 +94,16 @@ export function Avatar({
           {chair === 'wheelchair' && <WheelchairBack />}
           {chair === 'chair' && <ChairBack />}
           <g transform={`translate(0 ${sy})`}>
+            {extra?.style === 'cloak' && <CloakBack c={ramp(extra.color)} seated={seated} />}
             <BackHair style={look.hair} c={hair} />
           </g>
 
           <g className="av-breath">
             {chair === 'floor' ? (
-              <CrossedLegs c={robe ? t : b} s={s} />
+              <CrossedLegs c={robe || dress ? t : b} s={s} />
             ) : (
               <>
-                {!robe && <Legs style={bottom?.style ?? 'pants'} c={b} skin={skin} seated={seated} />}
+                {!robe && <Legs style={dress ? 'bare' : (bottom?.style ?? 'pants')} c={b} skin={skin} seated={seated} />}
                 <Shoes style={shoes?.style ?? 'sneakers'} c={s} />
               </>
             )}
@@ -115,7 +118,10 @@ export function Avatar({
               <g className={arms.rc ?? ''}>
                 <Arm d={arms.r[0]} hand={arms.r[1]} dx={dx + sh} {...armProps} shaded />
               </g>
+              {extra?.style === 'backpack' && <BackpackStraps c={ramp(extra.color)} />}
+              {jewel && <Jewelry style={jewel.style} c={ramp(jewel.color)} />}
               {extra?.style === 'scarf' && <Scarf c={ramp(extra.color)} />}
+              {extra?.style === 'cloak' && <CloakClasp c={ramp(extra.color)} />}
               <OverHair style={look.hair} c={hair} />
               {action && <PropsFront action={action} />}
             </g>
@@ -811,8 +817,8 @@ function Torso({
   body: AvatarLook['body']
   seated: boolean
 }): React.JSX.Element {
-  const by = style === 'robe' ? (seated ? 232 : 252) : 222
-  const fl = style === 'robe' ? 10 : 0
+  const by = style === 'robe' ? (seated ? 232 : 252) : style === 'dress' ? (seated ? 230 : 238) : 222
+  const fl = style === 'robe' ? 10 : style === 'dress' ? 8 : 0
   const hp = body === 'curvy' ? 6 : 0
   const wa = body === 'curvy' ? 3 : 0
   const L = 70 - dx - sh
@@ -844,6 +850,50 @@ function Torso({
         <g>
           <path d="M90 146 L100 160 L110 146" fill="none" stroke={c.line} strokeWidth="2.5" />
           <path d={`M${L - 2} 190 L${R + 2} 170 L${R + 3} 180 L${L - 2} 200 Z`} fill="#f3ece0" opacity=".85" />
+        </g>
+      )}
+      {(style === 'shirt' || style === 'flannel') && (
+        <g>
+          {style === 'flannel' && (
+            <g stroke={c.shade} strokeWidth="4" opacity=".9">
+              <path d={`M${L + 2} 172 H${R - 2} M${L} 196 H${R} M${L - 2} 214 H${R + 2}`} />
+              <path d="M84 150 V220 M116 150 V220" />
+              <path d={`M${L + 2} 184 H${R - 2} M${L} 206 H${R}`} stroke={c.light} strokeWidth="1.5" />
+            </g>
+          )}
+          <path d="M88 145 L100 156 L92 162 Z M112 145 L100 156 L108 162 Z" fill={c.light} stroke={c.line} strokeWidth="2" />
+          <path d="M100 156 V220" stroke={c.line} strokeWidth="1.8" />
+          {[170, 186, 202].map((y) => (
+            <circle key={y} cx="103.5" cy={y} r="1.8" fill={c.line} />
+          ))}
+        </g>
+      )}
+      {(style === 'jacket' || style === 'leather') && (
+        <g>
+          <path d="M90 146 L110 146 L108 222 L92 222 Z" fill={style === 'leather' ? '#c9c4cc' : '#f3ead8'} stroke={c.line} strokeWidth="2" />
+          <path d="M90 146 L84 160 L92 170 L94 222 M110 146 L116 160 L108 170 L106 222" fill="none" stroke={c.line} strokeWidth="2.5" />
+          <path d="M90 146 L84 160 L92 170 Z M110 146 L116 160 L108 170 Z" fill={c.shade} stroke={c.line} strokeWidth="2" />
+          {style === 'leather' ? (
+            <path d="M113 176 L113 214" stroke="#d8d4dc" strokeWidth="2" strokeDasharray="2 3" />
+          ) : (
+            <path d={`M${L + 6} 200 h14 M${R - 20} 200 h14`} stroke={c.line} strokeWidth="2" />
+          )}
+        </g>
+      )}
+      {style === 'dress' && (
+        <g>
+          <path d="M88 146 Q100 156 112 146" fill="none" stroke={c.line} strokeWidth="2.5" />
+          <path d={`M${L + 2} 192 Q100 198 ${R - 2} 192`} fill="none" stroke={c.shade} strokeWidth="5" />
+          <circle cx="100" cy="195" r="3" fill={c.light} stroke={c.line} strokeWidth="1.5" />
+        </g>
+      )}
+      {style === 'armor' && (
+        <g>
+          <path d={`M${L + 4} 160 Q100 150 ${R - 4} 160 L${R - 6} 196 Q100 204 ${L + 6} 196 Z`} fill={c.shade} stroke={c.line} strokeWidth="2.5" />
+          <path d="M100 156 V200 M86 168 Q100 172 114 168 M86 182 Q100 186 114 182" fill="none" stroke={c.line} strokeWidth="2" />
+          <path d={`M${L + 2} 206 H${R - 2}`} stroke="#5a3a24" strokeWidth="7" />
+          <rect x="94" y="201" width="12" height="10" rx="2" fill="#e8c070" stroke="#9a7a2a" strokeWidth="1.5" />
+          <path d="M84 146 L92 160 M116 146 L108 160" stroke="#5a3a24" strokeWidth="4" />
         </g>
       )}
       {style === 'robe' && (
@@ -902,6 +952,26 @@ function Legs({ style, c, skin, seated }: { style: string; c: Ramp; skin: Ramp; 
       <g>
         {leg(skin.base, skin.line, full)}
         {leg(c.base, c.line, seated ? 12 : 22)}
+      </g>
+    )
+  }
+  if (style === 'bare') return leg(skin.base, skin.line, full)
+  if (style === 'jogger' || style === 'cargo') {
+    return (
+      <g>
+        {leg(c.base, c.line, full)}
+        {style === 'jogger' ? (
+          <g>
+            <rect x="80" y={y0 + full - 10} width="18" height="7" rx="3" fill={c.shade} />
+            <rect x="104" y={y0 + full - 12} width="17" height="7" rx="3" fill={c.shade} transform={`rotate(7 112 ${y0})`} />
+            <path d={`M97 ${y0 + 4} V${y0 + full - 12}`} stroke="#f3ece0" strokeWidth="2.5" />
+          </g>
+        ) : (
+          <g fill={c.shade} stroke={c.line} strokeWidth="1.5">
+            <rect x="80" y={y0 + 10} width="10" height="11" rx="2" />
+            <rect x="110" y={y0 + 9} width="10" height="11" rx="2" transform={`rotate(7 112 ${y0})`} />
+          </g>
+        )}
       </g>
     )
   }
@@ -992,6 +1062,56 @@ function Scarf({ c }: { c: Ramp }): React.JSX.Element {
   )
 }
 
+function BackpackStraps({ c }: { c: Ramp }): React.JSX.Element {
+  return (
+    <g fill={c.base} stroke={c.line} strokeWidth="2">
+      <path d="M78 148 L86 146 L84 206 L76 204 Z" />
+      <path d="M122 148 L114 146 L116 206 L124 204 Z" />
+      <rect x="77" y="176" width="9" height="5" rx="1.5" fill={c.shade} />
+      <rect x="114" y="176" width="9" height="5" rx="1.5" fill={c.shade} />
+    </g>
+  )
+}
+
+function CloakBack({ c, seated }: { c: Ramp; seated: boolean }): React.JSX.Element {
+  const y = seated ? 236 : 252
+  return (
+    <g>
+      <path d={`M70 146 Q54 200 46 ${y} Q100 ${y + 12} 154 ${y} Q146 200 130 146 Z`} fill={c.shade} stroke={c.line} strokeWidth="3" />
+      <path d={`M64 190 Q60 220 58 ${y - 4} M136 190 Q140 220 142 ${y - 4}`} fill="none" stroke={c.line} strokeWidth="2" opacity=".5" />
+    </g>
+  )
+}
+
+function CloakClasp({ c }: { c: Ramp }): React.JSX.Element {
+  return (
+    <g>
+      <path d="M72 146 Q100 138 128 146 L124 154 Q100 148 76 154 Z" fill={c.base} stroke={c.line} strokeWidth="2.5" />
+      <circle cx="100" cy="151" r="5" fill="#e8c070" stroke="#9a7a2a" strokeWidth="1.5" />
+    </g>
+  )
+}
+
+function Jewelry({ style, c }: { style: string; c: Ramp }): React.JSX.Element | null {
+  if (style === 'chain') {
+    return (
+      <g fill="none" stroke={c.line} strokeWidth="1.2">
+        {[0, 1, 2, 3, 4, 5, 6].map((i) => {
+          const a = Math.PI * (0.15 + (i / 6) * 0.7)
+          return <ellipse key={i} cx={100 - Math.cos(a) * 17} cy={144 + Math.sin(a) * 14} rx="3.2" ry="2.4" fill={c.base} />
+        })}
+      </g>
+    )
+  }
+  const gold = style === 'pendant' ? '#e8c15a' : c.base
+  return (
+    <g>
+      <path d="M85 146 Q100 164 115 146" fill="none" stroke={gold} strokeWidth="1.8" />
+      {style === 'pendant' && <path d="M100 156 l5 6 l-5 7 l-5 -7 Z" fill={c.base} stroke={c.line} strokeWidth="1.5" />}
+    </g>
+  )
+}
+
 function Hat({ style, c }: { style: string; c: Ramp }): React.JSX.Element {
   const p = { fill: c.base, stroke: c.line, strokeWidth: 3 }
   if (style === 'beanie') {
@@ -1001,6 +1121,23 @@ function Hat({ style, c }: { style: string; c: Ramp }): React.JSX.Element {
         <path d="M120 24 Q150 36 154 78 L132 78 Q132 44 120 24 Z" fill={c.shade} />
         <rect x="40" y="70" width="120" height="16" rx="8" {...p} fill={c.shade} />
         <circle cx="100" cy="14" r="10" {...p} fill={c.light} />
+      </g>
+    )
+  }
+  if (style === 'headband') {
+    return (
+      <g>
+        <path d="M46 72 Q100 52 154 72 L153 82 Q100 62 47 82 Z" {...p} strokeWidth={2.5} />
+        <path d="M60 70 Q100 56 140 70" fill="none" stroke={c.light} strokeWidth="2" />
+      </g>
+    )
+  }
+  if (style === 'beret') {
+    return (
+      <g>
+        <ellipse cx="106" cy="46" rx="50" ry="16" transform="rotate(-8 106 46)" {...p} />
+        <path d="M124 34 Q150 36 154 48 Q138 54 120 52 Z" fill={c.shade} />
+        <path d="M104 30 l2 -7" stroke={c.line} strokeWidth="3" />
       </g>
     )
   }
