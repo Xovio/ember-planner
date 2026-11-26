@@ -39,10 +39,16 @@ export const HAIR_STYLES: { id: string; name: string }[] = [
 export const BEARDS: { id: AvatarLook['beard']; name: string }[] = [
   { id: 'none', name: 'Keiner' },
   { id: 'stubble', name: 'Stoppeln' },
+  { id: 'heavy', name: 'Dreitagebart' },
   { id: 'short', name: 'Kurz' },
   { id: 'full', name: 'Voll' },
+  { id: 'long', name: 'Lang' },
   { id: 'mustache', name: 'Schnurrbart' },
-  { id: 'goatee', name: 'Kinnbart' }
+  { id: 'handlebar', name: 'Zwirbelbart' },
+  { id: 'goatee', name: 'Kinnbart' },
+  { id: 'anchor', name: 'Henriquatre' },
+  { id: 'chinstrap', name: 'Kinnriemen' },
+  { id: 'sideburns', name: 'Koteletten' }
 ]
 
 /**

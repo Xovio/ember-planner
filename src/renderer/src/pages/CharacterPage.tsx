@@ -249,7 +249,28 @@ const EYE_OPTS: Opt<AvatarLook['eyeShape']> = [
 const BROW_OPTS: Opt<AvatarLook['brows']> = [
   ['thin', 'fein'],
   ['soft', 'mittel'],
-  ['thick', 'kräftig']
+  ['thick', 'kräftig'],
+  ['arched', 'geschwungen'],
+  ['unibrow', 'zusammen'],
+  ['slit', 'mit Lücke']
+]
+const NOSE_OPTS: Opt<AvatarLook['nose']> = [
+  ['none', 'keine'],
+  ['dot', 'Punkt'],
+  ['button', 'Stups'],
+  ['pointed', 'spitz'],
+  ['wide', 'breit']
+]
+const EARRING_OPTS: Opt<AvatarLook['earrings']> = [
+  ['none', 'keine'],
+  ['studs', 'Stecker'],
+  ['hoops', 'Creolen']
+]
+const PIERCING_OPTS: Opt<AvatarLook['piercing']> = [
+  ['none', 'keins'],
+  ['nose', 'Nase'],
+  ['brow', 'Braue'],
+  ['lip', 'Lippe']
 ]
 const MAKEUP_OPTS: Opt<AvatarLook['makeup']> = [
   ['none', 'keins'],
@@ -263,7 +284,7 @@ const isHex = (v: string): string | null => (/^#[0-9a-f]{6}$/i.test(v) ? v : nul
 function LookEditor({ look: raw, name, onChange }: { look: AvatarLook; name: string; onChange(look: AvatarLook, name: string): void }): React.JSX.Element {
   const look = { ...LOOK_DEFAULTS, ...raw }
   const set = (p: Partial<AvatarLook>): void => onChange({ ...look, ...p }, name)
-  const flag = (key: 'lashes' | 'blush' | 'freckles' | 'mole' | 'glasses' | 'hearingAid' | 'wheelchair', label: string): React.JSX.Element => (
+  const flag = (key: 'lashes' | 'blush' | 'freckles' | 'mole' | 'scar' | 'glasses' | 'hearingAid' | 'wheelchair', label: string): React.JSX.Element => (
     <button className={`look-chip ${look[key] ? 'on' : ''}`} onClick={() => set({ [key]: !look[key] })}>
       {label}
     </button>
@@ -323,6 +344,9 @@ function LookEditor({ look: raw, name, onChange }: { look: AvatarLook; name: str
         />
       )}
       {row('Brauen', <Seg value={look.brows} options={BROW_OPTS} onChange={(brows) => set({ brows })} />)}
+      {row('Nase', <Seg value={look.nose} options={NOSE_OPTS} onChange={(nose) => set({ nose })} />)}
+      {row('Ohrringe', <Seg value={look.earrings} options={EARRING_OPTS} onChange={(earrings) => set({ earrings })} />)}
+      {row('Piercing', <Seg value={look.piercing} options={PIERCING_OPTS} onChange={(piercing) => set({ piercing })} />)}
       {row('Make-up', <Seg value={look.makeup} options={MAKEUP_OPTS} onChange={(makeup) => set({ makeup })} />)}
       {row(
         'Details',
@@ -331,6 +355,7 @@ function LookEditor({ look: raw, name, onChange }: { look: AvatarLook; name: str
           {flag('blush', 'Wangenröte')}
           {flag('freckles', 'Sommersprossen')}
           {flag('mole', 'Muttermal')}
+          {flag('scar', 'Narbe')}
         </div>
       )}
 

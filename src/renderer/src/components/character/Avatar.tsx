@@ -134,6 +134,7 @@ export function Avatar({
                 />
               )}
               {face.shape({ fill: skin.base, stroke: skin.line, strokeWidth: 2.5 })}
+              <Earrings style={look.earrings} ear={face.ear} />
               <g clipPath={`url(#fc${uid})`}>
                 <path d="M40 92 Q100 108 160 92 L160 60 L40 60 Z" fill={skin.shade} opacity=".55" />
                 <path d="M120 140 Q146 128 152 100 Q160 140 120 160 Z" fill={skin.shade} opacity=".45" />
@@ -160,7 +161,10 @@ export function Avatar({
               <Beard style={look.beard} c={hair} />
               <Eyes expression={expression} iris={iris} uid={uid} shape={eye} lashes={look.lashes} liner={look.makeup === 'liner' || look.makeup === 'both'} />
               <Brows expression={expression} line={hair.line} style={look.brows} lift={eye.cy - 104} />
+              {look.scar && <path d="M118 74 L126 96 M119 80 l4 -1.5 M122 88 l4 -1.5" fill="none" stroke={skin.line} strokeWidth="2" opacity=".55" />}
+              <Nose style={look.nose} line={skin.line} light={skin.light} />
               <Mouth expression={expression} lips={look.makeup === 'lips' || look.makeup === 'both'} />
+              <Piercing style={look.piercing} />
 
               <FrontHair style={look.hair} c={hair} skin={skin} />
               {look.glasses && (
@@ -190,6 +194,10 @@ export const LOOK_DEFAULTS: Omit<AvatarLook, 'skin' | 'hair' | 'hairColor' | 'ey
   brows: 'soft',
   lashes: false,
   beard: 'none',
+  nose: 'none',
+  earrings: 'none',
+  piercing: 'none',
+  scar: false,
   freckles: false,
   mole: false,
   blush: true,
@@ -554,8 +562,48 @@ function Beard({ style, c }: { style: string; c: Ramp }): React.JSX.Element | nu
           {stache}
         </g>
       )
+    case 'heavy':
+      return (
+        <g>
+          <path d="M50 108 Q54 152 100 154 Q146 152 150 108 Q142 126 128 132 Q116 126 104 132 Q92 126 80 132 Q60 126 50 108 Z" fill={c.base} opacity=".5" />
+          <g opacity=".5">{stache}</g>
+        </g>
+      )
+    case 'long':
+      return (
+        <g>
+          <path d="M50 110 Q46 170 74 192 Q100 214 126 192 Q154 170 150 110 Q144 128 126 132 Q114 122 104 128 Q94 122 82 132 Q56 128 50 110 Z" {...p} />
+          <path d="M84 150 Q88 176 98 196 M118 150 Q118 176 110 196 M132 140 Q142 160 132 180" fill="none" stroke={c.shade} strokeWidth="3" />
+          {stache}
+        </g>
+      )
     case 'mustache':
       return stache
+    case 'handlebar':
+      return (
+        <path
+          d="M78 112 Q76 123 87 122 Q96 121 104 118 Q112 121 121 122 Q132 123 130 112 Q128 118 122 117 Q112 112 104 117 Q96 112 86 117 Q80 118 78 112 Z"
+          {...p}
+          strokeWidth={2}
+        />
+      )
+    case 'anchor':
+      return (
+        <g>
+          {stache}
+          <path d="M88 132 Q104 128 120 132 Q118 158 104 168 Q90 158 88 132 Z" {...p} strokeWidth={2} />
+          <path d="M104 140 L104 160" fill="none" stroke={c.shade} strokeWidth="2.5" />
+        </g>
+      )
+    case 'chinstrap':
+      return <path d="M50 106 Q54 152 100 154 Q146 152 150 106 Q146 140 100 145 Q54 140 50 106 Z" {...p} strokeWidth={2} />
+    case 'sideburns':
+      return (
+        <g {...p} strokeWidth={2}>
+          <path d="M49 86 L58 87 Q58 108 62 122 Q54 122 50 110 Z" />
+          <path d="M151 86 L142 87 Q142 108 138 122 Q146 122 150 110 Z" />
+        </g>
+      )
     case 'goatee':
       return (
         <g>
@@ -654,13 +702,83 @@ function shift(hex: string): string {
 
 function Brows({ expression, line, style, lift }: { expression: Expression; line: string; style: string; lift: number }): React.JSX.Element {
   const up = (expression === 'cheer' || expression === 'happy' ? -3 : expression === 'sleepy' ? 3 : 0) + lift * 0.5
-  const w = style === 'thick' ? 5.5 : style === 'thin' ? 2 : 3
+  const w = style === 'thick' || style === 'unibrow' ? 5 : style === 'thin' ? 2 : 3
+  const arch = style === 'arched' ? 4 : 0
   return (
     <g fill="none" stroke={line} strokeWidth={w}>
-      <path d={`M74 ${84 + up} Q82 ${79 + up} 91 ${82 + up}`} />
-      <path d={`M109 ${81 + up} Q118 ${78 + up} 127 ${83 + up}`} />
+      <path d={`M74 ${84 + up} Q82 ${79 + up - arch} 91 ${82 + up}`} />
+      {style === 'slit' ? (
+        <>
+          <path d={`M109 ${81 + up} Q112 ${79.5 + up} 116 ${79 + up}`} />
+          <path d={`M120 ${79 + up} Q124 ${80 + up} 127 ${83 + up}`} />
+        </>
+      ) : (
+        <path d={`M109 ${81 + up} Q118 ${78 + up - arch} 127 ${83 + up}`} />
+      )}
+      {style === 'unibrow' && <path d={`M90 ${82 + up} Q100 ${80 + up} 110 ${81 + up}`} strokeWidth={w * 0.7} />}
     </g>
   )
+}
+
+function Nose({ style, line, light }: { style: string; line: string; light: string }): React.JSX.Element | null {
+  const p = { fill: 'none', stroke: line, strokeWidth: 2.2, opacity: 0.75 }
+  switch (style) {
+    case 'dot':
+      return <ellipse cx="103" cy="114" rx="2.6" ry="1.8" fill={line} opacity=".45" />
+    case 'button':
+      return (
+        <g>
+          <circle cx="103" cy="113" r="4" fill={light} opacity=".7" />
+          <path d="M99 115 Q103 119 107 115" {...p} />
+        </g>
+      )
+    case 'pointed':
+      return <path d="M105 103 L99 115 Q102 118 107 116" {...p} />
+    case 'wide':
+      return <path d="M95 113 Q97 118 100 116 Q103 118 106 116 Q109 118 111 113" {...p} />
+    default:
+      return null
+  }
+}
+
+const METAL = { fill: '#d9dde6', line: '#6b6f7a', gold: '#e8c15a', goldLine: '#9a7a2a' }
+
+function Earrings({ style, ear }: { style: string; ear: number }): React.JSX.Element | null {
+  if (style === 'studs')
+    return (
+      <g fill={METAL.gold} stroke={METAL.goldLine} strokeWidth="1.2">
+        <circle cx={100 - ear - 1} cy="113" r="2.8" />
+        <circle cx={100 + ear + 1} cy="113" r="2.8" />
+      </g>
+    )
+  if (style === 'hoops')
+    return (
+      <g fill="none" stroke={METAL.gold} strokeWidth="2.4">
+        <circle cx={100 - ear - 2} cy="119" r="5.5" />
+        <circle cx={100 + ear + 2} cy="119" r="5.5" />
+      </g>
+    )
+  return null
+}
+
+function Piercing({ style }: { style: string }): React.JSX.Element | null {
+  const ring = { fill: 'none', stroke: METAL.fill, strokeWidth: 2 }
+  const ball = { fill: METAL.fill, stroke: METAL.line, strokeWidth: 1.2 }
+  switch (style) {
+    case 'nose':
+      return <path d="M108 115 A2.6 2.6 0 1 1 106 119" {...ring} />
+    case 'brow':
+      return (
+        <g {...ball}>
+          <circle cx="122" cy="75" r="2.2" />
+          <circle cx="124" cy="87" r="2.2" />
+        </g>
+      )
+    case 'lip':
+      return <path d="M110 128 A3 3 0 1 1 106 131" {...ring} />
+    default:
+      return null
+  }
 }
 
 function Mouth({ expression, lips }: { expression: Expression; lips: boolean }): React.JSX.Element {

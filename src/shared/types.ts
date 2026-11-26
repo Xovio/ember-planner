@@ -190,9 +190,13 @@ export interface AvatarLook {
   height: number
   face: 'round' | 'oval' | 'square'
   eyeShape: 'round' | 'almond' | 'soft' | 'narrow' | 'small' | 'hooded'
-  brows: 'thin' | 'soft' | 'thick'
+  brows: 'thin' | 'soft' | 'thick' | 'arched' | 'unibrow' | 'slit'
   lashes: boolean
-  beard: 'none' | 'stubble' | 'short' | 'full' | 'mustache' | 'goatee'
+  beard: 'none' | 'stubble' | 'heavy' | 'short' | 'full' | 'long' | 'mustache' | 'handlebar' | 'goatee' | 'anchor' | 'chinstrap' | 'sideburns'
+  nose: 'none' | 'dot' | 'button' | 'pointed' | 'wide'
+  earrings: 'none' | 'studs' | 'hoops'
+  piercing: 'none' | 'nose' | 'brow' | 'lip'
+  scar: boolean
   freckles: boolean
   mole: boolean
   blush: boolean
@@ -528,6 +532,10 @@ export function defaultCharacter(): Character {
       brows: 'soft',
       lashes: false,
       beard: 'none',
+      nose: 'none',
+      earrings: 'none',
+      piercing: 'none',
+      scar: false,
       freckles: false,
       mole: false,
       blush: true,

@@ -137,10 +137,11 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
 - **Aussehen kostenlos** und frei kombinierbar (erweitert in v0.7), ohne festen Geschlechts-Schalter:
   - Schnellstart-Vorlagen *eher weiblich*, *eher männlich*, *neutral* (setzen nur ein paar Formen)
   - Körper: Statur, Körperform (gerade, kurvig, breite Schultern), Größe, Hautton (12 Töne oder eigener Farbwähler)
-  - Gesicht: Gesichtsform, Augenform (rund, mandel, sanft, schmal, klein, Schlupflid), Augenfarbe (auch frei), Brauen, Wimpern, Wangenröte, Sommersprossen, Muttermal,
-    Make-up (Lippen, Lidstrich)
+  - Gesicht: Gesichtsform, Augenform (rund, mandel, sanft, schmal, klein, Schlupflid), Augenfarbe (auch frei), Brauen (6 Formen, u. a. geschwungen,
+    zusammengewachsen, mit Lücke), Nase (5 Formen), Wimpern, Wangenröte, Sommersprossen, Muttermal, Narbe, Ohrringe (Stecker, Creolen),
+    Piercing (Nase, Braue, Lippe), Make-up (Lippen, Lidstrich)
   - Haare: 23 Frisuren (u. a. Afro, Lange Locken, Dreadlocks, Mittellang, Zopf, Flechtzopf, Seitenscheitel, Tolle, Zurückgegelt, Strubbelig, Stachelig, Männerdutt, Undercut, Iro, Raspel, Glatze),
-    Haarfarbe (auch frei), 6 Bärte
+    Haarfarbe (auch frei), 12 Bärte (u. a. Dreitagebart, Lang, Zwirbelbart, Henriquatre, Kinnriemen, Koteletten)
   - Hilfsmittel: Brille, Hörgerät, Rollstuhl
 - **Sechs Attribute** (Fitness, Ausdauer, Köpfchen, Kreativität, Ordnung, Sozial), jedes mit eigenem Level; Charakter-Level = 1 + alle Attribut-Aufstiege
 - **Coins** für erledigte ToDos nach **Schwierigkeit** (leicht · mittel · schwer · episch, im ToDo einstellbar) **× Zeit**
