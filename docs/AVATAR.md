@@ -88,6 +88,20 @@ der Kern ist und Möbel aus Code-Körpern alle vier Drehrichtungen gratis bekomm
 - **Später:** Fensterformen, größeres Zimmer 8×8 (≈ 600), zweites Zimmer (≈ 800), Garten (≈ 1.200), Körbchen fürs Haustier,
   den ganzen Raum drehen, mehrere gleiche Teile, kleines Herumlaufen
 
+## Idle-Animationen
+
+- **Logik** in `shared/idle.ts` (getestet): Katalog, was verfügbar ist, nächste Animation, Wegfindung (Breitensuche über
+  freie Kacheln, Teppiche zählen als frei), Zielplatz am Möbel (Sitzplatz, Vorderseite nach Drehung, daneben) und Spiegelung
+- **Ablauf** in `useIdleActor.ts`: alle 20–40 s eine neue (nie zweimal dieselbe, außer festgepinnt), freie Animationen
+  schlendern manchmal an einen Platz, vor dem nichts steht; pausiert im Einrichten-Modus und bei verborgenem Fenster
+- **Zeichnung** im Avatar: Aktionen als Armhaltungen, Requisiten (Laptop mit Stuhl, Buch, Gießkanne, Pinsel, Hanteln,
+  Würfel) und kleine Effekte (Noten, Zzz, Funkeln); Sitzen auf Stuhl, Boden oder Möbel; Laufen mit Wippen.
+  Bewegung nur ohne „Bewegung reduzieren“
+- **Freischalten:** drei ab Werk, Möbel-Animationen kommen mit dem Möbel, freie im Shop (30–80 Coins, Yoga und Meditieren
+  ab Attribut-Level 2). Gekaufte stehen als `i-<id>` in `owned`; ausgeschaltete und festgepinnte in `character.idle`
+- **Später:** Figur von hinten bzw. seitlich (echtes Sitzen am Schreibtisch mit dem Rücken zur Kamera), Liegen im Bett,
+  mehr Animationen pro Möbel, Haustier, das mitmacht
+
 ## Aussehen
 
 Kein Geschlechts-Schalter: Jedes Merkmal (Körperform, Größe, Gesichts- und Augenform, Brauen, Wimpern, Bart, Make-up,

@@ -17,6 +17,9 @@ export function Avatar({
   expression = 'content',
   animate = false,
   pose = 'wave',
+  action,
+  sit = 'stand',
+  walking = false,
   size = 200,
   title
 }: {
@@ -25,6 +28,11 @@ export function Avatar({
   expression?: Expression
   animate?: boolean
   pose?: 'wave' | 'rest'
+  /** an idle animation (see shared/idle.ts): arms, props and motion */
+  action?: string
+  /** sitting on a chair it brings, on the floor, or on furniture (the room draws that) */
+  sit?: 'stand' | 'chair' | 'floor' | 'seat'
+  walking?: boolean
   size?: number
   title?: string
 }): React.JSX.Element {
@@ -45,21 +53,24 @@ export function Avatar({
   const dx = (Math.max(0, Math.min(2, look.build)) - 1) * 6
   const sh = look.body === 'broad' ? 5 : 0
   const robe = top?.style === 'robe'
-  const cheer = expression === 'cheer'
+  const cheer = expression === 'cheer' && !action
   const blushColor = mixBlush(skin.base)
   const scale = [0.93, 1, 1.06][Math.max(0, Math.min(2, look.height))] ?? 1
-  const seated = look.wheelchair
-  const sy = seated ? 20 : 0
+  const chair = look.wheelchair ? 'wheelchair' : sit
+  const seated = chair !== 'stand'
+  const sy = chair === 'floor' ? 32 : seated ? 20 : 0
   const eye = EYE_SHAPES[look.eyeShape] ?? EYE_SHAPES.round
   const face = FACES[look.face] ?? FACES.round
   const tee = top?.style === 'tee'
+  const arms = (action && ACTION_ARMS[action]) || (cheer ? ARMS_UP : pose === 'rest' ? ARMS_REST : ARMS_WAVE)
+  const armProps = { c: t, skin, short: tee }
 
   return (
     <svg
       viewBox="-10 -30 220 310"
       width={size}
       height={(size * 310) / 220}
-      className={`avatar ${animate ? 'animated' : ''}`}
+      className={`avatar ${animate ? 'animated' : ''} ${action ? `act-${action}` : ''} ${walking ? 'walking' : ''}`}
       role="img"
       aria-label={title ?? 'Dein Charakter'}
       strokeLinejoin="round"
@@ -74,89 +85,96 @@ export function Avatar({
         </clipPath>
         <clipPath id={`fc${uid}`}>{face.shape({})}</clipPath>
       </defs>
-      <ellipse cx="100" cy="266" rx={(seated ? 58 : 44 + dx) * scale} ry="8" fill="#6b4a5a" opacity=".22" />
+      {chair !== 'seat' && <ellipse cx="100" cy="266" rx={(seated ? 58 : 44 + dx) * scale} ry="8" fill="#6b4a5a" opacity=".22" />}
 
       <g transform={`translate(100 266) scale(${scale}) translate(-100 -266)`}>
-        {seated && <WheelchairBack />}
-        <g transform={`translate(0 ${sy})`}>
-          <BackHair style={look.hair} c={hair} />
-        </g>
-
-        <g className="av-breath">
-          {!robe && <Legs style={bottom?.style ?? 'pants'} c={b} skin={skin} seated={seated} />}
-          <Shoes style={shoes?.style ?? 'sneakers'} c={s} />
-          {seated && <WheelchairFront />}
+        <g className="av-body">
+          {chair === 'wheelchair' && <WheelchairBack />}
+          {chair === 'chair' && <ChairBack />}
           <g transform={`translate(0 ${sy})`}>
-            <Torso style={top?.style ?? 'hoodie'} c={t} dx={dx} sh={sh} body={look.body} seated={seated} />
-            <Arm
-              d={cheer ? 'M74 158 Q58 146 50 128' : 'M74 158 Q58 176 60 196'}
-              dx={-dx - sh}
-              c={t}
-              skin={skin}
-              short={tee}
-              hand={cheer ? [48, 121] : [60, 201]}
-            />
-            {pose === 'rest' && !cheer ? (
-              <Arm d="M126 158 Q142 176 140 196" dx={dx + sh} c={t} skin={skin} short={tee} hand={[140, 201]} shaded />
+            <BackHair style={look.hair} c={hair} />
+          </g>
+
+          <g className="av-breath">
+            {chair === 'floor' ? (
+              <CrossedLegs c={robe ? t : b} s={s} />
             ) : (
-              <g className="av-wave">
-                <Arm d="M126 158 Q142 146 150 128" dx={dx + sh} c={t} skin={skin} short={tee} hand={[152, 121]} shaded />
-              </g>
+              <>
+                {!robe && <Legs style={bottom?.style ?? 'pants'} c={b} skin={skin} seated={seated} />}
+                <Shoes style={shoes?.style ?? 'sneakers'} c={s} />
+              </>
             )}
-            {extra?.style === 'scarf' && <Scarf c={ramp(extra.color)} />}
-            <OverHair style={look.hair} c={hair} />
-          </g>
-        </g>
-
-        <g transform={`translate(0 ${sy}) rotate(-4 100 150)`}>
-          <ellipse cx={100 - face.ear} cy="104" rx="7" ry="9" fill={skin.base} stroke={skin.line} strokeWidth="2.5" />
-          <ellipse cx={100 + face.ear} cy="104" rx="7" ry="9" fill={skin.base} stroke={skin.line} strokeWidth="2.5" />
-          {look.hearingAid && (
-            <path
-              d={`M${100 - face.ear - 5} 92 Q${100 - face.ear - 13} 98 ${100 - face.ear - 9} 110 Q${100 - face.ear - 5} 114 ${100 - face.ear - 2} 108`}
-              fill="#a99ec0"
-              stroke="#5d5470"
-              strokeWidth="2"
-            />
-          )}
-          {face.shape({ fill: skin.base, stroke: skin.line, strokeWidth: 2.5 })}
-          <g clipPath={`url(#fc${uid})`}>
-            <path d="M40 92 Q100 108 160 92 L160 60 L40 60 Z" fill={skin.shade} opacity=".55" />
-            <path d="M120 140 Q146 128 152 100 Q160 140 120 160 Z" fill={skin.shade} opacity=".45" />
+            {chair === 'wheelchair' && <WheelchairFront />}
+            {chair === 'chair' && <ChairSeat />}
+            <g transform={`translate(0 ${sy})`}>
+              <Torso style={top?.style ?? 'hoodie'} c={t} dx={dx} sh={sh} body={look.body} seated={seated} />
+              {action && <PropsBehind action={action} />}
+              <g className={arms.lc ?? ''}>
+                <Arm d={arms.l[0]} hand={arms.l[1]} dx={-dx - sh} {...armProps} />
+              </g>
+              <g className={arms.rc ?? ''}>
+                <Arm d={arms.r[0]} hand={arms.r[1]} dx={dx + sh} {...armProps} shaded />
+              </g>
+              {extra?.style === 'scarf' && <Scarf c={ramp(extra.color)} />}
+              <OverHair style={look.hair} c={hair} />
+              {action && <PropsFront action={action} />}
+            </g>
           </g>
 
-          {look.freckles && (
-            <g fill={skin.line} opacity=".42">
-              {FRECKLES.map(([x, y], i) => (
-                <g key={i}>
-                  <circle cx={x} cy={y} r="1.4" />
-                  <circle cx={200 - x} cy={y} r="1.4" />
+          <g transform={`translate(0 ${sy})`}>
+            <g className="av-head" transform="rotate(-4 100 150)">
+              <ellipse cx={100 - face.ear} cy="104" rx="7" ry="9" fill={skin.base} stroke={skin.line} strokeWidth="2.5" />
+              <ellipse cx={100 + face.ear} cy="104" rx="7" ry="9" fill={skin.base} stroke={skin.line} strokeWidth="2.5" />
+              {look.hearingAid && (
+                <path
+                  d={`M${100 - face.ear - 5} 92 Q${100 - face.ear - 13} 98 ${100 - face.ear - 9} 110 Q${100 - face.ear - 5} 114 ${100 - face.ear - 2} 108`}
+                  fill="#a99ec0"
+                  stroke="#5d5470"
+                  strokeWidth="2"
+                />
+              )}
+              {face.shape({ fill: skin.base, stroke: skin.line, strokeWidth: 2.5 })}
+              <g clipPath={`url(#fc${uid})`}>
+                <path d="M40 92 Q100 108 160 92 L160 60 L40 60 Z" fill={skin.shade} opacity=".55" />
+                <path d="M120 140 Q146 128 152 100 Q160 140 120 160 Z" fill={skin.shade} opacity=".45" />
+                {action === 'laptop' && <rect x="40" y="110" width="120" height="50" fill="#9cd0f0" opacity=".18" />}
+              </g>
+
+              {look.freckles && (
+                <g fill={skin.line} opacity=".42">
+                  {FRECKLES.map(([x, y], i) => (
+                    <g key={i}>
+                      <circle cx={x} cy={y} r="1.4" />
+                      <circle cx={200 - x} cy={y} r="1.4" />
+                    </g>
+                  ))}
                 </g>
-              ))}
-            </g>
-          )}
-          {look.blush && (
-            <>
-              <ellipse cx="72" cy="121" rx="9" ry="5" fill={blushColor} opacity=".55" />
-              <ellipse cx="128" cy="121" rx="9" ry="5" fill={blushColor} opacity=".55" />
-            </>
-          )}
-          {look.mole && <circle cx="124" cy="131" r="1.7" fill={skin.line} opacity=".7" />}
-          <Beard style={look.beard} c={hair} />
-          <Eyes expression={expression} iris={iris} uid={uid} shape={eye} lashes={look.lashes} liner={look.makeup === 'liner' || look.makeup === 'both'} />
-          <Brows expression={expression} line={hair.line} style={look.brows} lift={eye.cy - 104} />
-          <Mouth expression={expression} lips={look.makeup === 'lips' || look.makeup === 'both'} />
+              )}
+              {look.blush && (
+                <>
+                  <ellipse cx="72" cy="121" rx="9" ry="5" fill={blushColor} opacity=".55" />
+                  <ellipse cx="128" cy="121" rx="9" ry="5" fill={blushColor} opacity=".55" />
+                </>
+              )}
+              {look.mole && <circle cx="124" cy="131" r="1.7" fill={skin.line} opacity=".7" />}
+              <Beard style={look.beard} c={hair} />
+              <Eyes expression={expression} iris={iris} uid={uid} shape={eye} lashes={look.lashes} liner={look.makeup === 'liner' || look.makeup === 'both'} />
+              <Brows expression={expression} line={hair.line} style={look.brows} lift={eye.cy - 104} />
+              <Mouth expression={expression} lips={look.makeup === 'lips' || look.makeup === 'both'} />
 
-          <FrontHair style={look.hair} c={hair} skin={skin} />
-          {look.glasses && (
-            <g fill="none" stroke="#4a3a48" strokeWidth="2.5">
-              <rect x="70" y="92" width="26" height="24" rx="9" />
-              <rect x="104" y="92" width="26" height="24" rx="9" />
-              <path d="M96 102 Q100 99 104 102" />
+              <FrontHair style={look.hair} c={hair} skin={skin} />
+              {look.glasses && (
+                <g fill="none" stroke="#4a3a48" strokeWidth="2.5">
+                  <rect x="70" y="92" width="26" height="24" rx="9" />
+                  <rect x="104" y="92" width="26" height="24" rx="9" />
+                  <path d="M96 102 Q100 99 104 102" />
+                </g>
+              )}
+              {hat && <Hat style={hat.style} c={ramp(hat.color)} />}
+              {extra?.style === 'headphones' && <Headphones c={ramp(extra.color)} />}
             </g>
-          )}
-          {hat && <Hat style={hat.style} c={ramp(hat.color)} />}
-          {extra?.style === 'headphones' && <Headphones c={ramp(extra.color)} />}
+            {action && <HeadFx action={action} />}
+          </g>
         </g>
       </g>
     </svg>
@@ -627,8 +645,10 @@ function Legs({ style, c, skin, seated }: { style: string; c: Ramp; skin: Ramp; 
   const full = seated ? 26 : 46
   const leg = (fill: string, line: string, h: number): React.JSX.Element => (
     <g>
-      <rect x="78" y={y0} width="22" height={h} rx="10" fill={fill} stroke={line} strokeWidth="2.5" />
-      <rect x="102" y={y0 - 2} width="21" height={h - 2} rx="10" fill={fill} stroke={line} strokeWidth="2.5" transform={`rotate(7 112 ${y0})`} />
+      <rect className="av-leg-l" x="78" y={y0} width="22" height={h} rx="10" fill={fill} stroke={line} strokeWidth="2.5" />
+      <g className="av-leg-r">
+        <rect x="102" y={y0 - 2} width="21" height={h - 2} rx="10" fill={fill} stroke={line} strokeWidth="2.5" transform={`rotate(7 112 ${y0})`} />
+      </g>
     </g>
   )
   if (style === 'shorts') {
@@ -782,4 +802,201 @@ function Headphones({ c }: { c: Ramp }): React.JSX.Element {
       <rect x="150" y="90" width="18" height="28" rx="8" fill={c.shade} />
     </g>
   )
+}
+
+/* ── idle actions: arms, props and little effects ── */
+
+interface Arms {
+  l: [string, [number, number]]
+  r: [string, [number, number]]
+  /** css classes for the arm groups (animation) */
+  lc?: string
+  rc?: string
+}
+
+const L_REST: Arms['l'] = ['M74 158 Q58 176 60 196', [60, 201]]
+const R_REST: Arms['r'] = ['M126 158 Q142 176 140 196', [140, 201]]
+const L_UP: Arms['l'] = ['M74 158 Q58 146 50 128', [48, 121]]
+const R_UP: Arms['r'] = ['M126 158 Q142 146 150 128', [152, 121]]
+const ARMS_REST: Arms = { l: L_REST, r: R_REST }
+const ARMS_UP: Arms = { l: L_UP, r: R_UP, rc: 'av-wave' }
+const ARMS_WAVE: Arms = { l: L_REST, r: R_UP, rc: 'av-wave' }
+
+const ACTION_ARMS: Record<string, Arms> = {
+  look: ARMS_REST,
+  hum: ARMS_REST,
+  stretch: { l: ['M74 158 Q50 130 46 96', [44, 90]], r: ['M126 158 Q150 130 154 96', [156, 90]] },
+  wave: ARMS_WAVE,
+  hop: { l: L_UP, r: R_UP },
+  dance: { l: ['M74 158 Q52 140 48 118', [46, 112]], r: ['M126 158 Q148 168 152 186', [153, 192]], lc: 'av-swing-l', rc: 'av-swing-r' },
+  yoga: { l: ['M74 158 Q40 90 96 14', [97, 12]], r: ['M126 158 Q160 90 104 14', [103, 12]] },
+  meditate: { l: ['M74 158 Q56 180 54 204', [52, 208]], r: ['M126 158 Q144 180 146 204', [148, 208]] },
+  laptop: { l: ['M74 158 Q70 184 86 190', [88, 192]], r: ['M126 158 Q130 184 114 190', [112, 192]], lc: 'av-type-l', rc: 'av-type-r' },
+  read: { l: ['M74 158 Q64 180 76 176', [77, 174]], r: ['M126 158 Q136 180 124 176', [123, 174]] },
+  browse: { l: ['M74 158 Q64 180 76 176', [77, 174]], r: ['M126 158 Q136 180 124 176', [123, 174]] },
+  relax: { l: ['M74 158 Q42 132 62 92', [64, 88]], r: ['M126 158 Q158 132 138 92', [136, 88]] },
+  nap: { l: ['M74 158 Q70 186 90 196', [92, 198]], r: ['M126 158 Q130 186 110 196', [108, 198]] },
+  water: { l: L_REST, r: ['M126 158 Q148 170 160 160', [162, 158]], rc: 'av-pour' },
+  paint: { l: ['M74 158 Q60 176 64 190', [64, 192]], r: ['M126 158 Q150 140 160 118', [162, 112]], rc: 'av-paint' },
+  lift: { l: ['M74 158 Q52 180 58 150', [58, 146]], r: ['M126 158 Q148 180 142 150', [142, 146]], lc: 'av-lift', rc: 'av-lift av-lift-late' },
+  stargaze: { l: L_REST, r: ['M126 158 Q148 140 156 112', [158, 106]] },
+  dice: { l: L_REST, r: ['M126 158 Q146 168 156 176', [158, 178]], rc: 'av-throw' },
+  warm: { l: ['M74 158 Q64 182 80 190', [82, 192]], r: ['M126 158 Q136 182 120 190', [118, 192]] }
+}
+
+/** a plain wooden chair behind and under the character */
+function ChairBack(): React.JSX.Element {
+  const c = ramp('#b8794a')
+  return <rect x="66" y="164" width="68" height="76" rx="9" fill={c.shade} stroke={c.line} strokeWidth="2.5" />
+}
+
+function ChairSeat(): React.JSX.Element {
+  const c = ramp('#b8794a')
+  return (
+    <g stroke={c.line} strokeWidth="2.5">
+      <rect x="60" y="234" width="80" height="9" rx="4" fill={c.base} />
+      <path d="M66 243 L64 266 M134 243 L136 266" stroke={c.shade} strokeWidth="5" />
+    </g>
+  )
+}
+
+/** sitting on the floor */
+function CrossedLegs({ c, s }: { c: Ramp; s: Ramp }): React.JSX.Element {
+  return (
+    <g stroke={c.line} strokeWidth="2.5">
+      <rect x="60" y="244" width="52" height="18" rx="9" fill={c.base} transform="rotate(8 86 253)" />
+      <rect x="88" y="244" width="52" height="18" rx="9" fill={c.shade} transform="rotate(-8 114 253)" />
+      <ellipse cx="66" cy="262" rx="8" ry="6" fill={s.base} stroke={s.line} />
+      <ellipse cx="134" cy="262" rx="8" ry="6" fill={s.base} stroke={s.line} />
+    </g>
+  )
+}
+
+/** props behind the arms (held from the sides) */
+function PropsBehind({ action }: { action: string }): React.JSX.Element | null {
+  if (action === 'read' || action === 'browse') {
+    const c = ramp(action === 'read' ? '#5a8fb8' : '#c2685a')
+    return (
+      <g className="av-book" stroke={c.line} strokeWidth="2">
+        <path d="M76 150 L100 156 L124 150 L124 184 L100 190 L76 184 Z" fill={c.base} />
+        <path d="M100 156 V190" stroke={c.shade} strokeWidth="2.5" />
+        <path d="M84 162 L94 165 M106 165 L116 162" stroke={c.light} strokeWidth="2" />
+      </g>
+    )
+  }
+  return null
+}
+
+/** props in front of the hands */
+function PropsFront({ action }: { action: string }): React.JSX.Element | null {
+  switch (action) {
+    case 'laptop': {
+      const c = ramp('#9aa0b4')
+      return (
+        <g stroke={c.line} strokeWidth="2">
+          <rect x="70" y="164" width="60" height="38" rx="4" fill={c.base} />
+          <circle cx="100" cy="182" r="5" fill="#f3ead8" stroke="none" />
+          <path d="M97 181 l3 -3 l3 3" fill="none" stroke="#e5615a" strokeWidth="1.5" />
+          <rect x="64" y="200" width="72" height="7" rx="3" fill={c.shade} />
+        </g>
+      )
+    }
+    case 'water': {
+      const c = ramp('#8fb59a')
+      return (
+        <g>
+          <g stroke={c.line} strokeWidth="2">
+            <path d="M158 146 h22 v20 a4 4 0 0 1 -4 4 h-14 a4 4 0 0 1 -4 -4 Z" fill={c.base} />
+            <path d="M180 150 L196 140" stroke={c.base} strokeWidth="4" />
+            <path d="M162 146 Q169 134 176 146" fill="none" />
+          </g>
+          {[0, 1, 2].map((i) => (
+            <ellipse key={i} className="av-drop" cx={198 + i * 2} cy={146} rx="1.6" ry="2.4" fill="#8cc4e8" style={{ animationDelay: `${i * 0.35}s` }} />
+          ))}
+        </g>
+      )
+    }
+    case 'paint':
+      return (
+        <g>
+          <ellipse cx="58" cy="196" rx="14" ry="8" fill="#e8d2b0" stroke="#8a6a4a" strokeWidth="1.8" />
+          <circle cx="52" cy="194" r="2.4" fill="#e5615a" />
+          <circle cx="58" cy="192" r="2.4" fill="#8cc4e8" />
+          <circle cx="64" cy="194" r="2.4" fill="#e0a43c" />
+          <g className="av-paint">
+            <path d="M162 112 L176 92" stroke="#8a5a3a" strokeWidth="3" />
+            <path d="M176 92 l4 -6" stroke="#5a8fb8" strokeWidth="4" />
+          </g>
+        </g>
+      )
+    case 'lift':
+      return (
+        <g fill="#4a4458">
+          {[58, 142].map((x, i) => (
+            <g key={x} className={`av-lift ${i ? 'av-lift-late' : ''}`}>
+              <rect x={x - 12} y="143" width="24" height="5" rx="2" fill="#9a95a3" />
+              <rect x={x - 15} y="138" width="6" height="15" rx="2" />
+              <rect x={x + 9} y="138" width="6" height="15" rx="2" />
+            </g>
+          ))}
+        </g>
+      )
+    case 'dice':
+      return (
+        <g className="av-die">
+          <polygon points="172,184 180,180 188,184 188,193 180,197 172,193" fill="#f3ead8" stroke="#8a6a8a" strokeWidth="1.6" />
+          <path d="M172 184 L180 188 L188 184 M180 188 V197" fill="none" stroke="#8a6a8a" strokeWidth="1.2" />
+        </g>
+      )
+    default:
+      return null
+  }
+}
+
+/** little effects around the head */
+function HeadFx({ action }: { action: string }): React.JSX.Element | null {
+  const note = (x: number, y: number, d: number, k: number): React.JSX.Element => (
+    <g key={k} className="av-float" style={{ animationDelay: `${d}s` }}>
+      <path d={`M${x} ${y} v-14 l9 -3 v14`} fill="none" stroke="#a998d8" strokeWidth="2.2" />
+      <ellipse cx={x - 2.5} cy={y} rx="3.5" ry="2.6" fill="#a998d8" />
+      <ellipse cx={x + 6.5} cy={y - 3} rx="3.5" ry="2.6" fill="#a998d8" />
+    </g>
+  )
+  const z = (x: number, y: number, d: number, k: number, size: number): React.JSX.Element => (
+    <path
+      key={k}
+      className="av-float"
+      style={{ animationDelay: `${d}s` }}
+      d={`M${x} ${y} h${size} l-${size} ${size} h${size}`}
+      fill="none"
+      stroke="#8cc4e8"
+      strokeWidth="2.4"
+    />
+  )
+  const spark = (x: number, y: number, d: number, k: number): React.JSX.Element => (
+    <path
+      key={k}
+      className="av-twinkle"
+      style={{ animationDelay: `${d}s` }}
+      d={`M${x} ${y - 6} Q${x + 1} ${y - 1} ${x + 6} ${y} Q${x + 1} ${y + 1} ${x} ${y + 6} Q${x - 1} ${y + 1} ${x - 6} ${y} Q${x - 1} ${y - 1} ${x} ${y - 6}Z`}
+      fill="#f3c26b"
+    />
+  )
+  switch (action) {
+    case 'hum':
+    case 'dance':
+      return <g>{[note(164, 60, 0, 1), note(176, 40, 1.2, 2)]}</g>
+    case 'nap':
+    case 'relax':
+      return <g>{[z(156, 54, 0, 1, 8), z(168, 36, 1, 2, 11)]}</g>
+    case 'meditate':
+    case 'stargaze':
+      return <g>{[spark(40, 40, 0, 1), spark(166, 30, 0.8, 2), spark(176, 70, 1.6, 3)]}</g>
+    case 'warm':
+      return (
+        <path className="av-float" d="M162 52 c-3 -4 -9 -2 -7 3 c1 3 7 7 7 7 c0 0 6 -4 7 -7 c2 -5 -4 -7 -7 -3Z" fill="#f0a6b4" />
+      )
+    default:
+      return null
+  }
 }

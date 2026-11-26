@@ -215,6 +215,8 @@ export interface Character {
   rewards: Record<string, Reward>
   /** furniture standing in the room; owned furniture that is not placed waits in the chest */
   room: Room
+  /** idle animations switched off, and one to play all the time */
+  idle?: { off: string[]; pinned?: string }
 }
 
 /** one piece of furniture in the room: floor tile (x, y) and turn 0–3, or a spot on a wall */

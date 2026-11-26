@@ -4,10 +4,14 @@ import type { AvatarLook, PlacedFurniture } from '@shared/types'
 import { ramp } from '@shared/wardrobe'
 import { Avatar } from '../Avatar'
 import { FLOOR_MATRIX, H, OX, P, PHASE_LOOK, T, pathOf, pts, toFloor, type Phase, type Pt } from './iso'
-import { FurnitureShape, glowsOf } from './furniture'
+import { FurnitureShape, glowsOf, placer } from './furniture'
+import type { Actor } from './useIdleActor'
 import { FloorSurface, WallSurface } from './surfaces'
 
 const CURTAIN = '#e5807a'
+/** the character's size in the room */
+const AV_H = 80
+const AV_W = (AV_H * 220) / 310
 const VIEW = { x: 0, y: -4, w: 300, h: 262 }
 
 interface Drag {
@@ -34,6 +38,7 @@ export function RoomScene({
   onSelect = () => undefined,
   onMove = () => undefined,
   paused,
+  actor,
   label = 'Dein Zimmer'
 }: {
   items: PlacedFurniture[]
@@ -48,6 +53,8 @@ export function RoomScene({
   onSelect?(id: string | null): void
   onMove?(p: PlacedFurniture): void
   paused: boolean
+  /** the character's idle animation and position; without it the character stands still */
+  actor?: Actor
   label?: string
 }): React.JSX.Element {
   const uid = useId().replace(/:/g, '')
@@ -123,7 +130,11 @@ export function RoomScene({
   const rugs = placed.filter((x) => x.f.kind === 'rug')
   const wallItems = placed.filter((x) => x.f.kind === 'wall')
   const floorItems = placed.filter((x) => x.f.kind === 'floor')
-  const spot = avatarSpot({ items: shown })
+  const still = avatarSpot({ items: shown })
+  // while editing the character stands aside, otherwise it follows its idle animation
+  const live = actor && !editing && !drag ? actor : null
+  const spot = live ? { x: live.x, y: live.y } : still
+  const seatOn = live?.idle && live.target?.seat && live.target.item ? live.target.item : null
   type Drawn = {
     x: number
     y: number
@@ -137,15 +148,15 @@ export function RoomScene({
     key: p.id,
     node: itemNode(f, p)
   }))
-  if (look)
+  if (look && !seatOn)
     drawn.push({
-    x: spot.x + 0.2,
-    y: spot.y + 0.2,
-    w: 0.6,
-    d: 0.6,
-    key: 'avatar',
-    node: avatarNode()
-  })
+      x: spot.x + 0.2,
+      y: spot.y + 0.2,
+      w: 0.6,
+      d: 0.6,
+      key: 'avatar',
+      node: avatarNode()
+    })
   const dragValid = drag ? canPlace(room, drag.cand) : true
 
   function itemNode(f: Furniture, p: PlacedFurniture): React.ReactNode {
@@ -157,16 +168,57 @@ export function RoomScene({
         onPointerDown={(e) => down(e, p)}
       >
         <FurnitureShape f={f} p={p} />
+        {seatOn === p.id && seatedNode(f, p)}
+      </g>
+    )
+  }
+  function figure(): React.ReactNode {
+    const id = live?.idle?.id
+    const expression =
+      id === 'nap' || id === 'relax'
+        ? 'sleepy'
+        : id === 'meditate' || id === 'yoga'
+          ? 'proud'
+          : id === 'dance' || id === 'hop'
+            ? 'happy'
+            : 'content'
+    return (
+      <Avatar
+        look={look!}
+        outfit={outfit ?? {}}
+        animate={!paused}
+        pose="rest"
+        action={id}
+        sit={live?.idle?.sit === 'seat' && !seatOn ? 'stand' : (live?.idle?.sit ?? 'stand')}
+        walking={!!live?.walking}
+        expression={expression}
+        size={AV_W}
+        title="Dein Charakter im Zimmer"
+      />
+    )
+  }
+  /** mirrored around the figure's middle when what it uses is on the left */
+  function mirrorAt(x: number): string | undefined {
+    return live?.target?.mirror ? `translate(${x} 0) scale(-1 1) translate(${-x} 0)` : undefined
+  }
+  function seatedNode(f: Furniture, p: PlacedFurniture): React.ReactNode {
+    const [sx, sy, sz] = live!.target!.seat!
+    const [x, y] = placer(f, p)(sx, sy, sz)
+    return (
+      <g transform={mirrorAt(x)}>
+        <g transform={`translate(${x - AV_W / 2} ${y - (AV_H * 272) / 310})`} className="room-avatar">
+          {figure()}
+        </g>
       </g>
     )
   }
   function avatarNode(): React.ReactNode {
     const [x, y] = P(spot.x + 0.5, spot.y + 0.5)
-    const h = 80
-    const w = (h * 220) / 310
     return (
-      <g key="avatar" transform={`translate(${x - w / 2} ${y - (h * 296) / 310})`} className="room-avatar">
-        <Avatar look={look!} outfit={outfit ?? {}} animate={!paused} pose="rest" size={w} title="Dein Charakter im Zimmer" />
+      <g key="avatar" transform={mirrorAt(x)}>
+        <g transform={`translate(${x - AV_W / 2} ${y - (AV_H * 296) / 310})`} className="room-avatar">
+          {figure()}
+        </g>
       </g>
     )
   }

@@ -190,6 +190,19 @@ export function surfaces(room: Pick<Room, 'wall' | 'floor'>): { wall: Furniture;
 
 /* ── space ── */
 
+/** a point in a W×D footprint turned `rot` quarter turns (the footprint becomes D×W when odd) */
+export function rotPt(px: number, py: number, W: number, D: number, rot: number): [number, number] {
+  let x = px
+  let y = py
+  let w = W
+  let d = D
+  for (let i = 0; i < ((rot % 4) + 4) % 4; i++) {
+    ;[x, y] = [d - y, x]
+    ;[w, d] = [d, w]
+  }
+  return [x, y]
+}
+
 export interface Rect {
   x: number
   y: number
