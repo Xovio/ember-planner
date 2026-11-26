@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Category, TodoList } from '@shared/types'
-import { looksLikeEvent, parseEventInput, parseQuickAdd, resolveDate, templateIn } from './quickAdd'
+import { looksLikeEvent, parseEventInput, parseQuickAdd, resolveDate, splitTemplate, templateIn } from './quickAdd'
 
 // Monday, 23 Nov 2026, noon
 const TODAY = new Date(2026, 10, 23, 12)
@@ -129,5 +129,15 @@ describe('events', () => {
 
   it('parses all-day events', () => {
     expect(parseEventInput('Urlaub morgen ganztägig', cals, TODAY)).toMatchObject({ title: 'Urlaub', allDay: true })
+  })
+})
+
+describe('ToDo templates in the quick entry', () => {
+  const tpls = [{ name: 'Wohnung putzen' }, { name: 'Wäsche' }]
+  it('splits off "/name" and keeps the rest for adjustments', () => {
+    expect(splitTemplate('/putzen bis Freitag', tpls)).toEqual({ template: tpls[0], rest: 'bis Freitag' })
+    expect(splitTemplate('Bad /wäsche', tpls)).toEqual({ template: tpls[1], rest: 'Bad' })
+    expect(splitTemplate('Ein/Aus prüfen', tpls)).toEqual({ rest: 'Ein/Aus prüfen' })
+    expect(splitTemplate('/xyz Test', tpls)).toEqual({ rest: '/xyz Test' })
   })
 })

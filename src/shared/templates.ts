@@ -9,7 +9,7 @@ export const templateKey = (t: Pick<EventTemplate, 'name'>): string => norm(t.na
  * Template for a typed "/token": the whole name or one of its words starts with it,
  * so "/session" and "/dnd" both find "DnD-Session". Exact keys win.
  */
-export function findTemplate(token: string, templates: EventTemplate[]): EventTemplate | undefined {
+export function findTemplate<T extends Pick<EventTemplate, 'name'>>(token: string, templates: T[]): T | undefined {
   const k = norm(token)
   if (!k) return undefined
   return (

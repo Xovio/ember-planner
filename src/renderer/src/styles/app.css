@@ -3916,3 +3916,68 @@ input[type='time'].input {
   display: block;
   margin: -25px 0 0 -21px;
 }
+
+/* weekly review widget */
+.review-card .widget-head {
+  align-items: flex-start;
+}
+.review-hero {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+.review-hero > svg {
+  color: var(--warn);
+}
+.review-hero strong {
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.review-hero span {
+  color: var(--text-2);
+  font-size: 13px;
+}
+.review-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-style: normal;
+  font-size: 11.5px;
+  font-weight: 650;
+  color: var(--warn);
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+}
+.review-list {
+  list-style: none;
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.review-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.review-list li > svg {
+  flex: none;
+  color: var(--accent);
+}
+.review-list b {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.review-empty {
+  margin: 6px 0 4px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.review-plan {
+  margin-top: 12px;
+}

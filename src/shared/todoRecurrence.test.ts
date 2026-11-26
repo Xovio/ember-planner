@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { nextRecurrence, parseTasksLine, recurrenceFromTasks, recurrenceLabel, recurrenceToTasks, toTasksLine } from './todo'
+import { nextRecurrence, weeklyRollover, parseTasksLine, recurrenceFromTasks, recurrenceLabel, recurrenceToTasks, toTasksLine } from './todo'
 import type { Recurrence, Todo } from './types'
 
 const todo = (p: Partial<Todo>): Todo => ({
@@ -89,5 +89,32 @@ describe('recurrence text', () => {
   it('has German labels', () => {
     expect(recurrenceLabel({ freq: 'weekly', interval: 1, byWeekday: [0, 3] })).toBe('Wöchentlich (Mo, Do)')
     expect(recurrenceLabel({ freq: 'monthly', interval: 3 })).toBe('Alle 3 Monate')
+  })
+})
+
+describe('weeklyRollover (Sonntagsreset)', () => {
+  // Wednesday 25 Nov 2026; this week starts Monday 23 Nov
+  const now = new Date(2026, 10, 25, 9)
+
+  it('moves undone weekly ToDos from last week into this week, keeping the gap between deadlines', () => {
+    const t = todo({ softDeadline: '2026-11-19', hardDeadline: '2026-11-21', recurrence: { ...weekly, count: 5 } })
+    expect(weeklyRollover([t], now)).toEqual([{ id: 't', patch: { softDeadline: '2026-11-26', hardDeadline: '2026-11-28' } }])
+  })
+
+  it('skips whole weeks when it was left for longer, and honours weekdays', () => {
+    const t = todo({ softDeadline: '2026-11-02', recurrence: { ...weekly, byWeekday: [0, 3] } })
+    expect(weeklyRollover([t], now)[0].patch.softDeadline).toBe('2026-11-23')
+  })
+
+  it('leaves this week, done, other rhythms, repeatables and ended series alone', () => {
+    const list = [
+      todo({ id: 'now', softDeadline: '2026-11-23', recurrence: weekly }),
+      todo({ id: 'done', softDeadline: '2026-11-16', done: true, recurrence: weekly }),
+      todo({ id: 'daily', softDeadline: '2026-11-16', recurrence: { freq: 'daily', interval: 1 } }),
+      todo({ id: 'nodate', recurrence: weekly }),
+      todo({ id: 'rep', softDeadline: '2026-11-16', recurrence: weekly, repeatable: { cooldownMin: 0, completions: [] } }),
+      todo({ id: 'ended', softDeadline: '2026-11-16', recurrence: { ...weekly, until: '2026-11-20' } })
+    ]
+    expect(weeklyRollover(list, now)).toEqual([])
   })
 })
