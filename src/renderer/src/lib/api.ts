@@ -6,6 +6,7 @@ import type { DiscordApi } from '@shared/discord'
 import type { UpdateApi } from '@shared/update'
 import type { AppTimeApi } from '@shared/apptime'
 import type { LauncherApi } from '@shared/launcher'
+import type { ObsidianApi } from '@shared/notes'
 
 export interface FileFilter {
   name: string
@@ -55,6 +56,8 @@ export interface PlannerApi {
   appTime?: AppTimeApi
   /** only in the desktop app */
   launcher?: LauncherApi
+  /** only in the desktop app */
+  obsidian?: ObsidianApi
 }
 
 declare global {

@@ -1,6 +1,6 @@
 # Obsidian-Anbindung – Konzept
 
-**Status:** Konzept (26. November 2026), noch nicht gebaut.
+**Status:** Stufe 1 gebaut (26. November 2026). Vorschau (1b) und die weiteren Stufen sind Konzept.
 
 ## Ausgangslage
 

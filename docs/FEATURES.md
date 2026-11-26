@@ -293,6 +293,25 @@ Technik und Entscheidungen: [GOOGLE-SYNC.md](GOOGLE-SYNC.md)
 
 Konzept und Entscheidungen: [DISCORD.md](DISCORD.md)
 
+## Obsidian-Notizen
+
+- **Vaults wählen** unter *Optionen → Obsidian*: Ember Planner schlägt die Vaults vor, die Obsidian selbst kennt.
+  Vorausgewählt sind die im gemeinsamen Ordner, weitere Ordner lassen sich hinzufügen. Die Vaults werden **nur gelesen**,
+  nie beschrieben
+- **Notizen verknüpfen** an Terminen, ToDos, Listen und Projekten sowie Termin-Vorlagen: „+ Notiz“ öffnet eine
+  Schnellsuche über Titel, Aliase, Ordner und Tags, filterbar nach dem `Type` aus dem Frontmatter. `↵` verknüpft,
+  das Fenster bleibt für weitere Notizen offen
+- Ein Klick auf eine Notiz öffnet sie in Obsidian. Notizen einer Liste oder eines Projekts erscheinen bei jedem ToDo darin
+  gestrichelt („von Projekt / Liste“)
+- Jeder neue Termin aus einer Vorlage bekommt deren Notizen, z. B. die Kampagnen-Übersicht an jeder Session
+- **Befehlspalette** (`Strg+K`) findet auch Notizen und öffnet sie direkt
+- Umbenannte oder verschobene Notizen werden über den Dateinamen wiedergefunden, fehlende als „nicht gefunden“ markiert.
+  Der Index aktualisiert sich, sobald sich Dateien im Vault ändern (auch durch Remotely Save). Vorlagen-Ordner von
+  Templates und Templater werden ausgelassen
+- Verknüpfungen bleiben lokal und gehen nicht zu Google oder Discord
+
+Konzept und Stufen: [OBSIDIAN.md](OBSIDIAN.md)
+
 ## Daten & Technik
 
 - Lokale JSON-Datei `%APPDATA%\Ember Planner\data.json`, atomar geschrieben; defekte Dateien werden gesichert statt überschrieben
@@ -304,7 +323,7 @@ Konzept und Entscheidungen: [DISCORD.md](DISCORD.md)
 - **Import:** JSON-Sicherung (ersetzt alle Daten) · Markdown mit Tasks-Zeilen (fügt ToDos samt Unteraufgaben zum Eingang hinzu) –
   beides mit `Strg+Z` rückgängig
 - Google-Anmeldung (`google-auth.bin`, verschlüsselt) und Sync-Zustand (`google-sync.json`) liegen getrennt von `data.json`
-- Datenmodell vorbereitet für Obsidian-Quellen (Datei + Zeile)
+- Datenmodell vorbereitet für ToDos aus Obsidian (Datei + Zeile) für einen späteren Tasks-Sync
 - **Automatisierte Tests** (`npm test`, Vitest): Wiederholungen, iCalendar-Regeln, Google-Mapping, Sync und Hochladen,
   Schnelleingabe, Tasks-Format, Feiertage, Export/Import, Board-Gliederung, Markdown- und Canvas-Export
 - **Windows-Installer** (`npm run dist`, electron-builder/NSIS): pro Benutzer ohne Adminrechte, Startmenü- und
@@ -320,7 +339,7 @@ Konzept und Entscheidungen: [DISCORD.md](DISCORD.md)
 - Nur **Windows** getestet; Installer ist nicht signiert (SmartScreen fragt beim ersten Installieren nach)
 - **Sync nur mit Google Kalender** – ToDos werden nicht zwischen Geräten abgeglichen
 - Google-Serien in einer anderen Zeitzone als der des PCs können rund um die Zeitumstellung um eine Stunde abweichen; `RDATE` wird nicht unterstützt
-- **Keine Obsidian-Anbindung** (nur das Format ist vorbereitet)
+- Obsidian: nur Notizen verknüpfen und öffnen; keine Vorschau in der App und kein Abgleich von ToDos im Tasks-Format
 - Mehrtägige Termine mit Uhrzeit erscheinen in Tag und Woche pro Tag als eigenes Stück im Raster
 - Ein einzeln geänderter Termin einer Google-Serie kann nicht in einen anderen Kalender wandern (dort wird er als eigener Termin angelegt)
 - Discord: nur einzelne Termine lassen sich ankündigen (Serien: erst „Nur diesen Termin“), nur in Sprachkanälen oder mit Ort,

@@ -1,10 +1,12 @@
 import { useMemo } from 'react'
-import { BookMarked, CalendarClock, Megaphone, Trash2 } from 'lucide-react'
+import { BookMarked, BookOpen, CalendarClock, Megaphone, Trash2 } from 'lucide-react'
 import type { EventTemplate } from '@shared/types'
 import { nextPlaceholder, templateKey, templateSessions } from '@shared/templates'
 import { useStore, writableCalendars } from '../../store'
 import { calVar } from '../../lib/theme'
 import { fmt, formatDuration, WEEKDAY_SHORT } from '../../lib/dates'
+import { api } from '../../lib/api'
+import { NoteLinksField } from '../notes/NoteLinks'
 
 const DURATIONS = [15, 30, 45, 60, 90, 120, 180, 240, 300, 360, 480]
 const RHYTHMS = [
@@ -109,6 +111,12 @@ export function TemplatesSection(): React.JSX.Element {
                     onChange={(e) => set({ location: e.target.value || undefined })}
                   />
                 </div>
+                {api.obsidian && (
+                  <div className="tpl-fields" title="Jeder neue Termin aus dieser Vorlage bekommt diese Notizen">
+                    <BookOpen size={14} className="muted" />
+                    <NoteLinksField bare links={t.noteLinks} onChange={(noteLinks) => set({ noteLinks: noteLinks.length ? noteLinks : undefined })} />
+                  </div>
+                )}
                 <div className="tpl-fields tpl-session">
                   <CalendarClock size={14} className="muted" />
                   <span className="muted">Nächste Session vormerken</span>

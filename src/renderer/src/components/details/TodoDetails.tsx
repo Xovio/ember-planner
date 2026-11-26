@@ -13,6 +13,8 @@ import { TodoCheck } from '../todos/TodoItem'
 import { DatePicker } from '../ui/DatePicker'
 import { COOLDOWN_OPTIONS, cooldownLabel, formatLeft, lastCompletion, makeRepeatable } from '@shared/repeatable'
 import { useCooldown } from '../../lib/todos'
+import { inheritedLinks } from '@shared/notes'
+import { NoteLinksField } from '../notes/NoteLinks'
 
 /** ToDo editor inside the right panel. Every change saves immediately and is undoable. */
 export function TodoDetails({ id }: { id: string }): React.JSX.Element {
@@ -38,6 +40,7 @@ export function TodoDetails({ id }: { id: string }): React.JSX.Element {
   const softAfterHard = todo.softDeadline && todo.hardDeadline && todo.softDeadline > todo.hardDeadline
   const tasksLine = toTasksLine(todo, data.categories)
   const list = data.lists.find((l) => l.id === todo.listId)
+  const project = list?.parentId ? data.lists.find((l) => l.id === list.parentId) : undefined
 
   return (
     <div className="details" style={{ '--c': calVar(list?.color ?? 'red') } as React.CSSProperties}>
@@ -246,6 +249,13 @@ export function TodoDetails({ id }: { id: string }): React.JSX.Element {
           <AlignLeft size={16} className="field-icon" />
           <textarea className="input textarea" placeholder="Notizen" rows={4} value={todo.notes ?? ''} onChange={(e) => set({ notes: e.target.value }, 'notes')} />
         </div>
+
+        <NoteLinksField
+          links={todo.noteLinks}
+          onChange={(noteLinks) => set({ noteLinks })}
+          inherited={inheritedLinks(todo.noteLinks, project?.noteLinks, list?.noteLinks)}
+          inheritedLabel={project ? `von ${project.name} / ${list?.name}` : `von ${list?.name}`}
+        />
 
         <div className="obsidian-preview">
           <div className="obsidian-head">

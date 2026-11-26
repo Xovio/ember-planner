@@ -4,6 +4,7 @@ import { api } from './lib/api'
 import { applyTheme, applyLook } from './lib/theme'
 import { playChime } from './lib/chime'
 import { usePointsSync } from './lib/pointsSync'
+import { useNoteIndexSync } from './lib/notes'
 import { TitleBar } from './components/TitleBar'
 import { NavRail } from './components/NavRail'
 import { ActivePage } from './plugins/ActivePage'
@@ -26,6 +27,7 @@ export function App(): React.JSX.Element {
   const theme = data?.settings.theme
   const font = data?.settings.font ?? 'default'
   const corners = data?.settings.corners ?? 'soft'
+  useNoteIndexSync()
 
   useEffect(() => {
     void useStore.getState().init()

@@ -20,6 +20,7 @@ import { weekdayIndex } from '@shared/recurrence'
 import { isFirstOccurrence } from '@shared/series'
 import { isCalendarLocked } from '@shared/google'
 import { isEventLocked, useStore } from '../../store'
+import { NoteLinksField } from '../notes/NoteLinks'
 import { calVar } from '../../lib/theme'
 import {
   REMINDER_PRESETS,
@@ -534,6 +535,8 @@ export function EventDetails({ id, occurrenceStart }: { id: string; occurrenceSt
             onChange={(e) => set({ notes: e.target.value }, 'notes')}
           />
         </div>
+
+        <NoteLinksField links={ev.noteLinks} onChange={(noteLinks) => set({ noteLinks })} />
 
         <p className="details-foot">Änderungen werden sofort gespeichert · Strg+Z macht sie rückgängig</p>
       </fieldset>

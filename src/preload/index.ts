@@ -7,6 +7,7 @@ import type { BackupInfo } from '../main/backup'
 import type { UpdateApi, UpdateInfo } from '@shared/update'
 import type { AppTimeApi, AppTimeState } from '@shared/apptime'
 import type { LauncherApi } from '@shared/launcher'
+import type { NoteEntry, ObsidianApi, VaultRef } from '@shared/notes'
 
 interface FileFilter {
   name: string
@@ -62,6 +63,14 @@ const launcher: LauncherApi = {
   pathOf: (file: File) => webUtils.getPathForFile(file)
 }
 
+const obsidian: ObsidianApi = {
+  discover: () => ipcRenderer.invoke('obsidian:discover'),
+  index: (vaults: VaultRef[]) => ipcRenderer.invoke('obsidian:index', vaults),
+  onChanged: (cb: (entries: NoteEntry[]) => void) => listen('obsidian:changed', cb),
+  open: (absPath: string) => ipcRenderer.invoke('obsidian:open', absPath),
+  pickFolder: () => ipcRenderer.invoke('obsidian:pickFolder')
+}
+
 function listen<T>(channel: string, cb: (payload: T) => void): () => void {
   const handler = (_e: IpcRendererEvent, payload: T): void => cb(payload)
   ipcRenderer.on(channel, handler)
@@ -95,7 +104,8 @@ const api = {
   discord,
   updates,
   appTime,
-  launcher
+  launcher,
+  obsidian
 }
 
 export type ElectronApi = typeof api
