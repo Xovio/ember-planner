@@ -349,6 +349,29 @@ export interface Repeatable {
   completions: ISODateTime[]
 }
 
+/** reusable preset for ToDos ("Wohnung putzen" with its checklist): every use makes a fresh ToDo */
+export interface TodoTemplate {
+  id: string
+  name: string
+  /** title of new ToDos (falls back to the name) */
+  title: string
+  listId?: string
+  categoryId?: string
+  priority: Priority
+  difficulty?: Difficulty
+  /** checklist items; every new ToDo starts with all of them open */
+  subtasks: string[]
+  estimateMin?: number
+  notes?: string
+  /** deadlines relative to the day the ToDo is made: 0 = same day */
+  hardInDays?: number
+  softInDays?: number
+  /** how often it was used (for sorting) */
+  uses?: number
+  createdAt: ISODateTime
+  updatedAt: ISODateTime
+}
+
 /** days a deleted ToDo stays in the trash */
 export const TRASH_DAYS = 30
 /** done ToDos older than this many days move to the archive view */
@@ -460,6 +483,7 @@ export interface AppData {
   /** deleted events (series together with their changed occurrences), restorable for TRASH_DAYS */
   eventTrash: CalendarEvent[]
   templates: EventTemplate[]
+  todoTemplates: TodoTemplate[]
   boards: Board[]
   goals: WeeklyGoal[]
   points: PointsLedger
@@ -577,6 +601,7 @@ export function createDefaultData(): AppData {
     trash: [],
     eventTrash: [],
     templates: [],
+    todoTemplates: [],
     boards: [],
     goals: [],
     points: { since: new Date().toISOString(), entries: {} },
@@ -601,6 +626,7 @@ export function normalizeData(raw: Partial<AppData> | null | undefined): AppData
     trash: raw.trash ?? [],
     eventTrash: raw.eventTrash ?? [],
     templates: raw.templates ?? [],
+    todoTemplates: (raw.todoTemplates ?? []).map((t) => ({ ...t, subtasks: t.subtasks ?? [], priority: t.priority ?? 0 })),
     boards: (raw.boards ?? []).map((b) => ({ ...b, notes: b.notes ?? [], frames: b.frames ?? [], edges: b.edges ?? [] })),
     goals: raw.goals ?? [],
     points: raw.points?.since ? { since: raw.points.since, entries: raw.points.entries ?? {} } : base.points,
