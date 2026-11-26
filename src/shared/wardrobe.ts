@@ -21,7 +21,17 @@ export const HAIR_STYLES: { id: string; name: string }[] = [
   { id: 'ponytail', name: 'Zopf' },
   { id: 'pigtails', name: 'Zwei Zöpfe' },
   { id: 'braid', name: 'Flechtzopf' },
+  { id: 'shoulder', name: 'Mittellang' },
+  { id: 'dreads', name: 'Dreadlocks' },
+  { id: 'sidepart', name: 'Seitenscheitel' },
+  { id: 'quiff', name: 'Tolle' },
+  { id: 'slick', name: 'Zurückgegelt' },
+  { id: 'messy', name: 'Strubbelig' },
+  { id: 'spiky', name: 'Stachelig' },
+  { id: 'crop', name: 'Fransen-Kurz' },
+  { id: 'manbun', name: 'Männerdutt' },
   { id: 'undercut', name: 'Undercut' },
+  { id: 'mohawk', name: 'Iro' },
   { id: 'buzz', name: 'Raspel' },
   { id: 'bald', name: 'Glatze' }
 ]

@@ -294,7 +294,37 @@ function BackHair({ style, c }: { style: string; c: Ramp }): React.JSX.Element |
     }
     case 'short':
     case 'braid':
+    case 'sidepart':
+    case 'quiff':
+    case 'spiky':
+    case 'messy':
+    case 'slick':
       return shortBack
+    case 'manbun':
+      return (
+        <g>
+          {shortBack}
+          <circle cx="100" cy="20" r="14" {...p} />
+          <path d="M90 32 Q100 36 110 32" fill="none" stroke={c.line} strokeWidth="3" />
+        </g>
+      )
+    case 'shoulder':
+      return <path d="M36 100 Q30 30 100 26 Q170 30 164 100 L166 152 Q158 164 148 156 L146 110 L54 110 L52 156 Q42 164 34 152 Z" {...p} />
+    case 'dreads': {
+      const xs = [40, 52, 64, 136, 148, 160]
+      return (
+        <g>
+          {shortBack}
+          {xs.map((x) => (
+            <g key={x}>
+              <path d={`M${x} 84 L${x + (x < 100 ? -2 : 2)} 168`} stroke={c.line} strokeWidth="14" />
+              <path d={`M${x} 84 L${x + (x < 100 ? -2 : 2)} 168`} stroke={c.base} strokeWidth="9" />
+              <path d={`M${x - 4} 110 l8 -2 M${x - 4} 136 l8 -2`} stroke={c.shade} strokeWidth="1.6" />
+            </g>
+          ))}
+        </g>
+      )
+    }
     case 'ponytail':
       return (
         <g>
@@ -312,6 +342,8 @@ function BackHair({ style, c }: { style: string; c: Ramp }): React.JSX.Element |
         </g>
       )
     case 'undercut':
+    case 'crop':
+    case 'mohawk':
     case 'buzz':
     case 'bald':
       return null
@@ -400,6 +432,83 @@ function FrontHair({ style, c, skin }: { style: string; c: Ramp; skin: Ramp }): 
           <path d="M154 92 Q155 76 149 66 Q146 78 147 92 Z" fill={c.base} opacity=".3" />
           <path d="M50 72 Q50 26 104 24 Q160 28 152 72 Q140 58 120 60 Q96 50 78 62 Q62 60 50 72 Z" {...p} />
           <path d="M66 42 Q86 30 110 32" fill="none" stroke={c.light} strokeWidth="4" />
+        </g>
+      )
+    case 'sidepart':
+      return (
+        <g>
+          <path d="M44 94 Q40 36 100 32 Q160 36 156 94 Q152 76 140 70 Q118 62 86 62 Q76 64 70 58 Q60 70 52 80 Q46 86 44 94 Z" {...p} />
+          <path d="M70 58 Q66 46 72 36" fill="none" stroke={c.line} strokeWidth="2.2" />
+          <path d="M82 46 Q106 38 132 48" fill="none" stroke={c.light} strokeWidth="4" />
+        </g>
+      )
+    case 'quiff':
+      return (
+        <g>
+          <path d="M46 92 Q42 52 58 40 Q66 14 102 12 Q140 12 150 40 Q158 56 154 92 Q148 74 132 68 Q110 62 92 64 Q70 64 58 76 Q50 82 46 92 Z" {...p} />
+          <path d="M60 72 Q62 40 96 30 Q124 22 146 42 Q126 34 106 40 Q80 48 74 70 Z" fill={c.shade} opacity=".55" />
+          <path d="M60 72 Q62 40 96 30 Q124 22 146 42" fill="none" stroke={c.line} strokeWidth="2.2" />
+          <path d="M80 22 Q102 14 126 20" fill="none" stroke={c.light} strokeWidth="5" />
+        </g>
+      )
+    case 'spiky':
+      return (
+        <g>
+          <path d="M44 94 Q40 62 48 50 L38 32 L62 38 L64 14 L84 30 L100 6 L114 30 L136 14 L136 38 L162 32 L152 52 Q160 64 156 94 Q148 76 134 72 L122 80 L112 66 L98 78 L86 66 L74 78 Q56 76 44 94 Z" {...p} />
+          <path d="M72 40 L66 24 M100 34 L100 16 M126 40 L132 24" fill="none" stroke={c.light} strokeWidth="3.5" />
+        </g>
+      )
+    case 'messy':
+      return (
+        <g>
+          <path d="M44 94 Q38 40 70 32 Q76 18 92 26 Q102 12 116 26 Q132 20 136 34 Q162 42 156 94 Q150 76 138 72 L130 82 Q122 70 112 76 L104 66 Q96 78 86 72 L76 82 Q66 72 56 82 Q48 86 44 94 Z" {...p} />
+          <path d="M102 22 Q96 8 110 4" fill="none" stroke={c.line} strokeWidth="3" />
+          <path d="M64 50 Q78 40 94 42" fill="none" stroke={c.light} strokeWidth="4" />
+        </g>
+      )
+    case 'crop':
+      return (
+        <g>
+          <path d="M46 94 Q45 80 50 72 Q53 82 52 94 Z" fill={c.base} opacity=".35" />
+          <path d="M154 94 Q155 80 150 72 Q147 82 148 94 Z" fill={c.base} opacity=".35" />
+          <path d="M48 82 Q46 34 100 32 Q154 34 152 82 L150 76 Q100 70 50 76 Z" {...p} />
+          <path d="M68 74 L70 64 M84 73 L86 62 M100 72 L102 62 M116 73 L118 62 M132 74 L134 64" fill="none" stroke={c.line} strokeWidth="1.8" />
+          <path d="M66 46 Q86 38 108 40" fill="none" stroke={c.light} strokeWidth="4" />
+        </g>
+      )
+    case 'slick':
+    case 'manbun':
+      return (
+        <g>
+          <path d="M46 88 Q44 32 100 28 Q156 32 154 88 Q150 66 138 58 Q120 50 100 50 Q80 50 62 58 Q50 66 46 88 Z" {...p} />
+          <path d="M66 52 Q88 38 122 40 M80 50 Q102 44 132 50" fill="none" stroke={c.shade} strokeWidth="2.2" />
+          <path d="M70 42 Q90 32 112 34" fill="none" stroke={c.light} strokeWidth="4" />
+        </g>
+      )
+    case 'mohawk':
+      return (
+        <g>
+          <path d="M46 90 Q44 44 100 42 Q156 44 154 90 Q148 70 100 66 Q52 70 46 90 Z" fill={c.base} opacity=".4" stroke={c.line} strokeOpacity=".3" strokeWidth="2" />
+          <path d="M84 66 Q78 32 86 8 Q100 -4 114 8 Q122 32 116 66 Q100 60 84 66 Z" {...p} />
+          <path d="M94 14 Q92 32 94 52" fill="none" stroke={c.light} strokeWidth="4" />
+        </g>
+      )
+    case 'shoulder':
+      return (
+        <g>
+          <path d="M42 100 Q38 34 100 30 Q162 34 158 100 Q150 76 132 68 Q112 60 102 44 Q90 60 68 68 Q50 76 42 100 Z" {...p} />
+          <path d="M62 54 Q78 42 94 42" fill="none" stroke={c.light} strokeWidth="4" />
+          <path d="M112 44 Q128 46 140 58" fill="none" stroke={c.light} strokeWidth="3" />
+        </g>
+      )
+    case 'dreads':
+      return (
+        <g>
+          <path d="M44 92 Q42 38 100 34 Q158 38 156 92 Q148 74 128 70 Q100 62 72 70 Q52 74 44 92 Z" {...p} />
+          {[64, 82, 100, 118, 136].map((x) => (
+            <path key={x} d={`M${x} 40 Q${x - 2} 56 ${x + 2} 68`} fill="none" stroke={c.shade} strokeWidth="2" />
+          ))}
+          <path d="M66 50 Q80 42 96 42" fill="none" stroke={c.light} strokeWidth="3.5" />
         </g>
       )
     case 'buzz':
