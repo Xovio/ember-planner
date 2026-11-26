@@ -210,7 +210,7 @@ export function RoomScene({
     const [x, y] = placer(f, p)(sx, sy, sz)
     return (
       <g transform={mirrorAt(x)}>
-        <g transform={`translate(${x - AV_W / 2} ${y - (AV_H * 272) / 310})`} className="room-avatar">
+        <g transform={`translate(${x - AV_W / 2} ${y - (AV_H * (live!.idle?.sit === 'seat' ? 272 : 296)) / 310})`} className="room-avatar">
           {figure()}
         </g>
       </g>

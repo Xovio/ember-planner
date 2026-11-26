@@ -104,12 +104,16 @@ export const FURNITURE: Furniture[] = [
   }),
   ...furn('bookshelf', 'Bücherregal', 'medium', 'floor', [2, 1], 90, { wood: ['Holz', '#a86e45'], white: ['Creme', '#eadcc4'] }),
   ...furn('desk', 'Schreibtisch', 'medium', 'floor', [2, 1], 100, { wood: ['Holz', '#c48a56'], dark: ['Nussbaum', '#8a5a3a'] }),
+  ...furn('guitar', 'Gitarre', 'medium', 'floor', [1, 1], 120, { natural: ['Natur', '#d9a066'], red: ['Rot', '#c2484a'], black: ['Schwarz', '#3a3540'] }),
   ...furn('dresser', 'Kommode', 'medium', 'floor', [2, 1], 80, { wood: ['Holz', '#b8794a'], sage: ['Salbei', '#9cbfa4'], rose: ['Rosé', '#e7b0b8'] }),
 
   /* large 150–300 */
   ...furn('sofa', 'Sofa', 'large', 'floor', [2, 1], 180, { sage: ['Salbei', '#8fb59a'], terracotta: ['Terrakotta', '#d9825f'], navy: ['Nachtblau', '#5a6a9c'] }),
   ...furn('bed', 'Bett', 'large', 'floor', [2, 3], 220, { sage: ['Salbei', '#8fb59a'], lavender: ['Lavendel', '#a998d8'], coral: ['Koralle', '#e5807a'] }),
   ...furn('fireplace', 'Kamin', 'large', 'floor', [2, 1], 300, { stone: ['Stein', '#d8c4b0'], brick: ['Ziegel', '#c27a62'] }),
+  ...furn('dndtable', 'D&D-Tisch', 'large', 'floor', [2, 2], 220, { green: ['Grün', '#4f8a5c'], blue: ['Blau', '#4a6a9c'] }),
+  ...furn('kitchen', 'Küchenzeile', 'large', 'floor', [2, 1], 260, { cream: ['Creme', '#eadcc4'], sage: ['Salbei', '#9cbfa4'], navy: ['Nachtblau', '#5a6a9c'] }),
+  ...furn('tv', 'Fernseher mit Konsole', 'large', 'floor', [2, 1], 180, { wood: ['Holz', '#b8794a'], white: ['Weiß', '#e8e2d8'] }),
 
   /* rugs */
   ...furn('rug', 'Teppich', 'rug', 'rug', [3, 2], 60, {
@@ -132,6 +136,7 @@ export const FURNITURE: Furniture[] = [
   ...furn('basketshelf', 'Korbregal', 'special', 'floor', [2, 1], 120, { wood: ['Holz', '#c9a27a'] }, { unlock: { attr: 'order', level: 3 } }),
   ...furn('hangchair', 'Hängesessel', 'special', 'floor', [1, 1], 180, { cream: ['Creme', '#efe2c8'] }, { unlock: { attr: 'stamina', level: 4 } }),
   ...furn('telescope', 'Teleskop', 'special', 'floor', [1, 1], 200, { navy: ['Nachtblau', '#4a5a8c'] }, { unlock: { attr: 'mind', level: 4 } }),
+  ...furn('treadmill', 'Laufband', 'special', 'floor', [1, 2], 200, { grey: ['Grau', '#8a8792'], coral: ['Koralle', '#e5615a'] }, { unlock: { attr: 'fitness', level: 2 } }),
   ...furn('gametable', 'Spieltisch', 'special', 'floor', [2, 2], 250, { green: ['Grün', '#5f9a6a'], wine: ['Weinrot', '#9c4a5a'] }, { unlock: { attr: 'social', level: 4 } }),
 
   /* wallpaper 80–150 (style = pattern) */
@@ -161,7 +166,7 @@ export const FURNITURE: Furniture[] = [
 export const furnitureById = (id: string | undefined): Furniture | undefined => (id ? FURNITURE.find((f) => f.id === id) : undefined)
 
 /** things that give light in the evening */
-export const LIGHT_STYLES = new Set(['lamp', 'candles', 'fireplace', 'lights'])
+export const LIGHT_STYLES = new Set(['lamp', 'candles', 'fireplace', 'lights', 'tv'])
 
 /* ── ownership ── */
 

@@ -45,7 +45,12 @@ export const IDLES: IdleDef[] = [
   { id: 'paint', name: 'Malen', price: 0, needs: ['easel'], spot: 'beside', sit: 'stand' },
   { id: 'lift', name: 'Hanteln stemmen', price: 0, needs: ['bench'], spot: 'beside', sit: 'stand' },
   { id: 'stargaze', name: 'Sterne gucken', price: 0, needs: ['telescope'], spot: 'beside', sit: 'stand' },
-  { id: 'dice', name: 'Würfeln', price: 0, needs: ['gametable'], spot: 'beside', sit: 'chair' }
+  { id: 'dice', name: 'Würfeln', price: 0, needs: ['gametable', 'dndtable'], spot: 'beside', sit: 'chair' },
+  { id: 'gm', name: 'Spielleiten', price: 0, needs: ['dndtable'], spot: 'beside', sit: 'chair' },
+  { id: 'guitar', name: 'Gitarre spielen', price: 0, needs: ['guitar'], spot: 'beside', sit: 'chair' },
+  { id: 'cook', name: 'Kochen', price: 0, needs: ['kitchen'], spot: 'front', sit: 'stand' },
+  { id: 'run', name: 'Laufen', price: 0, needs: ['treadmill'], spot: 'seat', sit: 'stand' },
+  { id: 'game', name: 'Zocken', price: 0, needs: ['tv'], spot: 'front', sit: 'floor' }
 ]
 
 export const idleById = (id: string | undefined): IdleDef | undefined => IDLES.find((i) => i.id === id)
@@ -61,7 +66,9 @@ export const SEATS: Record<string, [number, number, number][]> = {
   ],
   armchair: [[0.5, 0.62, 10]],
   beanbag: [[0.5, 0.68, 7]],
-  bed: [[1, 1.35, 16]]
+  bed: [[1, 1.35, 16]],
+  /** standing on the belt */
+  treadmill: [[0.5, 1.05, 5.5]]
 }
 
 /* ── what the character can do ── */

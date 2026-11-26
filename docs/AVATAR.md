@@ -125,8 +125,8 @@ Zimmer steht eine Hantelbank, stemmt sie Hanteln. Passt nichts, laufen einfach d
   | D&D / Spiele | D&D, DnD, Session, Spieleabend, Pen & Paper | Würfeln am D&D-Tisch bzw. Spieltisch | Freudenhüpfer, Tanzen |
   | Feiern | Party, Feier, Konzert, Geburtstag | Tanzen, Winken | Nickerchen |
 
-- **D&D-Tisch** als eigenes Möbel (Spielmatte, Bildschirm des Spielleiters, Miniaturen, Würfel) – neben dem
-  vorhandenen Spieltisch, löst ebenfalls „Würfeln“ aus
+- **D&D-Tisch** ✅ (Spielmatte, Schirm des Spielleiters, Miniaturen, W20): „Würfeln“ und „Spielleiten“. Ebenfalls schon da:
+  Gitarre, Küchenzeile (Kochen), Laufband (Laufen), Fernseher mit Konsole (Zocken)
 - **Ablauf in `useIdleActor`:** während eines Termins ist eine Animation aus der passenden Gruppe die bevorzugte Wahl
   (z. B. 2 von 3 Runden), dazwischen normale, damit es nicht eintönig wird. Festgepinnte Animation, Einrichten-Modus und
   „Bewegung reduzieren“ haben Vorrang. Nur Animationen, die man besitzt und nicht ausgeschaltet hat

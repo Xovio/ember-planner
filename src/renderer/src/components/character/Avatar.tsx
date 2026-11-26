@@ -72,7 +72,7 @@ export function Avatar({
       viewBox="-10 -30 220 310"
       width={size}
       height={(size * 310) / 220}
-      className={`avatar ${animate ? 'animated' : ''} ${action ? `act-${action}` : ''} ${walking ? 'walking' : ''}`}
+      className={`avatar ${animate ? 'animated' : ''} ${action ? `act-${action}` : ''} ${walking || action === 'run' ? 'walking' : ''}`}
       role="img"
       aria-label={title ?? 'Dein Charakter'}
       strokeLinejoin="round"
@@ -1224,7 +1224,12 @@ const ACTION_ARMS: Record<string, Arms> = {
   lift: { l: ['M74 158 Q52 180 58 150', [58, 146]], r: ['M126 158 Q148 180 142 150', [142, 146]], lc: 'av-lift', rc: 'av-lift av-lift-late' },
   stargaze: { l: L_REST, r: ['M126 158 Q148 140 156 112', [158, 106]] },
   dice: { l: L_REST, r: ['M126 158 Q146 168 156 176', [158, 178]], rc: 'av-throw' },
-  warm: { l: ['M74 158 Q64 182 80 190', [82, 192]], r: ['M126 158 Q136 182 120 190', [118, 192]] }
+  warm: { l: ['M74 158 Q64 182 80 190', [82, 192]], r: ['M126 158 Q136 182 120 190', [118, 192]] },
+  gm: { l: ['M74 158 Q64 180 76 176', [77, 174]], r: ['M126 158 Q136 180 124 176', [123, 174]] },
+  guitar: { l: ['M74 158 Q56 178 52 170', [52, 170]], r: ['M126 158 Q134 186 114 196', [112, 196]], rc: 'av-strum' },
+  cook: { l: ['M74 158 Q64 182 80 190', [82, 190]], r: ['M126 158 Q138 178 120 182', [118, 182]], rc: 'av-stir' },
+  run: { l: ['M74 158 Q60 172 66 188', [68, 190]], r: ['M126 158 Q140 172 134 188', [132, 190]], lc: 'av-swing-l', rc: 'av-swing-r' },
+  game: { l: ['M74 158 Q68 186 88 194', [90, 195]], r: ['M126 158 Q132 186 112 194', [110, 195]], lc: 'av-type-l', rc: 'av-type-r' }
 }
 
 /** a plain wooden chair behind and under the character */
@@ -1257,6 +1262,16 @@ function CrossedLegs({ c, s }: { c: Ramp; s: Ramp }): React.JSX.Element {
 
 /** props behind the arms (held from the sides) */
 function PropsBehind({ action }: { action: string }): React.JSX.Element | null {
+  if (action === 'gm') {
+    return (
+      <g className="av-book" stroke="#8a6a4a" strokeWidth="2">
+        <rect x="74" y="152" width="52" height="34" rx="2" fill="#f3e6c8" />
+        <rect x="70" y="148" width="8" height="42" rx="4" fill="#e3d2b4" />
+        <rect x="122" y="148" width="8" height="42" rx="4" fill="#e3d2b4" />
+        <path d="M84 162 H116 M84 170 H110 M84 178 H114" stroke="#b09878" strokeWidth="1.6" />
+      </g>
+    )
+  }
   if (action === 'read' || action === 'browse') {
     const c = ramp(action === 'read' ? '#5a8fb8' : '#c2685a')
     return (
@@ -1324,6 +1339,52 @@ function PropsFront({ action }: { action: string }): React.JSX.Element | null {
           ))}
         </g>
       )
+    case 'guitar': {
+      const c = ramp('#d9a066')
+      return (
+        <g transform="rotate(20 100 198)" stroke={c.line} strokeWidth="2">
+          <rect x="34" y="195" width="50" height="7" rx="2" fill="#6a4a32" />
+          <rect x="24" y="193" width="12" height="11" rx="2" fill="#4a3424" />
+          <ellipse cx="88" cy="198" rx="15" ry="14" fill={c.base} />
+          <ellipse cx="110" cy="198" rx="20" ry="18" fill={c.base} />
+          <rect x="88" y="186" width="16" height="24" fill={c.base} stroke="none" />
+          <circle cx="98" cy="198" r="5" fill="#3a2a22" />
+          <path d="M30 197.5 H116 M30 200.5 H116" stroke="#f3ead8" strokeWidth=".6" />
+        </g>
+      )
+    }
+    case 'cook':
+      return (
+        <g>
+          {[0, 1, 2].map((i) => (
+            <path
+              key={i}
+              className="av-float"
+              style={{ animationDelay: `${i * 0.9}s` }}
+              d={`M${92 + i * 8} 182 q-3 -5 0 -10 q3 -5 0 -10`}
+              fill="none"
+              stroke="#f3ead8"
+              strokeWidth="2"
+              opacity=".8"
+            />
+          ))}
+          <g stroke="#8a3a3a" strokeWidth="2">
+            <path d="M74 188 h52 v14 a8 8 0 0 1 -8 8 h-36 a8 8 0 0 1 -8 -8 Z" fill="#e5615a" />
+            <ellipse cx="100" cy="188" rx="26" ry="5" fill="#c2484a" />
+            <path d="M74 192 h-6 M126 192 h6" strokeWidth="3" />
+          </g>
+          <path className="av-stir" d="M118 182 L104 190" stroke="#c48a56" strokeWidth="3.5" />
+        </g>
+      )
+    case 'game':
+      return (
+        <g stroke="#2e2a36" strokeWidth="2">
+          <path d="M84 190 h32 a8 8 0 0 1 8 8 l-2 6 a5 5 0 0 1 -9 1 l-3 -5 h-20 l-3 5 a5 5 0 0 1 -9 -1 l-2 -6 a8 8 0 0 1 8 -8 Z" fill="#4a4458" />
+          <circle cx="92" cy="196" r="2" fill="#8cc4e8" stroke="none" />
+          <circle cx="110" cy="195" r="1.8" fill="#e5615a" stroke="none" />
+          <circle cx="114" cy="198" r="1.8" fill="#8fb59a" stroke="none" />
+        </g>
+      )
     case 'dice':
       return (
         <g className="av-die">
@@ -1368,7 +1429,13 @@ function HeadFx({ action }: { action: string }): React.JSX.Element | null {
   switch (action) {
     case 'hum':
     case 'dance':
+    case 'guitar':
       return <g>{[note(164, 60, 0, 1), note(176, 40, 1.2, 2)]}</g>
+    case 'gm':
+    case 'game':
+      return <g>{[spark(40, 50, 0, 1), spark(168, 40, 1.1, 2)]}</g>
+    case 'run':
+      return <path className="av-float" d="M152 70 q4 6 0 9 q-4 -3 0 -9Z" fill="#8cc4e8" />
     case 'nap':
     case 'relax':
       return <g>{[z(156, 54, 0, 1, 8), z(168, 36, 1, 2, 11)]}</g>

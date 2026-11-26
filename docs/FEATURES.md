@@ -177,9 +177,10 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
 - **Tapeten** (80–150 Coins: einfarbig, Streifen, Punkte, Blümchen, Holzvertäfelung) und **Böden** (100–200: Dielen, Fischgrät,
   Fliesen, Teppichboden, Schachbrett) im Shop; in der Kiste jederzeit wechseln
 - Im Zimmer steht die Figur in Ruhe-Pose; **Zimmer-Widget** in der Übersicht (Klick öffnet das Zimmer)
-- **Möbel-Shop** mit 28 Formen in Farbvarianten (≈ 50 Teile): Kleinkram 20–50, Möbel 60–120, Groß 150–300 Coins,
+- **Möbel-Shop** mit 33 Formen in Farbvarianten (≈ 60 Teile): Kleinkram 20–50, Möbel 60–120, Groß 150–300 Coins,
+  dazu Gitarre, Küchenzeile, D&D-Tisch und Fernseher mit Konsole,
   Teppiche, Wandsachen (Bild, Uhr, Regal, Lichterkette) und Besonderes ab einem Attribut-Level (Hantelbank, Staffelei,
-  Korbregal, Hängesessel, Teleskop, Spieltisch). Gekauftes landet in der **Kiste**
+  Korbregal, Hängesessel, Teleskop, Spieltisch, Laufband). Gekauftes landet in der **Kiste**
 - **Einrichten-Modus** (Knopf *Einrichten*): Raster erscheint, Möbel anklicken und auf Kacheln ziehen (Wandsachen an der Wand
   entlang); wo kein Platz ist, wird das Feld rot und das Möbel springt zurück. `R` dreht, `Entf` lagert in die Kiste,
   Pfeiltasten verschieben, `Esc` beendet; `Strg+Z` macht jeden Schritt rückgängig. Teppiche liegen unter Möbeln
@@ -188,7 +189,8 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
 - **Idle-Animationen:** Alle 20–40 Sekunden sucht sich die Figur etwas aus und läuft über freie Kacheln hin (bei
   „Bewegung reduzieren“ ohne Laufen). Ab Werk: Umschauen, Strecken und gähnen, Summen. **Möbel bringen eigene mit**
   (Laptop am Schreibtisch, Lesen auf Sofa oder Sessel, Lümmeln im Sitzsack, Nickerchen auf dem Bett, Pflanze gießen,
-  im Regal stöbern, am Kamin wärmen, Malen, Hanteln, Sterne gucken, Würfeln). Im Shop: Winken, Freudenhüpfer, Tanzen,
+  im Regal stöbern, am Kamin wärmen, Malen, Hanteln, Sterne gucken, Würfeln, Spielleiten am D&D-Tisch, Gitarre spielen,
+  Kochen, Laufen auf dem Laufband, Zocken vor dem Fernseher). Im Shop: Winken, Freudenhüpfer, Tanzen,
   Yoga und Meditieren (die letzten beiden ab Attribut-Level). Im Reiter *Animationen* einzeln abspielen, ausschalten oder
   festpinnen; zugestellte Möbel werden dort angezeigt. Im Rollstuhl bleibt die Figur in ihrem Stuhl neben dem Möbel
 - Pflanzen wiegen sich, Kerzen flackern (nur ohne „Bewegung reduzieren“); ist das Fenster verborgen, pausiert alles
