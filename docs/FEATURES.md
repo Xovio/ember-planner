@@ -134,7 +134,7 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
 ## Charakter
 
 - Eigene Seite **Charakter** (linke Leiste) und Widget in der Übersicht: süße Vektor-Figur, die atmet, blinzelt und winkt
-- **Aussehen kostenlos** und frei kombinierbar, ohne festen Geschlechts-Schalter:
+- **Aussehen kostenlos** und frei kombinierbar (erweitert in v0.7), ohne festen Geschlechts-Schalter:
   - Schnellstart-Vorlagen *eher weiblich*, *eher männlich*, *neutral* (setzen nur ein paar Formen)
   - Körper: Statur, Körperform (gerade, kurvig, breite Schultern), Größe, Hautton (12 Töne oder eigener Farbwähler)
   - Gesicht: Gesichtsform, Augenform, Augenfarbe (auch frei), Brauen, Wimpern, Wangenröte, Sommersprossen, Muttermal,
@@ -150,7 +150,7 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
 - **Shop** mit Anprobe (≈ 30 Kleidungsstücke, manche erst ab einem Attribut-Level) und **Kleiderschrank** zum Umziehen
 - Gezählt wird ab dem ersten Start von v0.5; Wieder-Öffnen nimmt Coins zurück, Löschen nicht
 
-### Zimmer
+### Zimmer (v0.7)
 
 - Oben auf der Charakter-Seite umschalten zwischen **Zimmer** und **Figur und Kleidung**
 - **Isometrisches Zimmer** (6×6 Kacheln, zwei Wände, Fenster mit Vorhängen) im Vektor-Chibi-Stil, die Figur steht im Raum
