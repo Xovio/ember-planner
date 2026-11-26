@@ -109,28 +109,41 @@ Zimmer steht eine Hantelbank, stemmt sie Hanteln. Passt nichts, laufen einfach d
 
 - **Wann:** solange ein Termin läuft und danach noch eine Nachwirkzeit (Vorschlag 60 min, einstellbar). Ganztägige
   Termine und Feiertage zählen nicht. Bei mehreren gleichzeitigen gewinnt der, der zuletzt begonnen hat
-- **Erkennen:** Stichwörter im Titel (wie `guessAttr` in `shared/character.ts`, nur mit Tätigkeiten statt Attributen),
-  dazu optional pro Kalender und pro Termin-Vorlage eine feste Tätigkeit. Alles bleibt lokal
-- **Zuordnung** (erste Idee):
+- **Erkennen:** Stichwörter im Titel, pro Sprache eine kurze Liste (zuerst Deutsch und Englisch, z. B. „Gym, Fitness,
+  Training, Sport, workout“). Gleiches Muster wie `guessAttr` in `shared/character.ts`, nur mit Tätigkeiten statt
+  Attributen. Dazu optional pro Kalender und pro Termin-Vorlage eine feste Tätigkeit. Alles bleibt lokal
+- **Tätigkeiten bewusst allgemein** halten, jede ist eine *Gruppe* von Animationen. Die Figur nimmt jedes Mal zufällig
+  eine verfügbare daraus, so wechselt es sich von selbst ab:
 
-  | Termin | Während | Danach |
-  |---|---|---|
-  | Gym, Sport, Training | Hanteln stemmen (Hantelbank) · sonst Yoga · sonst Strecken | Strecken und gähnen, Nickerchen |
-  | Yoga, Meditation | Yoga / Meditieren | Meditieren |
-  | Arbeit, Meeting, Uni | Am Laptop arbeiten (Schreibtisch) | Im Sitzsack lümmeln, Lesen |
-  | Lernen, Lesen | Lesen (Sofa/Sessel) · Im Regal stöbern | Lesen |
-  | D&D, Session, Spieleabend | Würfeln (Spieltisch) | Freudenhüpfer, Tanzen |
-  | Prep, Malen, kreativ | Malen (Staffelei) · Am Laptop arbeiten | Im Regal stöbern |
-  | Feier, Party, Konzert | Tanzen | Nickerchen |
+  | Tätigkeit | Stichwörter (Beispiele) | Animationen während | Danach |
+  |---|---|---|---|
+  | Fitness | Gym, Fitness, Sport, Training, Laufen, workout | Hanteln stemmen (Hantelbank), Yoga, Strecken | Strecken und gähnen, Nickerchen |
+  | Ruhe | Yoga, Meditation, Entspannen | Yoga, Meditieren | Meditieren, Lümmeln |
+  | Arbeit | Arbeit, Meeting, Uni, Vorlesung, work | Am Laptop arbeiten (Schreibtisch) | Im Sitzsack lümmeln, Lesen |
+  | Lernen | Lernen, Lesen, Prüfung, study | Lesen, Im Regal stöbern, Laptop | Lesen |
+  | Kreativ | Prep, Malen, Zeichnen, Schreiben, kreativ | Malen (Staffelei), Laptop, Lesen | Im Regal stöbern |
+  | D&D / Spiele | D&D, DnD, Session, Spieleabend, Pen & Paper | Würfeln am D&D-Tisch bzw. Spieltisch | Freudenhüpfer, Tanzen |
+  | Feiern | Party, Feier, Konzert, Geburtstag | Tanzen, Winken | Nickerchen |
 
-- **Ablauf in `useIdleActor`:** während eines Termins ist die passende Animation die bevorzugte Wahl (z. B. 2 von 3
-  Runden), dazwischen normale, damit es nicht eintönig wird. Festgepinnte Animation, Einrichten-Modus und „Bewegung
-  reduzieren“ haben Vorrang. Nur Animationen, die man besitzt und nicht ausgeschaltet hat
+- **D&D-Tisch** als eigenes Möbel (Spielmatte, Bildschirm des Spielleiters, Miniaturen, Würfel) – neben dem
+  vorhandenen Spieltisch, löst ebenfalls „Würfeln“ aus
+- **Ablauf in `useIdleActor`:** während eines Termins ist eine Animation aus der passenden Gruppe die bevorzugte Wahl
+  (z. B. 2 von 3 Runden), dazwischen normale, damit es nicht eintönig wird. Festgepinnte Animation, Einrichten-Modus und
+  „Bewegung reduzieren“ haben Vorrang. Nur Animationen, die man besitzt und nicht ausgeschaltet hat
 - **Zeigen:** kleiner Hinweis beim Darüberfahren („trainiert gerade – Gym bis 18:30“), Schalter in den Optionen zum Abstellen
 - **Logik testbar** in `shared/idle.ts`: `activityFor(events, now)` → Tätigkeit oder nichts, dann wie bisher die
-  verfügbare Animation dazu suchen
+  verfügbaren Animationen der Gruppe suchen
 - **Später:** eigene Animationen nur für Termine (Kochen mit Küche, Laufband, Gitarre), Kleidung passend zur Tätigkeit
   (Sportsachen beim Gym), Belohnungs-Moment wenn ein Termin vorbei ist
+
+### Figur als Begleiter in anderen Ansichten (Idee)
+
+- Schalter in den Optionen: die Figur klein (ohne Zimmer) auch im Kalender, in der ToDo-Liste und anderen Ansichten zeigen,
+  z. B. in einer Ecke der Seitenleiste oder unten am Rand. Ein- und ausblendbar, pro Ansicht wählbar
+- Dort **kleine Animationen ohne Möbel**, die zur gleichen Tätigkeit passen: Bizeps-Curls mit einer Kurzhantel,
+  auf ein Blatt Papier schreiben, am Laptop tippen, würfeln, malen; sonst die freien Idles (summen, umschauen, strecken)
+- Reagiert dezent auf das, was man tut (z. B. kurzer Jubel beim Abhaken eines ToDos), nie störend, nichts blinkt
+- Nutzt dieselbe Tätigkeits-Erkennung wie im Zimmer; „Bewegung reduzieren“ zeigt sie nur still
 
 ## Aussehen
 
