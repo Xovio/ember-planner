@@ -216,12 +216,19 @@ interface EyeShape {
   /** how high the lid arcs above the eye, and how much the outer corner lifts */
   arc: number
   tilt: number
+  /** lid stroke width (without liner) */
+  lidW?: number
+  /** a thin crease line above the lid */
+  crease?: boolean
 }
 
 const EYE_SHAPES: Record<string, EyeShape> = {
   round: { cy: 104, rx: 9, ry: 11.5, arc: 4.5, tilt: 0 },
   almond: { cy: 105, rx: 10, ry: 9, arc: 3.5, tilt: 2.5 },
-  soft: { cy: 105, rx: 9, ry: 10, arc: 1, tilt: -1 }
+  soft: { cy: 105, rx: 9, ry: 10, arc: 1, tilt: -1 },
+  narrow: { cy: 106, rx: 9.5, ry: 6.5, arc: 1.5, tilt: 0.5, lidW: 3 },
+  small: { cy: 105, rx: 6.5, ry: 7.5, arc: 2, tilt: 0, lidW: 2.6 },
+  hooded: { cy: 106, rx: 9, ry: 8.5, arc: 0.5, tilt: -1.5, lidW: 4.2, crease: true }
 }
 
 const FRECKLES: [number, number][] = [
@@ -471,46 +478,58 @@ function Eyes({
 }): React.JSX.Element {
   const lid = '#5b3340'
   const { cy, rx, ry, arc, tilt } = shape
+  // inner and outer lid corners follow the eye width; the right eye mirrors the left
+  const inL = 83 + rx + 3
+  const outL = 83 - rx - 2
+  const inR = 117 - rx - 3
+  const outR = 117 + rx + 2
   if (expression === 'proud') {
     return (
       <g fill="none" stroke={lid} strokeWidth="4">
-        <path d={`M74 ${cy + 4} Q83 ${cy - 7} 92 ${cy + 4}`} />
-        <path d={`M108 ${cy + 4} Q117 ${cy - 7} 126 ${cy + 4}`} />
+        <path d={`M${83 - rx} ${cy + 4} Q83 ${cy - 7} ${83 + rx} ${cy + 4}`} />
+        <path d={`M${117 - rx} ${cy + 4} Q117 ${cy - 7} ${117 + rx} ${cy + 4}`} />
       </g>
     )
   }
   if (expression === 'sleepy') {
     return (
       <g fill="none" stroke={lid} strokeWidth="3.5">
-        <path d={`M74 ${cy + 1} Q83 ${cy + 7} 92 ${cy + 1}`} />
-        <path d={`M108 ${cy + 1} Q117 ${cy + 7} 126 ${cy + 1}`} />
+        <path d={`M${83 - rx} ${cy + 1} Q83 ${cy + 7} ${83 + rx} ${cy + 1}`} />
+        <path d={`M${117 - rx} ${cy + 1} Q117 ${cy + 7} ${117 + rx} ${cy + 1}`} />
       </g>
     )
   }
   const lower = shift(iris)
   const top = cy - ry
+  const corner = top + arc - tilt
   // lid from inner to outer corner; the outer end lifts with `tilt`
-  const lidL = `M95 ${top + arc - 0.5} Q83 ${top - arc} ${72} ${top + arc - tilt}`
-  const lidR = `M105 ${top + arc - 0.5} Q117 ${top - arc} ${128} ${top + arc - tilt}`
-  const w = liner ? 5 : 3.5
+  const lidL = `M${inL} ${top + arc - 0.5} Q83 ${top - arc} ${outL} ${corner}`
+  const lidR = `M${inR} ${top + arc - 0.5} Q117 ${top - arc} ${outR} ${corner}`
+  const w = liner ? 5 : (shape.lidW ?? 3.5)
+  const glint = Math.min(3.6, ry * 0.36)
   return (
     <g className="av-blink">
       {[83, 117].map((cx, i) => (
         <g key={cx}>
           <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill={iris} />
           <ellipse cx={cx} cy={cy + ry * 0.7} rx={rx - 1} ry={ry * 0.52} fill={lower} clipPath={`url(#${i ? 'ir' : 'il'}${uid})`} />
-          <circle cx={cx - 3} cy={cy - ry * 0.43} r={ry > 10 ? 3.6 : 3.1} fill="#fff8ee" />
-          <circle cx={cx + 3} cy={cy + ry * 0.43} r="1.7" fill="#fff8ee" />
+          <circle cx={cx - rx * 0.33} cy={cy - ry * 0.43} r={glint} fill="#fff8ee" />
+          {ry > 7 && <circle cx={cx + rx * 0.33} cy={cy + ry * 0.43} r="1.7" fill="#fff8ee" />}
         </g>
       ))}
+      {shape.crease && (
+        <g fill="none" stroke={lid} strokeWidth="1.6" opacity=".55">
+          <path d={`M${inL - 2} ${top - 2} Q83 ${top - arc - 6} ${outL + 1} ${corner - 4}`} />
+          <path d={`M${inR + 2} ${top - 2} Q117 ${top - arc - 6} ${outR - 1} ${corner - 4}`} />
+        </g>
+      )}
       <path d={lidL} fill="none" stroke={lid} strokeWidth={w} />
       <path d={lidR} fill="none" stroke={lid} strokeWidth={w} />
-      <path d={`M72 ${top + arc - tilt} l-4 -3 M128 ${top + arc - tilt} l4 -3`} stroke={lid} strokeWidth="2.5" />
-      {liner && <path d={`M71 ${top + arc - tilt} l-7 -2.5 M129 ${top + arc - tilt} l7 -2.5`} stroke={lid} strokeWidth="3" />}
+      {liner && <path d={`M${outL - 1} ${corner} l-7 -2.5 M${outR + 1} ${corner} l7 -2.5`} stroke={lid} strokeWidth="3" />}
       {lashes && (
         <g stroke={lid} strokeWidth="2.2">
-          <path d={`M74 ${top + arc - 3 - tilt} l-5 -5 M77 ${top + arc - 5 - tilt} l-2.5 -6`} />
-          <path d={`M126 ${top + arc - 3 - tilt} l5 -5 M123 ${top + arc - 5 - tilt} l2.5 -6`} />
+          <path d={`M${outL} ${corner} l-4 -3 M${outL + 2} ${corner - 3} l-5 -5 M${outL + 5} ${corner - 5} l-2.5 -6`} />
+          <path d={`M${outR} ${corner} l4 -3 M${outR - 2} ${corner - 3} l5 -5 M${outR - 5} ${corner - 5} l2.5 -6`} />
         </g>
       )}
     </g>

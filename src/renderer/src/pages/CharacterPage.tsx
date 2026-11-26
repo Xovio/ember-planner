@@ -241,7 +241,10 @@ const FACE_OPTS: Opt<AvatarLook['face']> = [
 const EYE_OPTS: Opt<AvatarLook['eyeShape']> = [
   ['round', 'rund'],
   ['almond', 'mandel'],
-  ['soft', 'sanft']
+  ['soft', 'sanft'],
+  ['narrow', 'schmal'],
+  ['small', 'klein'],
+  ['hooded', 'Schlupflid']
 ]
 const BROW_OPTS: Opt<AvatarLook['brows']> = [
   ['thin', 'fein'],
