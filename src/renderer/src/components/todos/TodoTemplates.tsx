@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { ClipboardList, ListChecks, Pencil, Plus, Trash2, X } from 'lucide-react'
 import type { Difficulty, Priority, TodoTemplate } from '@shared/types'
+import { listLabel, sortedLists } from '@shared/lists'
 import { DIFFICULTY_LABEL } from '@shared/character'
 import { inDaysLabel, sortTemplates } from '@shared/todoTemplates'
 import { uid, useStore } from '../../store'
@@ -171,9 +172,9 @@ export function TodoTemplateEditor({ template, onClose }: { template: TodoTempla
           <label>Liste</label>
           <select className="input sm" value={draft.listId ?? ''} onChange={(e) => set({ listId: e.target.value || undefined })}>
             <option value="">Die gerade offene</option>
-            {data.lists.map((l) => (
+            {sortedLists(data.lists).map(({ list: l }) => (
               <option key={l.id} value={l.id}>
-                {l.name}
+                {listLabel(data.lists, l)}
               </option>
             ))}
           </select>

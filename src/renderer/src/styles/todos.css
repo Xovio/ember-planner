@@ -1070,3 +1070,117 @@ body.dragging-todo .tg-cols {
   font-family: inherit;
   line-height: 1.45;
 }
+
+/* projects: lists with sub-lists */
+.nav-row.sub-list {
+  padding-left: 24px;
+  height: 29px;
+  font-size: 13px;
+}
+.list-progress {
+  flex: none;
+  width: 34px;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.list-progress i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+}
+.list-parent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.list-parent select {
+  flex: 1;
+  min-width: 0;
+}
+.project-crumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.project-head {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+.project-bar {
+  display: block;
+  width: min(420px, 100%);
+  height: 6px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.project-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.3s var(--ease);
+}
+.project-subs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.project-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 12.5px;
+  color: var(--text);
+  cursor: pointer;
+}
+.project-sub:hover {
+  border-color: var(--c);
+}
+.project-sub .list-dot {
+  background: var(--c);
+}
+.project-sub em {
+  font-style: normal;
+  font-size: 11.5px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+/* sidebar rows: the edit buttons take no room until hovered, so names stay readable */
+.nav-row .ghost-hover {
+  display: none;
+}
+.nav-row:hover .ghost-hover,
+.nav-row:focus-within .ghost-hover {
+  display: inline-flex;
+}
+.nav-row:hover > .list-progress {
+  display: none;
+}
+
+.sub-list-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.sub-list-tag i {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--c);
+}

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { listLabel, sortedLists } from '@shared/lists'
 import { isToday, isTomorrow } from 'date-fns'
 import { Dices, MapPin, Plus } from 'lucide-react'
 import { findNextSession, guessCampaign, prepTodos, sessionCountdown } from '@shared/session'
@@ -208,9 +209,9 @@ export function SessionCountdownSettings(): React.JSX.Element {
         <span>Prep-Liste</span>
         <select className="input sm" value={cfg.listId} onChange={(e) => update({ listId: e.target.value })}>
           <option value="">keine</option>
-          {data.lists.map((l) => (
+          {sortedLists(data.lists).map(({ list: l }) => (
             <option key={l.id} value={l.id}>
-              {l.name}
+              {listLabel(data.lists, l)}
             </option>
           ))}
         </select>

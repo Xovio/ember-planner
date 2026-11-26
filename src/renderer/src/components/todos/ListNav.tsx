@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { AlertTriangle, Archive, CalendarRange, CheckCheck, CircleDashed, Inbox, Layers, Pencil, Plus, Sun, Trash2 } from 'lucide-react'
 import { CALENDAR_COLORS, INBOX_ID, type Category, type TodoList } from '@shared/types'
+import { isProject, listProgress, listScope, parentOptions, sortedLists } from '@shared/lists'
 import { uid, useStore, type TodoView } from '../../store'
 import { calVar } from '../../lib/theme'
 import { TODO_MIME, todoDrag } from '../../lib/dnd'
@@ -31,7 +32,10 @@ export function useTodoCounts(): Record<string, number> {
     const c: Record<string, number> = {}
     for (const v of SMART_VIEWS) c[v.id] = todos.filter((t) => matchesView(t, v.id)).length
     c.trash = trash.length + eventTrash
-    for (const l of lists) c[`list:${l.id}`] = todos.filter((t) => t.listId === l.id && !t.done).length
+    for (const l of lists) {
+      const scope = listScope(lists, l.id)
+      c[`list:${l.id}`] = todos.filter((t) => scope.has(t.listId) && !t.done).length
+    }
     return c
   }, [todos, trash, eventTrash, lists])
 }
@@ -74,6 +78,32 @@ export function ListsSection({ onPick }: { onPick?: () => void }): React.JSX.Ele
   const counts = useTodoCounts()
   const [editing, setEditing] = useState<TodoList | null>(null)
   const [dropOn, setDropOn] = useState<string | null>(null)
+  const todos = useStore((s) => s.data!.todos)
+  const tree = useMemo(() => sortedLists(lists), [lists])
+  const newList = (parentId?: string): TodoList => ({
+    id: uid(),
+    name: '',
+    color: parentId ? (lists.find((l) => l.id === parentId)?.color ?? 'red') : CALENDAR_COLORS[lists.length % CALENDAR_COLORS.length],
+    ...(parentId ? { parentId } : {})
+  })
+  /** "Gehört zu": make a list a sub-list of a project, or top-level again */
+  const parentField = (l: TodoList): React.ReactNode => {
+    const options = parentOptions(lists, l.id)
+    if (options.length === 0) return null
+    return (
+      <label className="list-parent">
+        <span>Gehört zu</span>
+        <select className="input sm" value={editing?.parentId ?? ''} onChange={(e) => setEditing({ ...l, ...editing, parentId: e.target.value || undefined })}>
+          <option value="">– eigene Liste –</option>
+          {options.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.name}
+            </option>
+          ))}
+        </select>
+      </label>
+    )
+  }
 
   return (
     <div>
@@ -83,12 +113,12 @@ export function ListsSection({ onPick }: { onPick?: () => void }): React.JSX.Ele
           className="icon-btn sm"
           aria-label="Liste hinzufügen"
           title="Liste hinzufügen"
-          onClick={() => setEditing({ id: uid(), name: '', color: CALENDAR_COLORS[lists.length % CALENDAR_COLORS.length] })}
+          onClick={() => setEditing(newList())}
         >
           <Plus size={16} />
         </button>
       </div>
-      {lists.map((l) =>
+      {tree.map(({ list: l, depth }) =>
         editing?.id === l.id ? (
           <NameColorForm
             key={l.id}
@@ -97,15 +127,17 @@ export function ListsSection({ onPick }: { onPick?: () => void }): React.JSX.Ele
             placeholder="Name der Liste"
             onCancel={() => setEditing(null)}
             onSave={(name, color) => {
-              upsert({ ...l, name, color })
+              upsert({ ...l, name, color, parentId: editing.parentId })
               setEditing(null)
             }}
             onDelete={l.id === INBOX_ID ? undefined : () => (remove(l.id), setEditing(null))}
-          />
+          >
+            {parentField(l)}
+          </NameColorForm>
         ) : (
           <div
             key={l.id}
-            className={`nav-row ${view === `list:${l.id}` ? 'on' : ''} ${dropOn === l.id ? 'drop' : ''}`}
+            className={`nav-row ${depth ? 'sub-list' : ''} ${view === `list:${l.id}` ? 'on' : ''} ${dropOn === l.id ? 'drop' : ''}`}
             onClick={() => {
               setView(`list:${l.id}`)
               onPick?.()
@@ -128,7 +160,21 @@ export function ListsSection({ onPick }: { onPick?: () => void }): React.JSX.Ele
           >
             {l.id === INBOX_ID ? <Inbox size={16} /> : <i className="list-dot" style={{ background: calVar(l.color) }} />}
             <span>{l.name}</span>
+            {isProject(lists, l.id) && <ProjectBar todos={todos} lists={lists} id={l.id} />}
             {counts[`list:${l.id}`] > 0 && <em>{counts[`list:${l.id}`]}</em>}
+            {depth === 0 && l.id !== INBOX_ID && (
+              <button
+                className="icon-btn sm ghost-hover"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setEditing(newList(l.id))
+                }}
+                aria-label={`Unterliste in ${l.name} anlegen`}
+                title="Unterliste anlegen – macht die Liste zum Projekt"
+              >
+                <Plus size={12} />
+              </button>
+            )}
             <button
               className="icon-btn sm ghost-hover"
               onClick={(e) => {
@@ -146,14 +192,16 @@ export function ListsSection({ onPick }: { onPick?: () => void }): React.JSX.Ele
         <NameColorForm
           name=""
           color={editing.color}
-          placeholder="Name der Liste"
+          placeholder={editing.parentId ? 'Name der Unterliste' : 'Name der Liste'}
           onCancel={() => setEditing(null)}
           onSave={(name, color) => {
             upsert({ ...editing, name, color })
             setEditing(null)
             setView(`list:${editing.id}`)
           }}
-        />
+        >
+          {parentField(editing)}
+        </NameColorForm>
       )}
     </div>
   )
@@ -214,5 +262,16 @@ export function CategoriesSection(): React.JSX.Element {
         </div>
       )}
     </div>
+  )
+}
+
+/** small progress bar of a project in the sidebar */
+function ProjectBar({ todos, lists, id }: { todos: import('@shared/types').Todo[]; lists: TodoList[]; id: string }): React.JSX.Element | null {
+  const p = useMemo(() => listProgress(todos, listScope(lists, id)), [todos, lists, id])
+  if (p.total === 0) return null
+  return (
+    <span className="list-progress" title={`Projekt: ${p.done} von ${p.total} erledigt`}>
+      <i style={{ width: `${(p.done / p.total) * 100}%` }} />
+    </span>
   )
 }

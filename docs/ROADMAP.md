@@ -108,7 +108,7 @@ Hintergründe und Quellen sammeln wir in einer eigenen Recherche-Notiz (`docs/AD
 - ~~Termin-Vorlagen (z. B. „DnD-Session“ mit Dauer, Ort, Erinnerung)~~ ✅ 2.8
 
 **ToDos**
-- **Projekte** mit Unter-Listen und Fortschritt – später mit Obsidian-Projektnotizen verbunden ⭐
+- ~~**Projekte** mit Unter-Listen und Fortschritt~~ ✅ – später mit Obsidian-Projektnotizen verbunden ⭐
 - Abhängigkeiten („erst nach …“)
 - Anhänge und Links
 - ~~Archiv und Papierkorb mit Wiederherstellen~~ ✅ 2.6 (für ToDos)

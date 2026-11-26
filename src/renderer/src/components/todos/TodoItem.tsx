@@ -92,12 +92,15 @@ let rangeAnchor: string | null = null
 export function TodoItem({
   todo,
   showList,
+  projectId,
   compact,
   draggable,
   orderedIds
 }: {
   todo: Todo
   showList?: boolean
+  /** shown inside this project: ToDos of its sub-lists always name their sub-list */
+  projectId?: string
   compact?: boolean
   draggable?: boolean
   /** visible order, for Shift+click range selection */
@@ -176,6 +179,12 @@ export function TodoItem({
             <span className="cat-tag" style={{ '--c': calVar(cat.color) } as React.CSSProperties}>
               <i />
               {cat.name}
+            </span>
+          )}
+          {projectId && list && todo.listId !== projectId && (
+            <span className="sub-list-tag" style={{ '--c': calVar(list.color) } as React.CSSProperties}>
+              <i />
+              {list.name}
             </span>
           )}
           {todo.repeatable && <RepeatBadge todo={todo} />}

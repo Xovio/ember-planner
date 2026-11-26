@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { addDays, addMinutes } from 'date-fns'
 import { AlignLeft, CalendarClock, ClipboardList, Coins, Copy, Flag, Hourglass, List, ListChecks, Plus, Repeat, Signal, Tag, Timer, Trash2, X } from 'lucide-react'
 import type { Difficulty, Priority, Recurrence, RecurrenceFreq, Todo } from '@shared/types'
+import { listLabel, sortedLists } from '@shared/lists'
 import { DIFFICULTY_LABEL, todoMinutes, todoReward } from '@shared/character'
 import { localDate, nextRecurrence, parseLocalDate, toTasksLine } from '@shared/todo'
 import { roundUp, uid, useStore } from '../../store'
@@ -143,9 +144,9 @@ export function TodoDetails({ id }: { id: string }): React.JSX.Element {
         <div className="field two-col">
           <List size={16} className="field-icon" />
           <select className="input" value={todo.listId} onChange={(e) => set({ listId: e.target.value })}>
-            {data.lists.map((l) => (
+            {sortedLists(data.lists).map(({ list: l }) => (
               <option key={l.id} value={l.id}>
-                {l.name}
+                {listLabel(data.lists, l)}
               </option>
             ))}
           </select>

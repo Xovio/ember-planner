@@ -314,6 +314,8 @@ export interface TodoList {
   id: string
   name: string
   color: CalendarColor
+  /** sub-list of this list (one level): the parent becomes a project that shows all its sub-lists */
+  parentId?: string
 }
 
 export interface Category {

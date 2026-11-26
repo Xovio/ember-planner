@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { listScope } from '@shared/lists'
 import { GripVertical, X } from 'lucide-react'
 import { compareTodos, deadlineStatus } from '@shared/todo'
 import { useStore } from '../../store'
@@ -18,8 +19,11 @@ export function TodoPanel(): React.JSX.Element {
   const setCategory = useStore((s) => s.setTodoCategory)
 
   const todos = useMemo(
-    () => all.filter((t) => matchesView(t, view) && (!category || t.categoryId === category)).sort(compareTodos),
-    [all, view, category]
+    () => {
+      const scope = view.startsWith('list:') ? listScope(lists, view.slice(5)) : undefined
+      return all.filter((t) => matchesView(t, view, undefined, scope) && (!category || t.categoryId === category)).sort(compareTodos)
+    },
+    [all, view, category, lists]
   )
   const overdue = todos.filter((t) => !t.done && deadlineStatus(t) === 'overdue').length
   const listName = view.startsWith('list:') ? lists.find((l) => l.id === view.slice(5))?.name : VIEW_LABELS[view]

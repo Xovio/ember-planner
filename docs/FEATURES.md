@@ -58,6 +58,11 @@ Die linke Leiste filtert die ToDo-Spalte: Ein Klick auf eine Liste oder Kategori
 - **Sortierung:** nach der frühesten Deadline; bei gleichem Tag zuerst die harte, dann Priorität
 - **Gruppen:** harte Deadline verpasst · weiche verpasst · heute · nächste 3 Tage · später · ohne Deadline · erledigt
 - **Ansichten:** alle offenen, heute fällig, nächste 7 Tage, überfällig, ohne Deadline, erledigt · eigene Listen · Kategorie-Filter
+- **Projekte mit Unterlisten:** jede Liste kann Unterlisten bekommen (+ beim Darüberfahren oder *Gehört zu* beim
+  Bearbeiten) und wird damit zum Projekt. Das Projekt zeigt alle ToDos seiner Unterlisten (mit Unterlisten-Markierung),
+  einen Fortschrittsbalken „x von y erledigt“ und die Unterlisten als Chips mit eigenem Stand; in der Leiste stehen
+  Unterlisten eingerückt unter dem Projekt, mit kleinem Balken. Eine Ebene tief; wird das Projekt gelöscht, bleiben die
+  Unterlisten als eigene Listen. Wiederholbare ToDos zählen nicht zum Fortschritt
 - **Archiv:** ToDos, die seit mehr als 14 Tagen erledigt sind, verschwinden aus Listen und „Erledigt“ und stehen im Archiv
 - **Papierkorb:** Löschen legt ToDos 30 Tage in den Papierkorb; dort einzeln oder alle wiederherstellen, endgültig löschen
   oder leeren (alles mit `Strg+Z` rückgängig). Gelöschte ToDos tauchen in keiner Ansicht, keinem Widget und keiner Erinnerung auf
