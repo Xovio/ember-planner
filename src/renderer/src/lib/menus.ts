@@ -1,6 +1,7 @@
 import { addDays, nextMonday, nextSaturday } from 'date-fns'
 import type { Priority } from '@shared/types'
 import { localDate } from '@shared/todo'
+import { listLabel, sortedLists } from '@shared/lists'
 import { isEventLocked, roundUp, useStore, type MenuItem } from '../store'
 import { api } from './api'
 import { calVar } from './theme'
@@ -90,8 +91,8 @@ export function todoMenu(ids: string[]): MenuItem[] {
     },
     {
       label: 'In Liste verschieben',
-      items: data.lists.map((l) => ({
-        label: l.name,
+      items: sortedLists(data.lists).map(({ list: l }) => ({
+        label: listLabel(data.lists, l),
         swatch: calVar(l.color),
         checked: !!one && one.listId === l.id,
         action: () => st.updateTodos(ids, { listId: l.id }, `${n} nach „${l.name}“ verschoben`)

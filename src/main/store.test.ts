@@ -4,6 +4,11 @@ import { join } from 'path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CalendarEvent } from '@shared/types'
 
+/** stores of the running test: their delayed write must happen before the temp folder goes */
+type Store = InstanceType<typeof import('./store').DataStore>
+let stores: Store[] = []
+const track = (s: Store): Store => (stores.push(s), s)
+
 let dir = ''
 vi.mock('electron', () => ({ app: { getPath: () => dir } }))
 
@@ -27,10 +32,13 @@ describe('DataStore', () => {
   beforeEach(() => {
     dir = mkdtempSync(join(tmpdir(), 'ember-store-'))
   })
-  afterEach(() => rmSync(dir, { recursive: true, force: true }))
+  afterEach(() => {
+    for (const s of stores.splice(0)) s.flush()
+    rmSync(dir, { recursive: true, force: true })
+  })
 
   it('keeps a remote change when the UI saves a stale snapshot', () => {
-    const store = new DataStore()
+    const store = track(new DataStore())
     const base = store.get()
     store.set({ ...base, events: [ev('a')] }, 0)
 
@@ -47,7 +55,7 @@ describe('DataStore', () => {
   })
 
   it('reports local changes but not remote ones', () => {
-    const store = new DataStore()
+    const store = track(new DataStore())
     const local = vi.fn()
     const remote = vi.fn()
     store.subscribe({ onLocalChange: local, onRemoteChange: remote })
@@ -63,7 +71,7 @@ describe('DataStore', () => {
   })
 
   it('writes the data file on flush', () => {
-    const store = new DataStore()
+    const store = track(new DataStore())
     store.applyRemote({ events: { upsert: [ev('g')] } })
     store.flush()
     const saved = JSON.parse(readFileSync(store.path, 'utf8'))

@@ -29,8 +29,13 @@ const ev = (id: string, summary = id): GEvent => ({
 
 type Reply = { items?: GEvent[]; nextPageToken?: string; nextSyncToken?: string } | Error
 
+/** stores of the running test: their delayed write must happen before the temp folder goes */
+type Store = InstanceType<typeof import('../store').DataStore>
+let stores: Store[] = []
+
 function setup(replies: Reply[]) {
   const store = new DataStore()
+  stores.push(store)
   store.applyRemote({ calendars: { upsert: [cal] } })
   const urls: URL[] = []
   const account = {
@@ -51,7 +56,11 @@ function setup(replies: Reply[]) {
 beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), 'ember-sync-'))
 })
-afterEach(() => rmSync(dir, { recursive: true, force: true }))
+afterEach(() => {
+  for (const s of stores) s.flush()
+  stores = []
+  rmSync(dir, { recursive: true, force: true })
+})
 
 describe('GoogleSync', () => {
   it('does a paged full sync first, then incremental syncs with the token', async () => {

@@ -11,7 +11,8 @@ export function NameColorForm({
   onSave,
   onCancel,
   onDelete,
-  deleteConfirm
+  deleteConfirm,
+  children
 }: {
   name: string
   color: CalendarColor
@@ -20,6 +21,8 @@ export function NameColorForm({
   onCancel: () => void
   onDelete?: () => void
   deleteConfirm?: string
+  /** extra fields between the colors and the buttons */
+  children?: React.ReactNode
 }): React.JSX.Element {
   const [name, setName] = useState(initialName)
   const [color, setColor] = useState<CalendarColor>(initialColor)
@@ -50,6 +53,7 @@ export function NameColorForm({
           />
         ))}
       </div>
+      {children}
       <div className="cal-form-actions">
         {onDelete && (
           <button

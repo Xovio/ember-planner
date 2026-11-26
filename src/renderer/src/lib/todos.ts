@@ -40,12 +40,13 @@ export function isArchived(t: Todo, now = Date.now()): boolean {
   return t.done && !!t.doneAt && now - new Date(t.doneAt).getTime() > ARCHIVE_DAYS * 86400000
 }
 
-export function matchesView(t: Todo, view: TodoView, today = localDate(new Date())): boolean {
+/** `scope`: for a list view, the list and its sub-lists (see listScope) */
+export function matchesView(t: Todo, view: TodoView, today = localDate(new Date()), scope?: Set<string>): boolean {
   if (view === 'trash') return false // trashed ToDos live in data.trash
   if (view === 'archive') return isArchived(t)
   if (isArchived(t)) return false
   if (view === 'done') return t.done
-  if (view.startsWith('list:')) return t.listId === view.slice(5)
+  if (view.startsWith('list:')) return scope ? scope.has(t.listId) : t.listId === view.slice(5)
   if (t.done) return false
   const eff = effectiveDeadline(t)
   switch (view) {

@@ -1110,7 +1110,8 @@ export const useStore = create<State>((set, get) => {
       mutate(
         (d) => ({
           ...d,
-          lists: d.lists.filter((l) => l.id !== id),
+          // sub-lists of a deleted project stay, as lists of their own
+          lists: d.lists.filter((l) => l.id !== id).map((l) => (l.parentId === id ? { ...l, parentId: undefined } : l)),
           todos: d.todos.map((t) => (t.listId === id ? { ...t, listId: INBOX_ID } : t))
         }),
         { label: `Liste „${list?.name}“ gelöscht`, undoToast: true }

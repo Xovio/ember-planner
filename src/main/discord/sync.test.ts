@@ -5,6 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CalendarEvent, CalendarInfo } from '@shared/types'
 import type { DEvent } from '@shared/discord'
 
+/** stores of the running test: their delayed write must happen before the temp folder goes */
+type Store = InstanceType<typeof import('../store').DataStore>
+let stores: Store[] = []
+const track = (s: Store): Store => (stores.push(s), s)
+
 let dir = ''
 vi.mock('electron', () => ({ app: { getPath: () => dir } }))
 
@@ -49,7 +54,7 @@ const dEvent = (id: string, extra: Partial<DEvent> = {}): DEvent => ({
 
 /** fake Discord: `events` is the server's list, writes go through `onWrite` */
 function setup(events: DEvent[] = [], onWrite: (c: Call) => DEvent | Error | undefined = () => undefined) {
-  const store = new DataStore()
+  const store = track(new DataStore())
   store.applyRemote({ calendars: { upsert: [local, guildCal] } })
   const calls: Call[] = []
   const account = {
@@ -116,6 +121,7 @@ beforeEach(() => {
   dir = mkdtempSync(join(tmpdir(), 'ember-discord-'))
 })
 afterEach(() => {
+  for (const s of stores.splice(0)) s.flush()
   rmSync(dir, { recursive: true, force: true })
 })
 
@@ -273,7 +279,7 @@ describe('following an announced event', () => {
 describe('only your events', () => {
   /** fake Discord that knows who is interested in which event; you are "me" */
   function withInterest(events: DEvent[], interested: Record<string, string[]>, owner: string | null = 'me') {
-    const store = new DataStore()
+    const store = track(new DataStore())
     store.applyRemote({ calendars: { upsert: [local, guildCal] } })
     const paths: string[] = []
     const account = {

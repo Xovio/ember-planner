@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react'
 import { Archive, CalendarDays, CheckCheck, Keyboard, Repeat, RotateCcw, Trash2, X } from 'lucide-react'
 import { ARCHIVE_DAYS, TRASH_DAYS, type Priority } from '@shared/types'
+import { childLists, listProgress, listScope } from '@shared/lists'
 import { useCalendarMap, useStore } from '../store'
 import { calVar } from '../lib/theme'
 import { fmt, toLocalTime } from '../lib/dates'
@@ -21,15 +22,20 @@ export function TodosPage(): React.JSX.Element {
   const setCategory = useStore((s) => s.setTodoCategory)
   const selection = useStore((s) => s.selection)
 
+  const scope = useMemo(() => (view.startsWith('list:') ? listScope(data.lists, view.slice(5)) : undefined), [data.lists, view])
   const visible = useMemo(
-    () => data.todos.filter((t) => matchesView(t, view) && (!category || t.categoryId === category)),
-    [data.todos, view, category]
+    () => data.todos.filter((t) => matchesView(t, view, undefined, scope) && (!category || t.categoryId === category)),
+    [data.todos, view, category, scope]
   )
   const groups = useMemo(() => groupTodos(visible), [visible])
   const ordered = useMemo(() => groups.flatMap((g) => g.items.map((t) => t.id)), [groups])
   const isList = view.startsWith('list:')
   const list = isList ? data.lists.find((l) => l.id === view.slice(5)) : undefined
   const title = list?.name ?? VIEW_LABELS[view]
+  const subs = list ? childLists(data.lists, list.id) : []
+  const parent = list?.parentId ? data.lists.find((l) => l.id === list.parentId) : undefined
+  const progress = useMemo(() => (scope && subs.length ? listProgress(data.todos, scope) : null), [data.todos, scope, subs.length])
+  const setView = useStore((s) => s.setTodoView)
   const openCount = visible.filter((t) => !t.done).length
   const quiet = view === 'done' || view === 'archive' || view === 'trash'
 
@@ -55,6 +61,11 @@ export function TodosPage(): React.JSX.Element {
       <section className="todos-main">
         <header className="todos-head">
           <div>
+            {parent && (
+              <button className="link-btn project-crumb" onClick={() => setView(`list:${parent.id}`)}>
+                <i className="list-dot" style={{ background: calVar(parent.color) }} /> {parent.name} ›
+              </button>
+            )}
             <h1>
               {list && <i className="list-dot" style={{ background: calVar(list.color) }} />}
               {title}
@@ -67,6 +78,7 @@ export function TodosPage(): React.JSX.Element {
                   : view === 'done'
                     ? `${visible.length} erledigt`
                     : `${openCount} offen`}
+              {progress && progress.total > 0 && ` · ${progress.done} von ${progress.total} erledigt`}
               {category && (
                 <>
                   {' '}
@@ -77,6 +89,26 @@ export function TodosPage(): React.JSX.Element {
                 </>
               )}
             </p>
+            {progress && (
+              <div className="project-head">
+                <span className="project-bar" aria-label={`${progress.done} von ${progress.total} erledigt`}>
+                  <i style={{ width: `${progress.total ? (progress.done / progress.total) * 100 : 0}%`, background: calVar(list!.color) }} />
+                </span>
+                <div className="project-subs">
+                  {subs.map((s) => {
+                    const p = listProgress(data.todos, new Set([s.id]))
+                    return (
+                      <button key={s.id} className="project-sub" onClick={() => setView(`list:${s.id}`)} style={{ '--c': calVar(s.color) } as React.CSSProperties}>
+                        <i className="list-dot" /> {s.name}
+                        <em>
+                          {p.done}/{p.total}
+                        </em>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </header>
 
@@ -110,7 +142,7 @@ export function TodosPage(): React.JSX.Element {
                   </h2>
                   <div className="todo-list">
                     {g.items.map((t) => (
-                      <TodoItem key={t.id} todo={t} showList={!isList} draggable orderedIds={ordered} />
+                      <TodoItem key={t.id} todo={t} showList={!isList} projectId={subs.length ? list!.id : undefined} draggable orderedIds={ordered} />
                     ))}
                   </div>
                 </section>
