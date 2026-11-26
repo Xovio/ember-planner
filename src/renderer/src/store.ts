@@ -28,7 +28,7 @@ import { applyPatch, type RemoteChange } from '@shared/patch'
 import { isCalendarLocked } from '@shared/google'
 import { api, isDemo } from './lib/api'
 import { holidayOn } from '@shared/holidays'
-import { daysBetween, localDate, nextRecurrence, parseLocalDate } from '@shared/todo'
+import { daysBetween, localDate, nextRecurrence, parseLocalDate, weeklyRollover } from '@shared/todo'
 import { completeRepeatable, cooldownLeft, formatLeft, isCoolingDown, undoRepeatable } from '@shared/repeatable'
 import { detachOccurrence, endSeriesBefore, splitSeries } from '@shared/series'
 import { goalEvent, markFilled, slotsToFill, weekKey } from '@shared/goals'
@@ -223,7 +223,9 @@ interface State {
   upsertTodoTemplate(t: TodoTemplate): void
   removeTodoTemplate(id: string): void
   /** a fresh ToDo from the template; returns its id */
-  applyTodoTemplate(id: string): string
+  applyTodoTemplate(id: string, overrides?: Partial<Todo>): string
+  /** weekly ToDos left undone last week start over in this week ("Sonntagsreset") */
+  rollWeeklyTodos(now?: Date): void
 
   upsertCalendar(c: CalendarInfo): void
   removeCalendar(id: string): void
@@ -453,6 +455,7 @@ export const useStore = create<State>((set, get) => {
           { history: false }
         )
       }
+      get().rollWeeklyTodos()
       get().fillGoalSlots()
       if (isDemo) applyDemoParams()
     },
@@ -930,13 +933,14 @@ export const useStore = create<State>((set, get) => {
         undoToast: true
       })
     },
-    applyTodoTemplate(id) {
+    applyTodoTemplate(id, overrides) {
       const data = get().data
       const tpl = data?.todoTemplates.find((x) => x.id === id)
       if (!data || !tpl) return ''
-      const todo = makeTodo(
-        todoFromTemplate(tpl, uid, { listIds: data.lists.map((l) => l.id), categoryIds: data.categories.map((c) => c.id) })
-      )
+      const todo = makeTodo({
+        ...todoFromTemplate(tpl, uid, { listIds: data.lists.map((l) => l.id), categoryIds: data.categories.map((c) => c.id) }),
+        ...overrides
+      })
       mutate(
         (d) => ({
           ...d,
@@ -1267,6 +1271,18 @@ export const useStore = create<State>((set, get) => {
         { label: `„${ev.title}“ für diese Woche gestrichen`, undoToast: true }
       )
       if (get().selection?.id === eventId) get().clearSelection()
+    },
+
+    rollWeeklyTodos(now = new Date()) {
+      const data = get().data
+      if (!data) return
+      const changes = weeklyRollover(data.todos, now)
+      if (changes.length === 0) return
+      const byId = new Map(changes.map((c) => [c.id, c.patch]))
+      const ts = stamp()
+      mutate((d) => ({ ...d, todos: d.todos.map((t) => (byId.has(t.id) ? { ...t, ...byId.get(t.id), updatedAt: ts } : t)) }), {
+        history: false
+      })
     },
 
     fillGoalSlots(now = new Date()) {

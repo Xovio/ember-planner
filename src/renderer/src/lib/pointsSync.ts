@@ -88,6 +88,7 @@ export function usePointsSync(): void {
       schedule()
     })
     const tick = setInterval(() => {
+      useStore.getState().rollWeeklyTodos()
       useStore.getState().fillGoalSlots()
       schedule()
     }, RECHECK_MS)

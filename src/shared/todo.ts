@@ -149,6 +149,27 @@ export function nextRecurrence(
   }
 }
 
+/**
+ * "Sonntagsreset": a weekly ToDo that was not done in its week starts over quietly in the new week
+ * instead of piling up as overdue. Its deadlines move on in its rhythm to the first date on or after
+ * this week's Monday; the series' count is not used up. Returns the changes to make.
+ */
+export function weeklyRollover(todos: Todo[], now: Date = new Date()): { id: string; patch: Pick<Todo, 'hardDeadline' | 'softDeadline'> }[] {
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7))
+  const mondayKey = localDate(monday)
+  const sunday = localDate(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() - 1))
+  const out: { id: string; patch: Pick<Todo, 'hardDeadline' | 'softDeadline'> }[] = []
+  for (const t of todos) {
+    if (t.done || t.repeatable || t.deletedAt || t.recurrence?.freq !== 'weekly') continue
+    const eff = effectiveDeadline(t)
+    if (!eff || eff >= mondayKey) continue
+    const next = nextRecurrence({ ...t, recurrence: { ...t.recurrence, count: undefined } }, sunday)
+    if (!next) continue
+    out.push({ id: t.id, patch: { hardDeadline: next.hardDeadline, softDeadline: next.softDeadline } })
+  }
+  return out
+}
+
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const UNIT: Record<RecurrenceFreq, string> = { daily: 'day', weekly: 'week', monthly: 'month', yearly: 'year' }
 

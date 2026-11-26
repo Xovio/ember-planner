@@ -222,6 +222,14 @@ export interface EventParse {
 const TEMPLATE_RE = /(^|\s)\/([\p{L}\p{N}_-]+)(?=$|[\s,;])/u
 
 /** template named in the text, if any */
+/** "/putzen bis Freitag" → the ToDo template and the rest of the text ("bis Freitag") */
+export function splitTemplate<T extends { name: string }>(input: string, templates: T[]): { template?: T; rest: string } {
+  const m = ` ${input} `.match(TEMPLATE_RE)
+  const template = m ? findTemplate(m[2], templates) : undefined
+  if (!m || !template) return { rest: input }
+  return { template, rest: ` ${input} `.replace(m[0], m[1]).replace(/\s+/g, ' ').trim() }
+}
+
 export function templateIn(input: string, templates: EventTemplate[]): EventTemplate | undefined {
   const m = ` ${input} `.match(TEMPLATE_RE)
   return m ? findTemplate(m[2], templates) : undefined
