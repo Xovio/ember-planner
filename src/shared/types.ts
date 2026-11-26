@@ -472,6 +472,10 @@ export interface Settings {
   overviewLayout: OverviewLayout
   /** per-widget options, keyed by widget id; each widget validates its own values */
   widgetConfig: Record<string, Record<string, unknown>>
+  /** the character as a small companion at the bottom of other pages */
+  companion: boolean
+  /** companion panel unfolded (false = only the small tab) */
+  companionOpen: boolean
 }
 
 /** half = one column, wide = two columns, full = the whole row */
@@ -551,7 +555,9 @@ export const DEFAULT_SETTINGS: Settings = {
   holidayRegion: 'DE',
   autoUpdate: true,
   overviewLayout: { order: [], hidden: [], sizes: {} },
-  widgetConfig: {}
+  widgetConfig: {},
+  companion: true,
+  companionOpen: true
 }
 
 export const INBOX_ID = 'inbox'

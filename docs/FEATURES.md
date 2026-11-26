@@ -169,6 +169,14 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
   Feiern) trägt sie im Zimmer, solange sie etwas Passendes macht – z. B. das Gym-Outfit beim Hanteln
 - Gezählt wird ab dem ersten Start von v0.5; Wieder-Öffnen nimmt Coins zurück, Löschen nicht
 
+### Begleiter
+
+- Die Figur klein **unten links auf allen Seiten** außer *Charakter*; auf- und zuklappbar, in den Optionen abschaltbar
+- **Macht mit, was im Kalender steht:** Stichwörter im Termin-Titel (Deutsch und Englisch, z. B. Gym, Meeting, Lernen,
+  D&D, Party) wählen passende Animationen – Hanteln, Laptop, Schreiben, Lesen, Malen, Würfeln, Tanzen – und
+  zeigen „trainiert – Gym bis 18:30“; bis eine Stunde danach ruhiger. Ein Outfit mit passender Tätigkeit wird getragen
+- Sonst die freien Animationen; kurzer Jubel, wenn etwas Punkte bringt
+
 ### Zimmer (v0.7)
 
 - Oben auf der Charakter-Seite umschalten zwischen **Zimmer** und **Figur und Kleidung**
