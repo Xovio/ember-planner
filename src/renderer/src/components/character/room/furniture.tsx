@@ -564,6 +564,136 @@ const SPECS: Record<string, (c: string) => Spec> = {
       )
     }
   }),
+  dndtable: (c) => ({
+    parts: [
+      ...legs(0.2, 0.2, 1.8, 1.8, 20, DARK, 0.12),
+      box(0.1, 0.1, 1.8, 1.8, 3, WOOD, 20),
+      box(0.22, 0.22, 1.56, 1.56, 0.6, c, 23),
+      box(0.3, 0.18, 1.1, 0.06, 13, '#7a3444', 23.6),
+      box(1.48, 0.3, 0.26, 0.34, 1.2, CREAM, 23.6),
+      box(0.72, 0.9, 0.08, 0.08, 6, '#d9d2c0', 23.6),
+      box(1.05, 1.2, 0.08, 0.08, 6, '#8cc4e8', 23.6),
+      box(0.6, 1.35, 0.08, 0.08, 6, '#e5615a', 23.6),
+      box(1.3, 1.0, 0.1, 0.1, 9, '#5a8a4a', 23.6)
+    ],
+    decor: (L, r) => {
+      const grid: ReactNode[] = []
+      for (let i = 1; i < 5; i++) {
+        const t = 0.22 + i * 0.312
+        const a = L(t, 0.3, 23.7)
+        const b = L(t, 1.78, 23.7)
+        const c2 = L(0.22, t, 23.7)
+        const d = L(1.78, t, 23.7)
+        grid.push(<line key={`x${i}`} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={r.light} strokeOpacity=".45" strokeWidth=".6" />)
+        grid.push(<line key={`y${i}`} x1={c2[0]} y1={c2[1]} x2={d[0]} y2={d[1]} stroke={r.light} strokeOpacity=".45" strokeWidth=".6" />)
+      }
+      const [x, y] = L(1.5, 1.5, 25)
+      const tri = [[x, y - 5], [x + 4.5, y + 2.5], [x - 4.5, y + 2.5]] as Pt[]
+      const [sx, sy] = L(0.85, 0.15, 30)
+      return (
+        <g>
+          {grid}
+          <polygon points={pts(tri)} fill="#e0a43c" stroke="#8a5a2a" strokeWidth=".6" />
+          <path d={`M${sx - 6},${sy} l4,-3 l4,3`} fill="none" stroke="#e8c070" strokeWidth="1" />
+        </g>
+      )
+    }
+  }),
+  guitar: () => ({
+    parts: [box(0.38, 0.38, 0.24, 0.24, 2, '#4a4458')],
+    decor: (L, r) => {
+      const [x, y] = L(0.5, 0.5, 2)
+      return (
+        <g>
+          <path d={`M${x - 6},${y + 2} L${x},${y - 14} L${x + 6},${y + 2}`} fill="none" stroke="#4a4458" strokeWidth="1.4" />
+          <rect x={x - 1.6} y={y - 58} width="3.2" height="30" rx="1" fill="#6a4a32" />
+          <path d={`M${x - 2.6},${y - 58} l0,-7 l5.2,0 l0,7 Z`} fill="#4a3424" />
+          <ellipse cx={x} cy={y - 14} rx="10" ry="11" fill={r.base} stroke={r.line} strokeWidth=".8" />
+          <ellipse cx={x} cy={y - 28} rx="7.5" ry="7.5" fill={r.base} stroke={r.line} strokeWidth=".8" />
+          <rect x={x - 6.4} y={y - 28} width="12.8" height="10" fill={r.base} />
+          <circle cx={x} cy={y - 21} r="3" fill="#3a2a22" />
+          <rect x={x - 4} y={y - 11} width="8" height="1.8" fill="#4a3424" />
+          <path d={`M${x - 1},${y - 62} L${x - 1},${y - 10} M${x + 1},${y - 62} L${x + 1},${y - 10}`} stroke="#e8e2d8" strokeWidth=".3" />
+          <ellipse cx={x - 4} cy={y - 18} rx="2" ry="4" fill={r.light} opacity=".6" />
+        </g>
+      )
+    }
+  }),
+  kitchen: (c) => {
+    const lt = ramp(c).light
+    return {
+      parts: [
+        box(0.04, 0.12, 1.92, 0.76, 28, c),
+        box(0.12, 0.88, 0.84, 0.03, 22, lt, 3),
+        box(1.04, 0.88, 0.84, 0.03, 22, lt, 3),
+        box(0, 0.08, 2, 0.84, 3, '#e8e2d8', 28),
+        box(0.22, 0.28, 0.6, 0.48, 0.8, '#b8c4d0', 31),
+        box(0.46, 0.14, 0.08, 0.08, 12, '#9aa0b4', 31),
+        box(1.1, 0.2, 0.8, 0.62, 0.6, '#3a3540', 31)
+      ],
+      decor: (L) => {
+        const burners = [L(1.3, 0.38, 31.8), L(1.7, 0.38, 31.8), L(1.3, 0.68, 31.8), L(1.7, 0.68, 31.8)]
+        const [px, py] = L(1.3, 0.68, 31.8)
+        const [tx, ty] = L(0.5, 0.42, 43)
+        return (
+          <g>
+            {burners.map(([x, y], i) => (
+              <ellipse key={i} cx={x} cy={y} rx="5" ry="2.6" fill="none" stroke="#6a6070" strokeWidth="1" />
+            ))}
+            <path d={`M${tx},${ty} q5,-2 6,4`} fill="none" stroke="#9aa0b4" strokeWidth="1.6" strokeLinecap="round" />
+            <rect x={px - 6} y={py - 9} width="12" height="8" rx="1.5" fill="#e5615a" stroke="#8a3a3a" strokeWidth=".6" />
+            <ellipse cx={px} cy={py - 9} rx="6" ry="1.8" fill="#c2484a" />
+          </g>
+        )
+      }
+    }
+  },
+  treadmill: (c) => ({
+    parts: [
+      box(0.14, 0.1, 0.72, 1.8, 5, '#4a4458'),
+      box(0.22, 0.24, 0.56, 1.56, 0.5, '#2e2a36', 5),
+      box(0.14, 0.12, 0.07, 0.07, 36, c),
+      box(0.79, 0.12, 0.07, 0.07, 36, c),
+      box(0.12, 0.06, 0.76, 0.16, 7, c, 34)
+    ],
+    decor: (L) => {
+      const [x, y] = L(0.5, 0.14, 38)
+      const a = L(0.14, 0.4, 28)
+      const b = L(0.14, 0.15, 30)
+      const d = L(0.86, 0.4, 28)
+      const e = L(0.86, 0.15, 30)
+      return (
+        <g>
+          <rect x={x - 6} y={y - 3} width="12" height="5" rx="1" fill="#8cc4e8" opacity=".85" />
+          <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#9a95a3" strokeWidth="1.6" strokeLinecap="round" />
+          <line x1={d[0]} y1={d[1]} x2={e[0]} y2={e[1]} stroke="#9a95a3" strokeWidth="1.6" strokeLinecap="round" />
+        </g>
+      )
+    }
+  }),
+  tv: (c) => ({
+    parts: [
+      box(0.05, 0.3, 1.9, 0.6, 12, c),
+      box(0.12, 0.9, 0.84, 0.02, 8, ramp(c).light, 2),
+      box(1.04, 0.9, 0.84, 0.02, 8, ramp(c).light, 2),
+      box(0.92, 0.5, 0.16, 0.12, 4, '#3a3540', 12),
+      box(0.25, 0.45, 1.5, 0.07, 28, '#2e2a36', 16),
+      box(1.3, 0.62, 0.36, 0.24, 2.5, '#e8e2d8', 12)
+    ],
+    glows: [[1, 0.7, 30, 36]],
+    decor: (L) => {
+      const o = 0.53
+      const scr = [L(0.32, o, 18), L(1.68, o, 18), L(1.68, o, 42), L(0.32, o, 42)]
+      const hill = [L(0.32, o, 18), L(0.32, o, 26), L(0.8, o, 32), L(1.2, o, 25), L(1.68, o, 30), L(1.68, o, 18)]
+      return (
+        <g>
+          <path d={pathOf(scr)} fill="#5a8fb8" />
+          <path d={pathOf(hill)} fill="#8fb59a" />
+          <path d={pathOf(wallCircle(L, 1.4, 37, 2.6, o))} fill="#f3c26b" />
+        </g>
+      )
+    }
+  }),
   gametable: (c) => ({
     parts: [
       ...legs(0.2, 0.2, 1.8, 1.8, 20, DARK, 0.12),

@@ -32,7 +32,12 @@ export const IDLE_TAG: Record<string, OutfitTag> = {
   warm: 'relax',
   stargaze: 'relax',
   dance: 'party',
-  hop: 'party'
+  hop: 'party',
+  gm: 'dnd',
+  game: 'dnd',
+  guitar: 'creative',
+  cook: 'relax',
+  run: 'fitness'
 }
 
 export const OUTFIT_CYCLES: [OutfitCycle, string][] = [
