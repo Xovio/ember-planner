@@ -1225,6 +1225,7 @@ const ACTION_ARMS: Record<string, Arms> = {
   stargaze: { l: L_REST, r: ['M126 158 Q148 140 156 112', [158, 106]] },
   dice: { l: L_REST, r: ['M126 158 Q146 168 156 176', [158, 178]], rc: 'av-throw' },
   warm: { l: ['M74 158 Q64 182 80 190', [82, 192]], r: ['M126 158 Q136 182 120 190', [118, 192]] },
+  write: { l: ['M74 158 Q66 184 84 192', [86, 193]], r: ['M126 158 Q134 182 112 186', [110, 186]], rc: 'av-type-r' },
   gm: { l: ['M74 158 Q64 180 76 176', [77, 174]], r: ['M126 158 Q136 180 124 176', [123, 174]] },
   guitar: { l: ['M74 158 Q56 178 52 170', [52, 170]], r: ['M126 158 Q134 186 114 196', [112, 196]], rc: 'av-strum' },
   cook: { l: ['M74 158 Q64 182 80 190', [82, 190]], r: ['M126 158 Q138 178 120 182', [118, 182]], rc: 'av-stir' },
@@ -1337,6 +1338,17 @@ function PropsFront({ action }: { action: string }): React.JSX.Element | null {
               <rect x={x + 9} y="138" width="6" height="15" rx="2" />
             </g>
           ))}
+        </g>
+      )
+    case 'write':
+      return (
+        <g>
+          <path d="M78 184 L124 180 L126 206 L80 210 Z" fill="#fbf6ec" stroke="#8a7a6a" strokeWidth="1.8" />
+          <path d="M86 190 L116 187 M86 196 L118 193 M86 202 L108 200" stroke="#b0a090" strokeWidth="1.4" />
+          <g className="av-type-r">
+            <path d="M110 186 L102 196" stroke="#e0a43c" strokeWidth="3.5" />
+            <path d="M102 196 l-2 3" stroke="#3a3540" strokeWidth="2" />
+          </g>
         </g>
       )
     case 'guitar': {

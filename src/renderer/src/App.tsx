@@ -16,6 +16,7 @@ import { CommandPalette } from './components/CommandPalette'
 import { ShortcutHelp } from './components/ShortcutHelp'
 import { ConfirmDialog } from './components/ConfirmDialog'
 import { AnnounceDialog } from './components/discord/AnnounceDialog'
+import { Companion } from './components/character/Companion'
 
 export function App(): React.JSX.Element {
   const data = useStore((s) => s.data)
@@ -83,6 +84,7 @@ export function App(): React.JSX.Element {
         <main className="page">
           <ActivePage />
         </main>
+        <Companion />
       </div>
       {quickCreate && <QuickCreate key={quickCreate.start + quickCreate.end + String(quickCreate.allDay) + (quickCreate.placeholderOf ?? '')} />}
       {preview && <EventPreview key={preview.eventId + (preview.occurrenceStart ?? '')} />}

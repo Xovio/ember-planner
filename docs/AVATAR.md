@@ -137,7 +137,17 @@ Zimmer steht eine Hantelbank, stemmt sie Hanteln. Passt nichts, laufen einfach d
   gibt es schon (`shared/outfits.ts`, im Zimmer bei passender Animation) – beim Termin ebenso anziehen
   (Sportsachen beim Gym); Belohnungs-Moment wenn ein Termin vorbei ist
 
-### Figur als Begleiter in anderen Ansichten (Idee)
+### Figur als Begleiter ✅
+
+**Umgesetzt** (`components/character/Companion.tsx`, Erkennung in `shared/activity.ts`): kleines Fenster unten links auf allen
+Seiten außer *Charakter*, auf- und zuklappbar (zugeklappt nur ein Knopf mit Gesicht), Schalter in den Optionen. Läuft ein
+Termin, dessen Titel zu einer Tätigkeit passt, macht die Figur mit (Gym → Hanteln/Yoga/Strecken, Arbeit → Laptop/Schreiben,
+Lernen → Lesen/Schreiben, Kreativ → Malen/Schreiben, D&D → Würfeln/Spielleiten, Feiern → Tanzen) und zeigt „trainiert –
+Gym bis 18:30“; bis 60 min danach ruhigere Animationen. Ein Outfit mit passendem Tag wird dabei getragen. Kurzer Jubel,
+wenn etwas Punkte bringt. Klick auf die Figur öffnet den Charakter.
+
+Ursprüngliche Idee:
+
 
 - Schalter in den Optionen: die Figur klein (ohne Zimmer) auch im Kalender, in der ToDo-Liste und anderen Ansichten zeigen,
   z. B. in einer Ecke der Seitenleiste oder unten am Rand. Ein- und ausblendbar, pro Ansicht wählbar

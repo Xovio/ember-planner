@@ -69,6 +69,9 @@ export function SettingsPage(): React.JSX.Element {
           </select>
         </Row>
         <StylePromptBuilder />
+        <Row label="Begleiter" hint="Deine Figur klein unten in der Ecke, auf allen Seiten außer Charakter. Sie macht mit, was gerade im Kalender steht.">
+          <Switch checked={s.companion ?? true} onChange={(v) => update({ companion: v })} />
+        </Row>
       </section>
 
       <section className="settings-section">

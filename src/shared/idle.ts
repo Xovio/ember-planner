@@ -46,6 +46,7 @@ export const IDLES: IdleDef[] = [
   { id: 'lift', name: 'Hanteln stemmen', price: 0, needs: ['bench'], spot: 'beside', sit: 'stand' },
   { id: 'stargaze', name: 'Sterne gucken', price: 0, needs: ['telescope'], spot: 'beside', sit: 'stand' },
   { id: 'dice', name: 'Würfeln', price: 0, needs: ['gametable', 'dndtable'], spot: 'beside', sit: 'chair' },
+  { id: 'write', name: 'Notizen schreiben', price: 0, needs: ['desk'], spot: 'front', sit: 'chair' },
   { id: 'gm', name: 'Spielleiten', price: 0, needs: ['dndtable'], spot: 'beside', sit: 'chair' },
   { id: 'guitar', name: 'Gitarre spielen', price: 0, needs: ['guitar'], spot: 'beside', sit: 'chair' },
   { id: 'cook', name: 'Kochen', price: 0, needs: ['kitchen'], spot: 'front', sit: 'stand' },

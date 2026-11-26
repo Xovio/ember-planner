@@ -22,6 +22,7 @@ export const IDLE_TAG: Record<string, OutfitTag> = {
   lift: 'fitness',
   yoga: 'fitness',
   laptop: 'work',
+  write: 'study',
   read: 'study',
   browse: 'study',
   paint: 'creative',
@@ -130,6 +131,10 @@ export function cyclePick(outfits: SavedOutfit[] | undefined, key: string, curre
   if (pool.length > 1 && same(pool[i].items, current)) i = (i + 1) % pool.length
   return pool[i]
 }
+
+/** the first outfit tagged for an activity */
+export const outfitForTag = (outfits: SavedOutfit[] | undefined, tag: OutfitTag | null | undefined): SavedOutfit | undefined =>
+  tag ? outfits?.find((o) => o.tag === tag) : undefined
 
 /** an outfit tagged for what the figure is doing in the room, if there is one */
 export function outfitForIdle(outfits: SavedOutfit[] | undefined, idleId: string | undefined): SavedOutfit | undefined {
