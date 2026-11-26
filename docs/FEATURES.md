@@ -136,6 +136,7 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
   verdient). Sind **alle** Wochenziele einer Woche geschafft (ab zwei Zielen), gibt es den **Completionist-Bonus** von +50 Coins
   und 40 Ausdauer-XP, mit eigenem Toast. Die Leisten in *Planen* und *ToDos* und das Widget zeigen den Stand („1/2 Ziele
   komplett“); in *Zuletzt verdient* sind Wochenziel- und Completionist-Boni hervorgehoben. Ist die Woche vorbei, bleibt der Bonus
+  auch bei späteren Änderungen erhalten
 - **Punkte** gibt es für erledigte ToDos (10, +5 je Prioritätsstufe), Ziel-Bausteine (15), ein komplettes Wochenziel (+25),
   stattgefundene D&D-Sessions (30, gleiche Regel wie das Widget *Nächste Session*) und jede volle Prep-Stunde (5)
 - Punkte gehen nie verloren: Gelöschtes behält seine Punkte, nur Wieder-Öffnen nimmt sie zurück. Gezählt wird ab der Version 0.5
