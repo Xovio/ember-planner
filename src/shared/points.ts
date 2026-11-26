@@ -1,7 +1,7 @@
 import { addDays } from 'date-fns'
 import { ANY, type AppTimeLog } from './apptime'
 import { expandAll } from './recurrence'
-import { goalWeek, weekKey } from './goals'
+import { goalBlockWeeks, goalWeek, setBonus, weekKey, weekStart } from './goals'
 import { localDate } from './todo'
 import { completionsSince, staleCompletionKeys } from './repeatable'
 import type { AppData, CalendarEvent, PointEntry, PointsLedger, Todo } from './types'
@@ -18,6 +18,8 @@ export const POINTS = {
   goal: 15,
   /** all blocks of a weekly goal done */
   goalWeek: 25,
+  /** "Completionist": every weekly goal of a week done */
+  goalSet: 50,
   session: 30,
   prepHour: 5
 }
@@ -109,6 +111,13 @@ export function reconcilePoints(
       const last = w.done.map((e) => e.goal!.doneAt!).sort().pop()!
       put(key, { at: last, kind: 'goal-week', points: POINTS.goalWeek, label: `${goal.title}: Wochenziel geschafft` })
     } else drop(key)
+  }
+  for (const [week, day] of goalBlockWeeks(data.events)) {
+    const key = `goal-set:${week}`
+    const s = setBonus(data.goals, data.events, day, now)
+    if (s.complete && s.doneAt.every((at) => at >= sinceIso)) {
+      put(key, { at: s.at!, kind: 'goal-set', points: POINTS.goalSet, label: `Completionist: alle ${s.total} Wochenziele geschafft` })
+    } else if (addDays(weekStart(day), 7) > now) drop(key) // a week that is over keeps its bonus
   }
   if (opts.session) {
     for (const o of pastSessions(data.events, opts.session, since, now)) {

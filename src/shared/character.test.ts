@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { attrLevel, attrXp, categoryAttr, characterLevel, coinBalance, guessAttr, reconcileRewards, todoMinutes, todoReward } from './character'
+import { attrLevel, attrXp, categoryAttr, characterLevel, coinBalance, guessAttr, reconcileRewards, todoMinutes, todoReward, REWARD } from './character'
 import { defaultCharacter, type CalendarEvent, type Category, type Todo } from './types'
 import { ANY } from './apptime'
 
@@ -71,5 +71,18 @@ describe('prep and attributes', () => {
     expect(guessAttr('DnD')).toBe('creativity')
     expect(guessAttr('Projekt')).toBe('mind')
     expect(categoryAttr({ id: 'x', name: 'Sport', color: 'red', attribute: null })).toBeNull()
+  })
+})
+
+describe('weekly goal rewards', () => {
+  it('pays the Completionist set bonus in coins when every goal of the week is done', () => {
+    const g = (id: string) => ({ id, title: id, count: 1, calendarId: 'p', durationMin: 60, slots: [], createdAt: '', updatedAt: '' })
+    const blk = (goalId: string, day: number): CalendarEvent => ({
+      id: goalId, calendarId: 'p', title: goalId, start: `2026-11-${day}T10:00:00Z`, end: `2026-11-${day}T11:00:00Z`, allDay: false,
+      reminders: [], createdAt: '', updatedAt: '', goal: { goalId, done: true, doneAt: `2026-11-${day}T11:00:00Z` }
+    })
+    const r = reconcileRewards({ ...base, goals: [g('gym'), g('lesen')], events: [blk('gym', 23), blk('lesen', 24)] }, opts)
+    expect(r['goal-set:2026-W48']).toMatchObject({ ...REWARD.goalSet, attr: 'stamina' })
+    expect(r['goal-week:gym:2026-W48'].coins).toBe(REWARD.goalWeek.coins)
   })
 })

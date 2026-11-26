@@ -39,13 +39,19 @@ export function usePointsSync(): void {
       let cheered = false
       if (rewards !== data.character.rewards) {
         if (ready) {
-          const fresh = Object.entries(rewards).filter(([k]) => !(k in data.character.rewards)).map(([, r]) => r)
+          const freshKeys = Object.keys(rewards).filter((k) => !(k in data.character.rewards))
+          const fresh = freshKeys.map((k) => rewards[k])
           const coins = fresh.reduce((s, r) => s + r.coins, 0)
           const xp = new Map<string, number>()
           for (const r of fresh) if (r.attr) xp.set(r.attr, (xp.get(r.attr) ?? 0) + r.xp)
           const attrs = [...xp].map(([a, v]) => `${ATTRS.find((x) => x.id === a)?.name} +${v}`).join(' · ')
+          // the weekly goal bonuses get their own cheer
+          const set = freshKeys.some((k) => k.startsWith('goal-set:'))
+          const week = freshKeys.some((k) => k.startsWith('goal-week:'))
+          const title = set ? `Completionist! +${coins} Coins` : week ? `Wochenziel geschafft! +${coins} Coins` : `+${coins} Coins`
+          const body = set ? `Alle Wochenziele dieser Woche geschafft${attrs ? ` · ${attrs}` : ''}` : attrs || undefined
           if (coins > 0) {
-            st.pushToast({ kind: 'info', title: `+${coins} Coins`, body: attrs || undefined })
+            st.pushToast({ kind: 'info', title, body })
             cheered = true
           }
         }

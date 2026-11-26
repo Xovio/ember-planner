@@ -56,6 +56,26 @@ describe('reconcilePoints', () => {
     expect(totalPoints(two)).toBe(2 * POINTS.goal + POINTS.goalWeek)
   })
 
+  it('gives the Completionist bonus once every weekly goal of the week is done', () => {
+    const g = (id: string, count: number): WeeklyGoal => ({ id, title: id, count, calendarId: 'p', durationMin: 60, slots: [], createdAt: '', updatedAt: '' })
+    const block = (id: string, goalId: string, day: number, done = true): CalendarEvent =>
+      ev(id, `2026-11-${day}T15:00:00Z`, `2026-11-${day}T16:00:00Z`, { title: goalId, goal: { goalId, done, doneAt: done ? `2026-11-${day}T16:00:00Z` : undefined } })
+    const goals = [g('gym', 2), g('lesen', 1)]
+    const partial = reconcilePoints({ ...base, goals, events: [block('a', 'gym', 23), block('b', 'gym', 24), block('c', 'lesen', 25, false)] }, opts)
+    expect(Object.keys(partial.entries).some((k) => k.startsWith('goal-set:'))).toBe(false)
+    const all = reconcilePoints({ ...base, goals, events: [block('a', 'gym', 23), block('b', 'gym', 24), block('c', 'lesen', 25)] }, opts)
+    expect(all.entries['goal-set:2026-W48']).toMatchObject({ kind: 'goal-set', points: POINTS.goalSet, at: '2026-11-25T16:00:00Z' })
+    expect(totalPoints(all)).toBe(3 * POINTS.goal + 2 * POINTS.goalWeek + POINTS.goalSet)
+    // a single goal is no set
+    const single = reconcilePoints({ ...base, goals: [g('gym', 2)], events: [block('a', 'gym', 23), block('b', 'gym', 24)] }, opts)
+    expect(single.entries['goal-set:2026-W48']).toBeUndefined()
+    // un-checking a block in the running week takes it back; in a week that is over it stays
+    const undone = [block('a', 'gym', 23), block('b', 'gym', 24), block('c', 'lesen', 25, false)]
+    expect(reconcilePoints({ ...base, goals, points: all, events: undone }, opts).entries['goal-set:2026-W48']).toBeUndefined()
+    const later = { ...opts, now: new Date('2026-12-02T12:00:00Z') }
+    expect(reconcilePoints({ ...base, goals, points: all, events: undone }, later).entries['goal-set:2026-W48']).toBeDefined()
+  })
+
   it('counts sessions that ended, using the session rule', () => {
     const events = [ev('s', '2026-11-24T18:00:00Z', '2026-11-24T22:00:00Z'), ev('future', '2026-11-27T18:00:00Z', '2026-11-27T22:00:00Z')]
     const l = reconcilePoints({ ...base, events }, { ...opts, session: { calendarId: 'dnd', keyword: 'Session' } })
