@@ -240,7 +240,7 @@ export interface Room {
   floor?: string
 }
 
-export type PointKind = 'todo' | 'goal' | 'goal-week' | 'session' | 'prep'
+export type PointKind = 'todo' | 'goal' | 'goal-week' | 'goal-set' | 'session' | 'prep'
 
 export interface PointEntry {
   at: ISODateTime

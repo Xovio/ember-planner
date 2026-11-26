@@ -7,7 +7,7 @@ import type { PointKind, WeeklyGoal } from '@shared/types'
 import { useStore } from '../../store'
 import { fmt } from '../../lib/dates'
 import { useNow } from '../calendar/TimeGrid'
-import { GoalEditor, GoalRow, MissedPrompt, useGoalWeeks } from '../goals/Goals'
+import { GoalEditor, GoalRow, MissedPrompt, SetBonusRow, useGoalWeeks } from '../goals/Goals'
 
 /** this week's goals with their progress and the "Hat's geklappt?" questions */
 export function GoalsWidget(): React.JSX.Element {
@@ -44,6 +44,7 @@ export function GoalsWidget(): React.JSX.Element {
           {weeks.map((w) => (
             <GoalRow key={w.goal.id} w={w} draggable={false} onEdit={() => setEditing(w.goal)} />
           ))}
+          <SetBonusRow day={today} />
         </div>
       )}
       {weeks.flatMap((w) => w.missed).map((e) => (
@@ -63,6 +64,7 @@ const KIND_LABEL: Record<PointKind, string> = {
   todo: 'ToDo',
   goal: 'Ziel',
   'goal-week': 'Wochenziel',
+  'goal-set': 'Completionist',
   session: 'Session',
   prep: 'Prep'
 }

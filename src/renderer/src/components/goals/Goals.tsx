@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
-import { Check, GripVertical, Pencil, Plus, Target, Trash2, X } from 'lucide-react'
-import { DAY_NAMES, goalsForWeek, goalWeek, slotsLabel, weekKey, type GoalWeek } from '@shared/goals'
+import { Check, Coins, GripVertical, Pencil, Plus, Target, Trash2, Trophy, X } from 'lucide-react'
+import { DAY_NAMES, SET_MIN_GOALS, goalsForWeek, goalWeek, setBonus, slotsLabel, weekKey, type GoalWeek } from '@shared/goals'
+import { REWARD } from '@shared/character'
 import type { CalendarEvent, GoalSlot, WeeklyGoal } from '@shared/types'
 import { useStore } from '../../store'
 import { calVar } from '../../lib/theme'
@@ -101,6 +102,12 @@ export function GoalRow({ w, draggable, onEdit }: { w: GoalWeek; draggable: bool
         <span className="goal-count">
           {w.done.length}/{w.target}
         </span>
+        <span
+          className={`goal-reward ${complete ? 'earned' : ''}`}
+          title={complete ? `Wochenziel komplett: +${REWARD.goalWeek.coins} Coins verdient` : `Alle ${w.target} geschafft: +${REWARD.goalWeek.coins} Coins Bonus`}
+        >
+          <Coins size={11} />+{REWARD.goalWeek.coins}
+        </span>
         <button className="icon-btn sm ghost-hover" onClick={onEdit} aria-label={`${w.goal.title} bearbeiten`}>
           <Pencil size={12} />
         </button>
@@ -148,10 +155,35 @@ export function GoalBar({ day }: { day: Date }): React.JSX.Element {
       {weeks.map((w) => (
         <GoalRow key={w.goal.id} w={w} draggable onEdit={() => setEditing(w.goal)} />
       ))}
+      <SetBonusRow day={day} />
       {missed.map((e) => (
         <MissedPrompt key={e.id} event={e} />
       ))}
       {editing && <GoalEditor goal={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}
+    </div>
+  )
+}
+
+/** "Completionist": the set bonus for every weekly goal of the week, with how far along it is */
+export function SetBonusRow({ day }: { day: Date }): React.JSX.Element | null {
+  const goals = useStore((s) => s.data!.goals)
+  const events = useStore((s) => s.data!.events)
+  const now = useNow(60_000)
+  const s = useMemo(() => setBonus(goals, events, day, now), [goals, events, day, now])
+  if (s.total < SET_MIN_GOALS) return null
+  return (
+    <div
+      className={`goal-set ${s.complete ? 'earned' : ''}`}
+      title={`Set-Bonus, wenn alle Wochenziele der Woche geschafft sind: +${REWARD.goalSet.coins} Coins und ${REWARD.goalSet.xp} Ausdauer`}
+    >
+      <Trophy size={14} />
+      <span className="goal-set-text">
+        <b>Completionist</b>
+        <span>{s.complete ? 'Alle Wochenziele geschafft!' : `${s.done}/${s.total} Ziele komplett`}</span>
+      </span>
+      <span className="goal-set-coins">
+        <Coins size={12} />+{REWARD.goalSet.coins}
+      </span>
     </div>
   )
 }
@@ -349,6 +381,7 @@ export function TodoGoalsSection(): React.JSX.Element {
       {weeks.map((w) => (
         <GoalRow key={w.goal.id} w={w} draggable={false} onEdit={() => setEditing(w.goal)} />
       ))}
+      <SetBonusRow day={today} />
       {missed.map((e) => (
         <MissedPrompt key={e.id} event={e} />
       ))}

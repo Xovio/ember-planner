@@ -3693,3 +3693,79 @@ input[type='time'].input {
   padding: 0;
   margin: 0;
 }
+
+/* weekly goal coin bonuses */
+.goal-reward {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  font-size: 11px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+  opacity: 0.75;
+}
+.goal-reward.earned {
+  color: var(--warn);
+  opacity: 1;
+}
+.goal-set {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed color-mix(in srgb, var(--warn) 45%, var(--border));
+  color: var(--text-2);
+  font-size: 12.5px;
+}
+.goal-set > svg {
+  flex: none;
+  color: var(--warn);
+}
+.goal-set-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+.goal-set-text b {
+  font-weight: 650;
+  color: var(--text);
+}
+.goal-set-text span {
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+.goal-set-coins {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--warn);
+}
+.goal-set.earned {
+  border-style: solid;
+  background: color-mix(in srgb, var(--warn) 14%, transparent);
+}
+.goal-set.earned .goal-set-text span {
+  color: var(--warn);
+}
+.points-kind.k-goal-week,
+.reward-goal .points-kind {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.points-kind.k-goal-set,
+.reward-set .points-kind {
+  background: color-mix(in srgb, var(--warn) 20%, transparent);
+  color: var(--warn);
+}
+.reward-set .points-label {
+  font-weight: 600;
+}

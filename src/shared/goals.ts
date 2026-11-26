@@ -109,3 +109,48 @@ export function markFilled(goal: WeeklyGoal, week: string): WeeklyGoal {
 
 /** "Di 15:30 · Do 15:30" */
 export const slotsLabel = (slots: GoalSlot[]): string => slots.map((s) => `${DAY_NAMES[s.day]} ${s.time}`).join(' · ')
+
+/* ── set bonus ("Completionist"): every weekly goal of a week done ── */
+
+/** at least this many goals make a set, so one goal alone doesn't pay twice */
+export const SET_MIN_GOALS = 2
+
+export interface SetBonus {
+  week: string
+  /** goals that count this week (target above zero) */
+  total: number
+  /** of those, complete */
+  done: number
+  complete: boolean
+  /** when the last block of the set was checked off */
+  at?: string
+  /** every checked-off block of the set */
+  doneAt: string[]
+}
+
+/**
+ * Where the set bonus of the week of `day` stands. Counted are the week's active goals that existed
+ * before the week ended and archived goals that had blocks in it (archiving later doesn't change the past).
+ */
+export function setBonus(goals: WeeklyGoal[], events: CalendarEvent[], day: Date, now: Date): SetBonus {
+  const week = weekKey(day)
+  const end = addDays(weekStart(day), 7).toISOString()
+  const withBlocks = new Set(events.filter((e) => e.goal && !e.deletedAt && weekKey(new Date(e.start)) === week).map((e) => e.goal!.goalId))
+  const counted = goals.filter(
+    (g) =>
+      (!g.week || g.week === week) &&
+      (g.archived ? withBlocks.has(g.id) : !g.createdAt || g.createdAt < end)
+  )
+  const weeks = counted.map((g) => goalWeek(g, events, day, now)).filter((w) => w.target > 0)
+  const doneWeeks = weeks.filter((w) => w.done.length >= w.target)
+  const doneAt = doneWeeks.flatMap((w) => w.done.map((e) => e.goal!.doneAt ?? e.start)).sort()
+  const complete = weeks.length >= SET_MIN_GOALS && doneWeeks.length === weeks.length
+  return { week, total: weeks.length, done: doneWeeks.length, complete, at: complete ? doneAt.at(-1) : undefined, doneAt }
+}
+
+/** the weeks to check for a set bonus: every week that has goal blocks, as one day in it */
+export function goalBlockWeeks(events: CalendarEvent[]): Map<string, Date> {
+  const out = new Map<string, Date>()
+  for (const e of events) if (e.goal && !e.deletedAt) out.set(weekKey(new Date(e.start)), new Date(e.start))
+  return out
+}

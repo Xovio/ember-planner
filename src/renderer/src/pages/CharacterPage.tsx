@@ -39,6 +39,12 @@ const TABS: { id: Tab; label: string }[] = [
 
 const BUILDS = ['schmal', 'mittel', 'breit']
 
+/** weekly goal bonuses stand out in "Zuletzt verdient" */
+const rewardKind = (key: string): string | undefined =>
+  key.startsWith('goal-set:') ? 'Completionist' : key.startsWith('goal-week:') ? 'Wochenziel' : undefined
+const rewardClass = (key: string): string | undefined =>
+  key.startsWith('goal-set:') ? 'reward-set' : key.startsWith('goal-week:') ? 'reward-goal' : undefined
+
 /** the character: look (free), wardrobe, shop with coins, attributes and where they come from */
 export function CharacterPage(): React.JSX.Element {
   const ch = useStore((s) => s.data!.character)
@@ -166,8 +172,8 @@ export function CharacterPage(): React.JSX.Element {
             <h4>Zuletzt verdient</h4>
             <ul className="points-recent">
               {recent.map((r) => (
-                <li key={r.k}>
-                  <span className="points-kind">{r.attr ? ATTRS.find((a) => a.id === r.attr)?.name : 'Coins'}</span>
+                <li key={r.k} className={rewardClass(r.k)}>
+                  <span className="points-kind">{rewardKind(r.k) ?? (r.attr ? ATTRS.find((a) => a.id === r.attr)?.name : 'Coins')}</span>
                   <span className="points-label">{r.label}</span>
                   <span className="muted">{fmt(new Date(r.at), 'd. MMM')}</span>
                   <strong>+{r.coins}</strong>
@@ -530,6 +536,8 @@ function AttrSources(): React.JSX.Element {
       <p className="widget-settings-hint">
         Erledigte ToDos geben Coins nach Schwierigkeit × Zeit (abgehakter Zeitblock, sonst Schätzung) und Erfahrung für das Attribut
         ihrer Kategorie. Ohne Kategorie wächst Ordnung. Ziel-Bausteine, Sessions (Sozial) und Prep-Stunden (Kreativität) zählen auch.
+        Ein komplettes Wochenziel bringt +25 Coins Bonus, alle Wochenziele einer Woche zusammen (ab zwei Zielen) den
+        Completionist-Bonus von +50 Coins.
       </p>
       <h4>Kategorien</h4>
       {data.categories.map((c) => (

@@ -33,7 +33,7 @@ import { goalEvent, markFilled, slotsToFill, weekKey } from '@shared/goals'
 import { attrLevel, attrXp, coinBalance } from '@shared/character'
 import { furnitureById, ownsFurniture } from '@shared/room'
 import { idleById, idleKey, ownsIdle } from '@shared/idle'
-import { itemById, ownsItem } from '@shared/wardrobe'
+import { itemById } from '@shared/wardrobe'
 import {
   isPlaceholderId,
   placeholderEvent,
@@ -1300,7 +1300,7 @@ export const useStore = create<State>((set, get) => {
     buyItem(id) {
       const ch = get().data?.character
       const it = itemById(id)
-      if (!ch || !it || ownsItem(ch, it)) return false
+      if (!ch || !it || ch.owned.includes(id)) return false
       if (coinBalance(ch) < it.price) return false
       if (it.unlock && attrLevel(attrXp(ch)[it.unlock.attr]).level < it.unlock.level) return false
       mutate(
