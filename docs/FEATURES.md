@@ -139,7 +139,7 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
   - Körper: Statur, Körperform (gerade, kurvig, breite Schultern), Größe, Hautton (12 Töne oder eigener Farbwähler)
   - Gesicht: Gesichtsform, Augenform (rund, mandel, sanft, schmal, klein, Schlupflid), Augenfarbe (auch frei), Brauen, Wimpern, Wangenröte, Sommersprossen, Muttermal,
     Make-up (Lippen, Lidstrich)
-  - Haare: 13 Frisuren (u. a. Afro, Lange Locken, Zopf, Zwei Zöpfe, Flechtzopf, Undercut, Raspel, Glatze),
+  - Haare: 23 Frisuren (u. a. Afro, Lange Locken, Dreadlocks, Mittellang, Zopf, Flechtzopf, Seitenscheitel, Tolle, Zurückgegelt, Strubbelig, Stachelig, Männerdutt, Undercut, Iro, Raspel, Glatze),
     Haarfarbe (auch frei), 6 Bärte
   - Hilfsmittel: Brille, Hörgerät, Rollstuhl
 - **Sechs Attribute** (Fitness, Ausdauer, Köpfchen, Kreativität, Ordnung, Sozial), jedes mit eigenem Level; Charakter-Level = 1 + alle Attribut-Aufstiege
