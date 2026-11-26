@@ -3693,3 +3693,56 @@ input[type='time'].input {
   padding: 0;
   margin: 0;
 }
+
+/* saved outfits in the wardrobe */
+.outfits .outfit-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+.outfits .outfit-actions .input {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+.outfit-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.outfit-card {
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.outfit-wear {
+  flex: none;
+  padding: 2px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  cursor: pointer;
+}
+.outfit-wear:hover {
+  border-color: var(--accent);
+}
+.outfit-meta {
+  display: grid;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.outfit-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.outfit-row .look-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: auto;
+}

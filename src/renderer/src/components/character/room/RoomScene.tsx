@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { ROOM_SIZE as N, WINDOW, avatarSpot, canPlace, depthOrder, footprint, furnitureById, surfaces, type Furniture } from '@shared/room'
-import type { AvatarLook, PlacedFurniture } from '@shared/types'
+import type { AvatarLook, PlacedFurniture, SavedOutfit } from '@shared/types'
+import { outfitForIdle } from '@shared/outfits'
 import { ramp } from '@shared/wardrobe'
 import { Avatar } from '../Avatar'
 import { FLOOR_MATRIX, H, OX, P, PHASE_LOOK, T, pathOf, pts, toFloor, type Phase, type Pt } from './iso'
@@ -32,6 +33,7 @@ export function RoomScene({
   floor: floorId,
   look,
   outfit,
+  outfits,
   phase,
   editing = false,
   selected = null,
@@ -47,6 +49,8 @@ export function RoomScene({
   /** without a look the room is shown empty (shop preview) */
   look?: AvatarLook
   outfit?: Record<string, string>
+  /** saved outfits: one tagged for what the figure is doing is worn meanwhile */
+  outfits?: SavedOutfit[]
   phase: Phase
   editing?: boolean
   selected?: string | null
@@ -185,7 +189,7 @@ export function RoomScene({
     return (
       <Avatar
         look={look!}
-        outfit={outfit ?? {}}
+        outfit={outfitForIdle(outfits, id)?.items ?? outfit ?? {}}
         animate={!paused}
         pose="rest"
         action={id}

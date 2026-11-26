@@ -221,6 +221,23 @@ export interface Character {
   room: Room
   /** idle animations switched off, and one to play all the time */
   idle?: { off: string[]; pinned?: string }
+  /** saved outfits; `rotate` ones take turns automatically, a `tag` one is worn for matching activities */
+  outfits?: SavedOutfit[]
+  outfitCycle?: OutfitCycle
+  /** the time window the last automatic outfit was picked for */
+  outfitCycleKey?: string
+}
+
+export type OutfitTag = 'fitness' | 'work' | 'study' | 'creative' | 'dnd' | 'relax' | 'party'
+export type OutfitCycle = 'off' | 'daily' | 'often'
+
+export interface SavedOutfit {
+  id: string
+  name: string
+  /** slot → item id, like Character.outfit */
+  items: Record<string, string>
+  rotate?: boolean
+  tag?: OutfitTag
 }
 
 /** one piece of furniture in the room: floor tile (x, y) and turn 0–3, or a spot on a wall */
