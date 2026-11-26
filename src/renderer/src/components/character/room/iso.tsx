@@ -1,3 +1,4 @@
+import { rotPt } from '@shared/room'
 import { ramp } from '@shared/wardrobe'
 
 /**
@@ -38,18 +39,8 @@ export interface Part {
 
 export const box = (x: number, y: number, w: number, d: number, h: number, c: string, z = 0): Part => ({ x, y, z, w, d, h, c })
 
-/** a point in a W×D footprint turned `rot` quarter turns (the footprint becomes D×W when odd) */
-export function rotPt(px: number, py: number, W: number, D: number, rot: number): [number, number] {
-  let x = px
-  let y = py
-  let w = W
-  let d = D
-  for (let i = 0; i < rot % 4; i++) {
-    ;[x, y] = [d - y, x]
-    ;[w, d] = [d, w]
-  }
-  return [x, y]
-}
+/** a point in a W×D footprint turned `rot` quarter turns (shared with the room logic) */
+export { rotPt } from '@shared/room'
 
 export function rotPart(p: Part, W: number, D: number, rot: number): Part {
   const [ax, ay] = rotPt(p.x, p.y, W, D, rot)

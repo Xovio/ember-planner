@@ -31,6 +31,7 @@ import { detachOccurrence, endSeriesBefore, splitSeries } from '@shared/series'
 import { goalEvent, markFilled, slotsToFill, weekKey } from '@shared/goals'
 import { attrLevel, attrXp, coinBalance } from '@shared/character'
 import { furnitureById, ownsFurniture } from '@shared/room'
+import { idleById, idleKey, ownsIdle } from '@shared/idle'
 import { itemById } from '@shared/wardrobe'
 import {
   isPlaceholderId,
@@ -263,6 +264,9 @@ interface State {
   setRoomItems(items: PlacedFurniture[], label: string): void
   /** puts up an owned wallpaper or flooring */
   setRoomSurface(id: string): void
+  /** buys a free idle animation from the shop */
+  buyIdle(id: string): boolean
+  setIdlePrefs(patch: Partial<NonNullable<Character['idle']>>): void
   /** silent: rewards after reconciling */
   setRewards(rewards: Character['rewards']): void
 
@@ -1288,6 +1292,26 @@ export const useStore = create<State>((set, get) => {
       const key = f.kind === 'wallpaper' ? 'wall' : f.kind === 'flooring' ? 'floor' : null
       if (!key) return
       mutate((d) => ({ ...d, character: { ...d.character, room: { ...d.character.room, [key]: id } } }), { label: `${f.name} angebracht` })
+    },
+
+    buyIdle(id) {
+      const ch = get().data?.character
+      const d = idleById(id)
+      if (!ch || !d || ownsIdle(ch, d)) return false
+      if (coinBalance(ch) < d.price) return false
+      if (d.unlock && attrLevel(attrXp(ch)[d.unlock.attr]).level < d.unlock.level) return false
+      mutate(
+        (dd) => ({ ...dd, character: { ...dd.character, owned: [...dd.character.owned, idleKey(id)], spent: dd.character.spent + d.price } }),
+        { label: `${d.name} gelernt`, undoToast: true }
+      )
+      return true
+    },
+
+    setIdlePrefs(patch) {
+      mutate(
+        (d) => ({ ...d, character: { ...d.character, idle: { off: [], ...d.character.idle, ...patch } } }),
+        { label: 'Animationen geändert', coalesce: 'idle' }
+      )
     },
 
     setRoomItems(items, label) {

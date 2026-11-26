@@ -18,6 +18,9 @@ import {
 import type { PlacedFurniture } from '@shared/types'
 import { useStore } from '../../../store'
 import { RoomScene } from './RoomScene'
+import { IdlePanel } from './IdlePanel'
+import { idleTarget } from '@shared/idle'
+import { useIdleActor } from './useIdleActor'
 import { FurniturePreview } from './FurniturePreview'
 import { PHASE_LOOK, phaseAt, type Phase } from './iso'
 
@@ -56,9 +59,10 @@ export function RoomView(): React.JSX.Element {
   const [selected, setSelected] = useState<string | null>(null)
   const [hint, setHint] = useState<string | null>(null)
   const [light, setLight] = useState<LightMode>('auto')
-  const [tab, setTab] = useState<'chest' | 'shop'>('chest')
+  const [tab, setTab] = useState<'chest' | 'shop' | 'idle'>('chest')
   const stage = useRef<HTMLDivElement>(null)
   const hidden = useHidden()
+  const { actor, play } = useIdleActor(ch, !editing && !hidden)
   const clock = useClockPhase(hidden)
   const phase = light === 'auto' ? clock : light
   const items = ch.room.items
@@ -141,7 +145,15 @@ export function RoomView(): React.JSX.Element {
         <div className="char-stage-head">
           <div>
             <h1>{ch.name ? `Zimmer von ${ch.name}` : 'Dein Zimmer'}</h1>
-            <p>{editing ? 'Einrichten: ziehen, R dreht, Entf lagert ein' : `${items.length} Dinge im Zimmer`}</p>
+            <p>
+              {editing
+                ? 'Einrichten: ziehen, R dreht, Entf lagert ein'
+                : actor.walking
+                  ? 'unterwegs …'
+                  : actor.idle
+                    ? actor.idle.name
+                    : `${items.length} Dinge im Zimmer`}
+            </p>
           </div>
           <div className="room-head-actions">
             <button
@@ -178,6 +190,7 @@ export function RoomView(): React.JSX.Element {
             onSelect={setSelected}
             onMove={(p) => replace(p, `${furnitureById(p.id)?.name ?? 'Möbel'} verschoben`)}
             paused={hidden}
+            actor={actor}
           />
         </div>
         <div className={`room-toolbar ${editing ? '' : 'idle'}`}>
@@ -211,11 +224,18 @@ export function RoomView(): React.JSX.Element {
           <button role="tab" aria-selected={tab === 'shop'} className={tab === 'shop' ? 'on' : ''} onClick={() => setTab('shop')}>
             Möbel-Shop
           </button>
+          <button role="tab" aria-selected={tab === 'idle'} className={tab === 'idle' ? 'on' : ''} onClick={() => setTab('idle')}>
+            Animationen
+          </button>
         </div>
-        {tab === 'chest' ? (
-          <Chest onPlace={place} onPick={(id) => (startEditing(), setSelected(id))} selected={selected} />
-        ) : (
-          <FurnitureShop onPlace={place} coins={coins} />
+        {tab === 'chest' && <Chest onPlace={place} onPick={(id) => (startEditing(), setSelected(id))} selected={selected} />}
+        {tab === 'shop' && <FurnitureShop onPlace={place} coins={coins} />}
+        {tab === 'idle' && (
+          <IdlePanel
+            current={actor.idle?.id ?? null}
+            onPlay={(id) => (stopEditing(), play(id))}
+            reach={(d) => !d.needs || !!idleTarget(ch.room, d, [Math.round(actor.x), Math.round(actor.y)], ch.look.wheelchair)}
+          />
         )}
       </section>
     </>

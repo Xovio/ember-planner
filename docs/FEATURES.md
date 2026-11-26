@@ -166,6 +166,12 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
   Pfeiltasten verschieben, `Esc` beendet; `Strg+Z` macht jeden Schritt rückgängig. Teppiche liegen unter Möbeln
 - **Licht nach Uhrzeit** (Morgen, Tag, Abend, Nacht): Himmel im Fenster, Tönung, Lampen, Kerzen, Kamin und Lichterkette
   leuchten abends; über den Licht-Knopf auch fest einstellbar
+- **Idle-Animationen:** Alle 20–40 Sekunden sucht sich die Figur etwas aus und läuft über freie Kacheln hin (bei
+  „Bewegung reduzieren“ ohne Laufen). Ab Werk: Umschauen, Strecken und gähnen, Summen. **Möbel bringen eigene mit**
+  (Laptop am Schreibtisch, Lesen auf Sofa oder Sessel, Lümmeln im Sitzsack, Nickerchen auf dem Bett, Pflanze gießen,
+  im Regal stöbern, am Kamin wärmen, Malen, Hanteln, Sterne gucken, Würfeln). Im Shop: Winken, Freudenhüpfer, Tanzen,
+  Yoga und Meditieren (die letzten beiden ab Attribut-Level). Im Reiter *Animationen* einzeln abspielen, ausschalten oder
+  festpinnen; zugestellte Möbel werden dort angezeigt. Im Rollstuhl bleibt die Figur in ihrem Stuhl neben dem Möbel
 - Pflanzen wiegen sich, Kerzen flackern (nur ohne „Bewegung reduzieren“); ist das Fenster verborgen, pausiert alles
 
 ## Ideen (Brainstorm-Boards)
