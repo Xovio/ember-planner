@@ -5,6 +5,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CalendarEvent, CalendarInfo } from '@shared/types'
 import type { GEvent } from './mapping'
 
+/** stores of the running test: their delayed write must happen before the temp folder goes */
+type Store = InstanceType<typeof import('../store').DataStore>
+let stores: Store[] = []
+const track = (s: Store): Store => (stores.push(s), s)
+
 let dir = ''
 vi.mock('electron', () => ({ app: { getPath: () => dir } }))
 
@@ -34,7 +39,7 @@ interface Call {
  * write requests via `onWrite`.
  */
 function setup(onWrite: (c: Call) => GEvent | Error | undefined, listItems: GEvent[] = []) {
-  const store = new DataStore()
+  const store = track(new DataStore())
   store.applyRemote({ calendars: { upsert: [cal] } })
   const calls: Call[] = []
   let items = listItems
@@ -103,6 +108,7 @@ beforeEach(() => {
 })
 afterEach(() => {
   vi.useRealTimers()
+  for (const s of stores.splice(0)) s.flush()
   rmSync(dir, { recursive: true, force: true })
 })
 
