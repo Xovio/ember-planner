@@ -137,7 +137,7 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
 - **Aussehen kostenlos** und frei kombinierbar (erweitert in v0.7), ohne festen Geschlechts-Schalter:
   - Schnellstart-Vorlagen *eher weiblich*, *eher männlich*, *neutral* (setzen nur ein paar Formen)
   - Körper: Statur, Körperform (gerade, kurvig, breite Schultern), Größe, Hautton (12 Töne oder eigener Farbwähler)
-  - Gesicht: Gesichtsform, Augenform, Augenfarbe (auch frei), Brauen, Wimpern, Wangenröte, Sommersprossen, Muttermal,
+  - Gesicht: Gesichtsform, Augenform (rund, mandel, sanft, schmal, klein, Schlupflid), Augenfarbe (auch frei), Brauen, Wimpern, Wangenröte, Sommersprossen, Muttermal,
     Make-up (Lippen, Lidstrich)
   - Haare: 13 Frisuren (u. a. Afro, Lange Locken, Zopf, Zwei Zöpfe, Flechtzopf, Undercut, Raspel, Glatze),
     Haarfarbe (auch frei), 6 Bärte
