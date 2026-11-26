@@ -313,3 +313,51 @@ export function GoalEditor({ goal, onClose }: { goal: WeeklyGoal | null; onClose
     </div>
   )
 }
+
+/** sidebar section on the ToDo page: this week's goals at a glance, with a way into the week to plan them */
+export function TodoGoalsSection(): React.JSX.Element {
+  const now = useNow(60_000)
+  const today = useMemo(() => new Date(now.getFullYear(), now.getMonth(), now.getDate()), [now])
+  const weeks = useGoalWeeks(today)
+  const setView = useStore((s) => s.setView)
+  const [editing, setEditing] = useState<WeeklyGoal | 'new' | null>(null)
+  const target = weeks.reduce((s, w) => s + w.target, 0)
+  const done = weeks.reduce((s, w) => s + Math.min(w.done.length, w.target), 0)
+  const open = weeks.reduce((s, w) => s + w.open, 0)
+  const missed = weeks.flatMap((w) => w.missed)
+
+  return (
+    <div className="goalbar todo-goals">
+      <div className="section-head">
+        <span>
+          Wochenziele{' '}
+          {target > 0 && (
+            <span className="muted">
+              {done}/{target}
+            </span>
+          )}
+        </span>
+        <button className="icon-btn sm" aria-label="Wochenziel anlegen" title="Wochenziel anlegen" onClick={() => setEditing('new')}>
+          <Plus size={16} />
+        </button>
+      </div>
+      {weeks.length === 0 && (
+        <button className="goal-empty" onClick={() => setEditing('new')}>
+          z. B. „3× Gym“ – erscheint hier und im Kalender
+        </button>
+      )}
+      {weeks.map((w) => (
+        <GoalRow key={w.goal.id} w={w} draggable={false} onEdit={() => setEditing(w.goal)} />
+      ))}
+      {missed.map((e) => (
+        <MissedPrompt key={e.id} event={e} />
+      ))}
+      {weeks.length > 0 && (
+        <button className="link-btn todo-goals-plan" onClick={() => setView('week')}>
+          {open > 0 ? `${open} offen – in der Woche einplanen →` : 'Zur Woche →'}
+        </button>
+      )}
+      {editing && <GoalEditor goal={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />}
+    </div>
+  )
+}

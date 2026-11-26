@@ -10,6 +10,8 @@ import { TodoItem } from '../components/todos/TodoItem'
 import { BulkBar } from '../components/todos/BulkBar'
 import { CategoriesSection, ListsSection, SmartViews } from '../components/todos/ListNav'
 import { RightPanel } from '../components/RightPanel'
+import { TodoGoalsSection } from '../components/goals/Goals'
+import { TodoTemplatesSection } from '../components/todos/TodoTemplates'
 
 /** Organising view: all lists, grouped by deadline status, fully keyboard-operable. */
 export function TodosPage(): React.JSX.Element {
@@ -37,7 +39,9 @@ export function TodosPage(): React.JSX.Element {
     <div className="todos-page">
       <aside className="sidebar">
         <SmartViews />
+        <TodoGoalsSection />
         <ListsSection />
+        <TodoTemplatesSection />
         <CategoriesSection />
         <div className="sidebar-foot">
           <div className="shortcut-hint wrap">

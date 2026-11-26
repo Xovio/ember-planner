@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { addDays, addMinutes } from 'date-fns'
-import { AlignLeft, CalendarClock, Coins, Copy, Flag, Hourglass, List, ListChecks, Plus, Repeat, Signal, Tag, Timer, Trash2, X } from 'lucide-react'
+import { AlignLeft, CalendarClock, ClipboardList, Coins, Copy, Flag, Hourglass, List, ListChecks, Plus, Repeat, Signal, Tag, Timer, Trash2, X } from 'lucide-react'
 import type { Difficulty, Priority, Recurrence, RecurrenceFreq, Todo } from '@shared/types'
 import { DIFFICULTY_LABEL, todoMinutes, todoReward } from '@shared/character'
 import { localDate, nextRecurrence, parseLocalDate, toTasksLine } from '@shared/todo'
@@ -24,6 +24,7 @@ export function TodoDetails({ id }: { id: string }): React.JSX.Element {
   const setPage = useStore((s) => s.setPage)
   const setCursor = useStore((s) => s.setCursor)
   const clear = useStore((s) => s.clearSelection)
+  const saveTemplate = useStore((s) => s.saveTodoAsTemplate)
 
   const [newSub, setNewSub] = useState('')
   const [copied, setCopied] = useState(false)
@@ -43,6 +44,14 @@ export function TodoDetails({ id }: { id: string }): React.JSX.Element {
       <div className="details-toolbar">
         <span className="drawer-kicker">ToDo · {list?.name}</span>
         <span style={{ flex: 1 }} />
+        <button
+          className="icon-btn sm"
+          title="Als Vorlage speichern – dann unter Vorlagen immer wieder neu anlegen"
+          aria-label="Als Vorlage speichern"
+          onClick={() => saveTemplate(todo.id)}
+        >
+          <ClipboardList size={14} />
+        </button>
         <button className="icon-btn sm danger" title="In den Papierkorb (Entf)" onClick={() => del([todo.id])}>
           <Trash2 size={14} />
         </button>

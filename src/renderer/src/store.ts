@@ -16,6 +16,7 @@ import {
   type Settings,
   type Todo,
   type TodoList,
+  type TodoTemplate,
   type PointsLedger,
   type Character,
   type PlacedFurniture,
@@ -32,7 +33,7 @@ import { goalEvent, markFilled, slotsToFill, weekKey } from '@shared/goals'
 import { attrLevel, attrXp, coinBalance } from '@shared/character'
 import { furnitureById, ownsFurniture } from '@shared/room'
 import { idleById, idleKey, ownsIdle } from '@shared/idle'
-import { itemById } from '@shared/wardrobe'
+import { itemById, ownsItem } from '@shared/wardrobe'
 import {
   isPlaceholderId,
   placeholderEvent,
@@ -41,6 +42,7 @@ import {
   templateFromEvent,
   templateKey
 } from '@shared/templates'
+import { templateFromTodo, todoFromTemplate } from '@shared/todoTemplates'
 
 /* ───────────── UI types ───────────── */
 
@@ -213,6 +215,13 @@ interface State {
   openPlaceholder(templateId: string, anchor: Anchor): void
   removeTemplate(id: string): void
 
+  /** saves a ToDo as a ToDo template and returns its id */
+  saveTodoAsTemplate(todoId: string): string
+  upsertTodoTemplate(t: TodoTemplate): void
+  removeTodoTemplate(id: string): void
+  /** a fresh ToDo from the template; returns its id */
+  applyTodoTemplate(id: string): string
+
   upsertCalendar(c: CalendarInfo): void
   removeCalendar(id: string): void
   toggleCalendar(id: string): void
@@ -359,6 +368,22 @@ export const useStore = create<State>((set, get) => {
   }
 
   const stamp = (): string => new Date().toISOString()
+  /** a new ToDo: in the shown list and category unless `t` says otherwise */
+  const makeTodo = (t: NewTodo): Todo => {
+    const ts = stamp()
+    const view = get().todoView
+    return {
+      id: uid(),
+      listId: view.startsWith('list:') ? view.slice(5) : INBOX_ID,
+      categoryId: get().todoCategory ?? undefined,
+      priority: 0,
+      subtasks: [],
+      done: false,
+      createdAt: ts,
+      updatedAt: ts,
+      ...t
+    }
+  }
   const toHm = (d: Date): string => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
 
   /** after undo/redo the selected item may be gone */
@@ -861,22 +886,55 @@ export const useStore = create<State>((set, get) => {
     setPicked: (picked) => set({ picked }),
 
     addTodo(t) {
-      const ts = stamp()
-      const id = uid()
-      const view = get().todoView
-      const todo: Todo = {
-        id,
-        listId: view.startsWith('list:') ? view.slice(5) : INBOX_ID,
-        categoryId: get().todoCategory ?? undefined,
-        priority: 0,
-        subtasks: [],
-        done: false,
-        createdAt: ts,
-        updatedAt: ts,
-        ...t
-      }
+      const todo = makeTodo(t)
       mutate((d) => ({ ...d, todos: [...d.todos, todo] }), { label: 'ToDo angelegt' })
-      return id
+      return todo.id
+    },
+
+    /* ── ToDo templates ── */
+    saveTodoAsTemplate(todoId) {
+      const todo = get().data?.todos.find((t) => t.id === todoId)
+      if (!todo) return ''
+      const t = templateFromTodo(todo, uid())
+      mutate((d) => ({ ...d, todoTemplates: [...d.todoTemplates, t] }), { label: `ToDo-Vorlage „${t.name}“ gespeichert` })
+      get().pushToast({ kind: 'undo', title: `Vorlage „${t.name}“ gespeichert`, body: 'Unter ToDos → Vorlagen mit einem Klick neu anlegen' })
+      return t.id
+    },
+    upsertTodoTemplate(t) {
+      const next = { ...t, updatedAt: stamp() }
+      mutate(
+        (d) => ({
+          ...d,
+          todoTemplates: d.todoTemplates.some((x) => x.id === t.id)
+            ? d.todoTemplates.map((x) => (x.id === t.id ? next : x))
+            : [...d.todoTemplates, next]
+        }),
+        { label: 'ToDo-Vorlage gespeichert' }
+      )
+    },
+    removeTodoTemplate(id) {
+      const t = get().data?.todoTemplates.find((x) => x.id === id)
+      mutate((d) => ({ ...d, todoTemplates: d.todoTemplates.filter((x) => x.id !== id) }), {
+        label: `Vorlage „${t?.name}“ gelöscht`,
+        undoToast: true
+      })
+    },
+    applyTodoTemplate(id) {
+      const data = get().data
+      const tpl = data?.todoTemplates.find((x) => x.id === id)
+      if (!data || !tpl) return ''
+      const todo = makeTodo(
+        todoFromTemplate(tpl, uid, { listIds: data.lists.map((l) => l.id), categoryIds: data.categories.map((c) => c.id) })
+      )
+      mutate(
+        (d) => ({
+          ...d,
+          todos: [...d.todos, todo],
+          todoTemplates: d.todoTemplates.map((x) => (x.id === id ? { ...x, uses: (x.uses ?? 0) + 1 } : x))
+        }),
+        { label: `„${todo.title}“ aus Vorlage angelegt`, undoToast: true }
+      )
+      return todo.id
     },
 
     updateTodo(id, patch, coalesce) {
@@ -1242,7 +1300,7 @@ export const useStore = create<State>((set, get) => {
     buyItem(id) {
       const ch = get().data?.character
       const it = itemById(id)
-      if (!ch || !it || ch.owned.includes(id)) return false
+      if (!ch || !it || ownsItem(ch, it)) return false
       if (coinBalance(ch) < it.price) return false
       if (it.unlock && attrLevel(attrXp(ch)[it.unlock.attr]).level < it.unlock.level) return false
       mutate(

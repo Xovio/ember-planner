@@ -62,11 +62,17 @@ Die linke Leiste filtert die ToDo-Spalte: Ein Klick auf eine Liste oder Kategori
 - **Papierkorb:** Löschen legt ToDos 30 Tage in den Papierkorb; dort einzeln oder alle wiederherstellen, endgültig löschen
   oder leeren (alles mit `Strg+Z` rückgängig). Gelöschte ToDos tauchen in keiner Ansicht, keinem Widget und keiner Erinnerung auf
 - **Schnellaktionen beim Darüberfahren:** Wunschtag heute / morgen / nächste Woche, weitere Aktionen im „…“-Menü
-- **Rechtsklick-Menü:** erledigt, Wunschtag, harte Deadline, jetzt einplanen, Priorität, Kategorie, Liste, löschen
+- **Rechtsklick-Menü:** erledigt, Wunschtag, harte Deadline, jetzt einplanen, Priorität, Kategorie, Liste, als Vorlage speichern, löschen
 - **Mehrfachauswahl** (Strg/Shift+Klick) mit Aktionsleiste
 - **Wiederholbare ToDos** (v0.6): *Wiederholung → Beliebig oft (mit Abklingzeit)* – z. B. „Waschmaschine befüllen“. Jedes
   Abhaken bringt Punkte und Coins, das ToDo bleibt offen. Während der Abklingzeit (keine bis 1 Woche, Standard 1 h) ist es
   abgehakt und rückt nach unten; ein Klick darauf nimmt das letzte Abhaken zurück
+- **ToDo-Vorlagen:** ein ToDo als Vorlage speichern (Klemmbrett-Knopf in den Details oder Rechtsklick) oder in der
+  linken Leiste unter *Vorlagen* (+) anlegen – Titel, Checkliste, Liste, Kategorie, Priorität, Schwierigkeit, Dauer und
+  Wunschtag/Deadline relativ zum Anlegetag („nach 2 Tagen“). Ein Klick auf die Vorlage legt ein neues ToDo mit frischer
+  Checkliste an; jedes kann normal abgehakt werden. Meistbenutzte Vorlagen stehen oben
+- **Wochenziele in den ToDos:** die linke Leiste zeigt die Ziele dieser Woche mit Fortschritt und „Hat’s geklappt?“;
+  bearbeiten per Stift, *in der Woche einplanen →* springt in die Wochenansicht
 - **Tastatur:** `↑` `↓` / `j` `k` wählen, `Leertaste` abhaken, `Entf` in den Papierkorb, `0`–`3` Priorität
 - **Obsidian-Tasks-Format:** jede Aufgabe zeigt ihre Zeile im Tasks-Format (zum Kopieren, mit `🔁 every week …` für
   Wiederholungen); die Schnelleingabe versteht die Syntax
@@ -118,7 +124,7 @@ auf eine Kachel ziehen fügt ein weiteres Ziel hinzu. Links wie `https://`, `ste
 
 ## Wochenziele & Punkte
 
-- **Wochenziele** wie „3× Gym“ legst du in *Planen* in der linken Leiste an (+ bei *Wochenziele*) oder im Widget
+- **Wochenziele** wie „3× Gym“ legst du in *Planen* oder *ToDos* in der linken Leiste an (+ bei *Wochenziele*) oder im Widget
   *Wochenziele*: was, wie oft pro Woche, wie lange, in welchem Kalender
 - **Feste Zeiten** (z. B. Di und Do 15:30, je 2 h) trägt Ember jede Woche selbst als Termine ein (diese und nächste Woche);
   die übrigen Bausteine ziehst du aus der Leiste in die Woche. Optional „Nur diese Woche“
