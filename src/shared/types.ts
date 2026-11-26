@@ -189,7 +189,7 @@ export interface AvatarLook {
   /** 0 small, 1 medium, 2 tall */
   height: number
   face: 'round' | 'oval' | 'square'
-  eyeShape: 'round' | 'almond' | 'soft'
+  eyeShape: 'round' | 'almond' | 'soft' | 'narrow' | 'small' | 'hooded'
   brows: 'thin' | 'soft' | 'thick'
   lashes: boolean
   beard: 'none' | 'stubble' | 'short' | 'full' | 'mustache' | 'goatee'

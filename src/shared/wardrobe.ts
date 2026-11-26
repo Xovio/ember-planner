@@ -40,8 +40,8 @@ export const BEARDS: { id: AvatarLook['beard']; name: string }[] = [
  * stays freely changeable afterwards: there is no gender switch that locks anything.
  */
 export const LOOK_PRESETS: { id: string; name: string; look: Partial<AvatarLook> }[] = [
-  { id: 'fem', name: 'Eher weiblich', look: { body: 'curvy', face: 'oval', eyeShape: 'almond', brows: 'thin', lashes: true, beard: 'none', hair: 'long' } },
-  { id: 'masc', name: 'Eher männlich', look: { body: 'broad', face: 'square', eyeShape: 'round', brows: 'thick', lashes: false, beard: 'stubble', hair: 'short', makeup: 'none' } },
+  { id: 'fem', name: 'Eher weiblich', look: { body: 'curvy', face: 'oval', eyeShape: 'almond', brows: 'thin', lashes: true, blush: true, beard: 'none', hair: 'long' } },
+  { id: 'masc', name: 'Eher männlich', look: { body: 'broad', face: 'square', eyeShape: 'narrow', brows: 'thick', lashes: false, blush: false, beard: 'stubble', hair: 'short', makeup: 'none' } },
   { id: 'neutral', name: 'Neutral', look: { body: 'straight', face: 'round', eyeShape: 'round', brows: 'soft', lashes: false, beard: 'none', hair: 'bob' } }
 ]
 
