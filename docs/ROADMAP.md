@@ -122,6 +122,9 @@ Hintergründe und Quellen sammeln wir in einer eigenen Recherche-Notiz (`docs/AD
 - ~~Tastenkürzel-Übersicht (`?`)~~ ✅ 2.6 · anpassbare Kürzel
 - Englische Übersetzung
 
+**Charakter & Zimmer**
+- **Termine spiegeln:** die Figur macht, was gerade im Kalender steht (Gym → Hanteln), und eine Weile danach – Plan in [AVATAR.md](AVATAR.md#termine-spiegeln-geplant)
+
 **Ideen-Boards** (Grundversion ✅ 2.7)
 - Bilder und Links als Karten, Zettelbreite anpassbar
 - `.canvas`-Dateien aus Obsidian importieren

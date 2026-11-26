@@ -102,6 +102,36 @@ der Kern ist und Möbel aus Code-Körpern alle vier Drehrichtungen gratis bekomm
 - **Später:** Figur von hinten bzw. seitlich (echtes Sitzen am Schreibtisch mit dem Rücken zur Kamera), Liegen im Bett,
   mehr Animationen pro Möbel, Haustier, das mitmacht
 
+## Termine spiegeln (geplant)
+
+Die Figur macht im Zimmer das, was du gerade im Kalender hast – und eine Weile danach noch. Steht „Gym“ an und im
+Zimmer steht eine Hantelbank, stemmt sie Hanteln. Passt nichts, laufen einfach die normalen Idle-Animationen.
+
+- **Wann:** solange ein Termin läuft und danach noch eine Nachwirkzeit (Vorschlag 60 min, einstellbar). Ganztägige
+  Termine und Feiertage zählen nicht. Bei mehreren gleichzeitigen gewinnt der, der zuletzt begonnen hat
+- **Erkennen:** Stichwörter im Titel (wie `guessAttr` in `shared/character.ts`, nur mit Tätigkeiten statt Attributen),
+  dazu optional pro Kalender und pro Termin-Vorlage eine feste Tätigkeit. Alles bleibt lokal
+- **Zuordnung** (erste Idee):
+
+  | Termin | Während | Danach |
+  |---|---|---|
+  | Gym, Sport, Training | Hanteln stemmen (Hantelbank) · sonst Yoga · sonst Strecken | Strecken und gähnen, Nickerchen |
+  | Yoga, Meditation | Yoga / Meditieren | Meditieren |
+  | Arbeit, Meeting, Uni | Am Laptop arbeiten (Schreibtisch) | Im Sitzsack lümmeln, Lesen |
+  | Lernen, Lesen | Lesen (Sofa/Sessel) · Im Regal stöbern | Lesen |
+  | D&D, Session, Spieleabend | Würfeln (Spieltisch) | Freudenhüpfer, Tanzen |
+  | Prep, Malen, kreativ | Malen (Staffelei) · Am Laptop arbeiten | Im Regal stöbern |
+  | Feier, Party, Konzert | Tanzen | Nickerchen |
+
+- **Ablauf in `useIdleActor`:** während eines Termins ist die passende Animation die bevorzugte Wahl (z. B. 2 von 3
+  Runden), dazwischen normale, damit es nicht eintönig wird. Festgepinnte Animation, Einrichten-Modus und „Bewegung
+  reduzieren“ haben Vorrang. Nur Animationen, die man besitzt und nicht ausgeschaltet hat
+- **Zeigen:** kleiner Hinweis beim Darüberfahren („trainiert gerade – Gym bis 18:30“), Schalter in den Optionen zum Abstellen
+- **Logik testbar** in `shared/idle.ts`: `activityFor(events, now)` → Tätigkeit oder nichts, dann wie bisher die
+  verfügbare Animation dazu suchen
+- **Später:** eigene Animationen nur für Termine (Kochen mit Küche, Laufband, Gitarre), Kleidung passend zur Tätigkeit
+  (Sportsachen beim Gym), Belohnungs-Moment wenn ein Termin vorbei ist
+
 ## Aussehen
 
 Kein Geschlechts-Schalter: Jedes Merkmal (Körperform, Größe, Gesichts- und Augenform, Brauen, Wimpern, Bart, Make-up,
