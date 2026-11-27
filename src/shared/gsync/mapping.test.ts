@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { applyPatch } from '@shared/patch'
-import { expandEvent } from '@shared/recurrence'
-import { createDefaultData, type CalendarEvent, type CalendarInfo } from '@shared/types'
+import { applyPatch } from '../patch'
+import { expandEvent } from '../recurrence'
+import { createDefaultData, type CalendarEvent, type CalendarInfo } from '../types'
 import { eventFromGoogle, htmlToText, patchFromGoogle, type GEvent } from './mapping'
 
 // TZ=Europe/Berlin in tests

@@ -51,8 +51,9 @@ mutate() ──data:save──────────▶ DataStore  ── Diff
 - Scopes: `calendar.calendarlist.readonly` (Kalenderliste lesen) und `calendar.events` (Termine in allen Kalendern
   lesen und schreiben). Den vollen `calendar`-Scope (Kalender löschen und freigeben) brauchen wir nicht.
 - Hat man bei der Anmeldung ein Häkchen entfernt, erkennt die App das an der Token-Antwort und zeigt einen Hinweis.
-- Umsetzung: `src/main/google/oauth.ts` (PKCE, Loopback-Server, Token-Endpunkt) und `src/main/google/account.ts`
-  (verschlüsselte Datei `google-auth.bin` im userData-Ordner, Token-Erneuerung, API-Aufrufe mit deutschen Fehlermeldungen)
+- Umsetzung: `src/main/google/oauth.ts` (PKCE, Loopback-Server) und `src/main/google/account.ts` (Anmeldung am Desktop),
+  Token-Erneuerung und API-Aufrufe mit deutschen Fehlermeldungen in `src/shared/gsync/client.ts`, damit die Android-App
+  sie mitnutzt. Die Zugangsdaten liegen am Desktop verschlüsselt in `google-auth.bin` im userData-Ordner.
 - ⚠️ Steht das Cloud-Projekt im Status **„Testing“**, laufen Refresh-Tokens nach **7 Tagen** ab.
   Für dauerhaften Betrieb stellt man es auf „In Produktion“. Eine Verifizierung braucht es dafür nicht;
   Google zeigt dann bei der Anmeldung nur einen Hinweis „nicht verifizierte App“.
@@ -71,7 +72,7 @@ mutate() ──data:save──────────▶ DataStore  ── Diff
 
 Push-Benachrichtigungen (Webhooks) von Google funktionieren für eine Desktop-App ohne Server nicht, daher wird abgefragt.
 
-**Umsetzung des Abrufs** (`src/main/google/sync.ts`, `mapping.ts`):
+**Umsetzung des Abrufs** (`src/shared/gsync/sync.ts`, `mapping.ts`; seit Schritt 4b plattformunabhängig):
 - Sync-Tokens pro Kalender liegen in `google-sync.json` im userData-Ordner, nicht in `data.json`.
 - Abgerufene Änderungen gehen als Patch über `DataStore.applyRemote` an die Oberfläche (siehe Etappe 1).
 - Lokale Termin-ID `g:<Kalender-ID>:<Event-ID>`, deshalb ersetzen wiederholte Abrufe Termine, statt sie zu verdoppeln.

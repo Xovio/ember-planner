@@ -1,6 +1,6 @@
-import { localMidnightISO, parseRecurrence } from '@shared/ical'
-import type { DataPatch } from '@shared/patch'
-import type { CalendarEvent, CalendarInfo } from '@shared/types'
+import { localMidnightISO, parseRecurrence } from '../ical'
+import type { DataPatch } from '../patch'
+import type { CalendarEvent, CalendarInfo } from '../types'
 
 /** the parts of a Google Calendar event resource we read */
 export interface GEventTime {

@@ -10,7 +10,7 @@ import type { DataPatch } from '@shared/patch'
 import type { AppData, CalendarInfo } from '@shared/types'
 import type { DataStore } from '../store'
 import type { GoogleAccount } from './account'
-import type { GoogleSync } from './sync'
+import type { GoogleSync } from '@shared/gsync/sync'
 
 const isGoogle = (c: CalendarInfo): boolean => c.external?.provider === 'google'
 

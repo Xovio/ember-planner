@@ -3,7 +3,7 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CalendarEvent, CalendarInfo } from '@shared/types'
-import type { GEvent } from './mapping'
+import type { GEvent } from '@shared/gsync/mapping'
 
 /** stores of the running test: their delayed write must happen before the temp folder goes */
 type Store = InstanceType<typeof import('../store').DataStore>
@@ -14,7 +14,8 @@ let dir = ''
 vi.mock('electron', () => ({ app: { getPath: () => dir } }))
 
 const { DataStore } = await import('../store')
-const { GoogleSync } = await import('./sync')
+const { GoogleSync } = await import('@shared/gsync/sync')
+const { FileGoogleSyncStorage } = await import('./storage')
 const { GoogleApiError } = await import('./account')
 
 // TZ=Europe/Berlin
@@ -65,7 +66,7 @@ function setup(onWrite: (c: Call) => GEvent | Error | undefined, listItems: GEve
   const sync = new GoogleSync({
     store,
     account: account as never,
-    dir,
+    storage: new FileGoogleSyncStorage(dir),
     timeZone: 'Europe/Berlin',
     onNotice: (t) => notices.push(t)
   })
