@@ -14,6 +14,7 @@ import { DiscordSync } from './discord/sync'
 import { autoUpdater } from 'electron-updater'
 import { Updater } from './updater'
 import { AppTimeTracker } from './apptime'
+import { SyncTracker } from './sync/tracker'
 import { registerLauncherIpc } from './launcher'
 import { PREP_WIDGET_ID, prepConfig } from '@shared/apptime'
 import type { GoogleStatus } from '@shared/google'
@@ -39,6 +40,7 @@ let googleSync: GoogleSync | null = null
 let discordSync: DiscordSync | null = null
 let updater: Updater | null = null
 let appTime: AppTimeTracker | null = null
+let syncTracker: SyncTracker | null = null
 let quitting = false
 
 // separate data folder, e.g. for testing without touching the real data
@@ -55,6 +57,12 @@ function init(): void {
   app.setAppUserModelId(APP_ID)
   store = new DataStore()
   applyLoginItem(store.get())
+  // change stamps for device sync; a failure here must never keep the app from starting
+  try {
+    syncTracker = new SyncTracker(app.getPath('userData'), store.get())
+  } catch (err) {
+    console.error('Device sync tracking disabled:', err)
+  }
 
   ipcMain.handle('data:load', (): LoadResult => ({ data: store.get(), seq: store.seq }))
   ipcMain.handle('data:save', (_e, next: AppData, baseSeq?: number) => {
@@ -157,6 +165,13 @@ function init(): void {
   discordSync.start()
 
   store.subscribe({
+    onSave(prev, next) {
+      try {
+        syncTracker?.observe(prev, next)
+      } catch (err) {
+        console.error('Device sync tracking failed:', err)
+      }
+    },
     onLocalChange(diff, data) {
       googleSync?.recordLocal(diff, data)
       discordSync?.recordLocal(diff)
@@ -296,6 +311,7 @@ app.on('before-quit', () => {
   updater?.stop()
   appTime?.stop()
   store?.flush()
+  syncTracker?.flush()
 })
 
 app.on('window-all-closed', () => {

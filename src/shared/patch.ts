@@ -1,3 +1,4 @@
+import { applyRecords } from './sync'
 import type { AppData, CalendarEvent, CalendarInfo } from './types'
 
 /**
@@ -8,6 +9,8 @@ import type { AppData, CalendarEvent, CalendarInfo } from './types'
 export interface DataPatch {
   events?: { upsert?: CalendarEvent[]; remove?: string[] }
   calendars?: { upsert?: CalendarInfo[]; remove?: string[] }
+  /** device sync: records by key (see shared/sync.ts), applied after events and calendars */
+  records?: { set?: Record<string, unknown>; remove?: string[] }
 }
 
 /** A patch as broadcast by the main process; `seq` increases by one per patch. */
@@ -38,17 +41,20 @@ export function isEmptyPatch(p: DataPatch): boolean {
     !p.events?.upsert?.length &&
     !p.events?.remove?.length &&
     !p.calendars?.upsert?.length &&
-    !p.calendars?.remove?.length
+    !p.calendars?.remove?.length &&
+    !Object.keys(p.records?.set ?? {}).length &&
+    !p.records?.remove?.length
   )
 }
 
 export function applyPatch(data: AppData, patch: DataPatch): AppData {
   if (isEmptyPatch(patch)) return data
-  return {
+  const next = {
     ...data,
     events: upsertById(data.events, patch.events?.upsert, patch.events?.remove),
     calendars: upsertById(data.calendars, patch.calendars?.upsert, patch.calendars?.remove)
   }
+  return patch.records ? applyRecords(next, patch.records.set, patch.records.remove) : next
 }
 
 export function applyPatches(data: AppData, patches: DataPatch[]): AppData {
