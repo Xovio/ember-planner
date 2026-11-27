@@ -1,6 +1,6 @@
 # Geräte-Sync über das Google-Konto – Konzept
 
-**Status:** Konzept, Entscheidungen getroffen (27. November 2026). Noch nichts gebaut.
+**Status:** Schritt 1 (Sync-Modell) gebaut, 27. November 2026. Schritte 2–4 sind Konzept.
 
 ## Ziel
 
@@ -55,26 +55,40 @@ appDataFolder/
 
 ## Zusammenführen
 
-Kern ist eine reine Funktion `mergeData(local, ...remotes)` in `src/shared/merge.ts`, vollständig mit Tests abgedeckt.
+Umgesetzt in `src/shared/sync.ts` (Schritt 1), mit Tests in `sync.test.ts`.
 
-1. **Sammlungen mit IDs** (ToDos, Listen, Termine, Vorlagen, Boards, Ziele, Kategorien): pro `id` gewinnt die Version
-   mit dem neueren `updatedAt`. Bei Gleichstand entscheidet die `deviceId`, damit alle Geräte dasselbe Ergebnis haben.
-2. **Löschen:** Ein Eintrag wird nicht entfernt, sondern bekommt `deletedAt`. Eine Löschung ist eine Änderung wie jede andere.
-   Löschmarkierungen bleiben **90 Tage** stehen, länger als der Papierkorb (30 Tage), damit auch ein länger offline
-   liegendes Handy die Löschung noch mitbekommt.
-3. **Punkte:** Einträge werden vereinigt. Ein Punkteeintrag ändert sich nie, deshalb gibt es hier keine Konflikte.
-   Die Summe wird immer neu berechnet und nie gespeichert.
-4. **Charakter:** pro Feldgruppe (`look`, `outfit`, `room`, `outfits` …) mit eigenem Zeitstempel. Wer auf dem Handy die
-   Frisur ändert und am PC ein Möbelstück verschiebt, behält beides. `owned` (gekaufte Teile) wird vereinigt, `spent` als
-   Liste von Käufen geführt, damit Münzen nicht doppelt oder gar nicht abgezogen werden.
+**Einträge statt Dateien.** Der abgeglichene Teil der Daten wird in einzelne Einträge zerlegt, z. B. `todos/<id>`,
+`lists/<id>`, `points/<id>`, `character/look`, `rewards/<id>` oder `settings/defaultView`. Jeder Eintrag hat einen
+**Stempel**: Zeit und Gerät der letzten Änderung. Beim Zusammenführen gewinnt pro Eintrag der neuere Stempel.
+Bei Gleichstand entscheidet die Geräte-ID, damit alle Geräte dasselbe Ergebnis haben.
+
+1. **Sammlungen mit IDs** (Kalender, Termine, ToDos, Papierkorb, Listen, Kategorien, Vorlagen, Boards, Ziele):
+   jeder Eintrag einzeln. Ein ToDo in den Papierkorb legen heißt: `todos/x` gelöscht, `trash/x` neu.
+2. **Löschen:** Wird ein Eintrag entfernt, bleibt sein Stempel als Löschmarkierung stehen. Eine Löschung ist eine
+   Änderung wie jede andere: Ist sie neuer als eine Bearbeitung auf dem anderen Gerät, gewinnt sie, sonst die Bearbeitung.
+   Löschmarkierungen werden **90 Tage** mit hochgeladen, länger als der Papierkorb (30 Tage), damit auch ein länger
+   offline liegendes Handy die Löschung noch mitbekommt.
+3. **Punkte:** Jeder Punkteeintrag ist ein eigener Eintrag und ändert sich nie, deshalb gibt es keine Konflikte.
+4. **Charakter:** jedes Feld einzeln (`look`, `outfit`, `room`, `outfits` …), Belohnungen pro Eintrag. Wer auf dem
+   Handy die Frisur ändert und am PC ein Möbelstück verschiebt, behält beides. Gekaufte Teile (`owned`) werden vereinigt.
+   Bekannte Grenze: Kauft man auf zwei Geräten gleichzeitig offline ein, zählt bei den ausgegebenen Münzen (`spent`)
+   nur ein Gerät. Das ist selten und kostet höchstens ein paar Münzen.
 5. **Wiederholbare ToDos:** `repeatable.completions` wird vereinigt, sonst geht ein Abhaken auf einem Gerät verloren.
 6. **Unteraufgaben** zählen zum ToDo. Wer auf zwei Geräten verschiedene Unteraufgaben abhakt, bekommt die neuere Fassung.
-   Das ist selten genug, um es so zu lassen. Ein Hinweis zeigt es an, wie bei Google-Kollisionen.
 
-Uhren: Handys und PCs stellen ihre Uhr über das Internet. Für den Fall, dass eine Uhr falsch geht, nimmt ein Gerät nie
-einen Zeitstempel, der älter ist als der höchste, den es schon gesehen hat (einfache „hybride Uhr“).
+**Wer stempelt?** Der Main-Prozess, nicht die Oberfläche. Bei jedem Speichern vergleicht er den alten und den neuen
+Stand Eintrag für Eintrag und stempelt, was sich geändert hat (`SyncTracker`, `src/main/sync/tracker.ts`, Datei
+`device-sync.json`). Dadurch musste am Datenmodell und an der Oberfläche nichts geändert werden. Das läuft ab dieser
+Version immer mit, auch wenn der Sync noch aus ist, damit beim Einschalten klar ist, was wann geändert wurde.
 
-Das Zusammenführen läuft im Main-Prozess und erreicht die Oberfläche als Patch über den vorhandenen `RemoteLog`
+**Daten von vor dem Sync:** Einträge, die noch genau dem Auslieferungszustand entsprechen (Standard-Listen und
+-Kalender), bekommen den Stempel 0. Alles andere bekommt sein `updatedAt` oder 1. Ein frisch installiertes Handy
+überschreibt so nie die echten Daten vom PC.
+
+**Uhren:** Ein Gerät stempelt nie früher als den höchsten Stempel, den es schon gesehen hat (einfache „hybride Uhr“).
+Eine nachgehende Uhr kann so keine neuere Änderung verdrängen.
+
+**Zur Oberfläche** kommen zusammengeführte Einträge als Patch (`DataPatch.records`) über den vorhandenen `RemoteLog`
 (`src/shared/patch.ts`). Undo und laufende Eingaben bleiben damit erhalten, genau wie beim Google-Kalender.
 
 ## Wann abgeglichen wird
@@ -83,20 +97,6 @@ Das Zusammenführen läuft im Main-Prozess und erreicht die Oberfläche als Patc
 - 20 Sekunden nach der letzten Änderung (gebündelt, damit nicht jeder Tastendruck hochgeladen wird)
 - alle 5 Minuten, solange die App offen ist
 - auf dem Handy zusätzlich beim Öffnen, Android darf im Hintergrund nur selten
-
-## Was am Datenmodell fehlt (Schritt 1)
-
-| Typ | Fehlt |
-|---|---|
-| `TodoList`, `Category`, `EventTemplate`, `TodoTemplate` | `updatedAt`, `deletedAt` (teils fehlt auch `createdAt`) |
-| `Board`, `WeeklyGoal` | `deletedAt` |
-| `CalendarInfo` | `updatedAt`, `deletedAt` (für lokale Kalender) |
-| `Character` | Zeitstempel pro Feldgruppe, Käufe als Liste |
-| `Settings` | Aufteilung in gemeinsame und Geräte-Einstellungen |
-| Papierkorb (`trash`, `eventTrash`) | wird zur Ansicht auf Einträge mit `deletedAt`, statt eigene Listen zu sein |
-
-`normalizeData` ergänzt fehlende Zeitstempel beim Laden alter Daten. Diese Umstellung lohnt sich auch ohne Sync,
-weil Export und Import sowie die Backups damit sauberer zusammenführen können.
 
 ## Anmeldung und Google-Freigabe
 
@@ -122,7 +122,7 @@ Abschnitt „Geräte-Sync“ in den Optionen:
 
 ## Schritte
 
-1. **Datenmodell:** Zeitstempel und Löschmarkierungen überall, Einstellungen aufteilen, `mergeData` mit Tests. Noch ohne Netzwerk.
+1. ~~**Sync-Modell:** Einträge, Stempel, Löschmarkierungen, gemeinsame und Geräte-Einstellungen, Zusammenführen mit Tests, Stempel im Main-Prozess. Noch ohne Netzwerk.~~ ✅
 2. **Drive-Sync am Desktop:** Berechtigung, Gerätedateien, Abgleich-Zeitpunkte, Optionen, optionale Verschlüsselung
    (AES-GCM, Schlüssel aus der Passphrase per PBKDF2). Testbar mit zwei Desktop-Installationen
    (`EMBER_USER_DATA` zeigt auf zwei Datenordner).
