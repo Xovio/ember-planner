@@ -1,6 +1,6 @@
 # Geräte-Sync über das Google-Konto – Konzept
 
-**Status:** Konzept (27. November 2026). Noch nichts gebaut, erst gemeinsam durchgehen.
+**Status:** Konzept, Entscheidungen getroffen (27. November 2026). Noch nichts gebaut.
 
 ## Ziel
 
@@ -10,7 +10,7 @@ Desktop-App und Handy-App zeigen dieselben Termine, ToDos, Projekte, Punkte und 
 - **Termine in Google-Kalendern** laufen wie heute über die Calendar API ([GOOGLE-SYNC.md](GOOGLE-SYNC.md)).
   Die Handy-App macht dasselbe, Google ist die gemeinsame Quelle.
 - **Alles andere** liegt als JSON im versteckten App-Ordner des Nutzers in Google Drive (`appDataFolder`).
-- Ein Google-Konto gibt es auch auf dem iPhone. Android ist nur der naheliegendste Fall, nicht die Grenze.
+- Die Handy-App gibt es nur für Android. Vorerst nutzen nur du und Freunde die App, sie wird nicht veröffentlicht.
 
 ## Grundsätze
 
@@ -32,8 +32,8 @@ Desktop-App und Handy-App zeigen dieselben Termine, ToDos, Projekte, Punkte und 
 | Termin- und ToDo-Vorlagen, Boards, Wochenziele | Drive | |
 | Punkte | Drive | `PointsLedger.entries` ist schon eine Sammlung einzelner Einträge, ideal zum Zusammenführen |
 | Charakter, Kleidung, Zimmer | Drive | pro Feld abgleichen, siehe unten |
-| Gemeinsame Einstellungen (Design, Schrift, Standardansicht, Erinnerungen) | Drive | |
-| Geräte-Einstellungen (Autostart, Tray, Widget-Anordnung, Vault-Pfade) | nur lokal | Pfade und Fenster gelten nur für das eine Gerät |
+| Gemeinsame Einstellungen (Standardansicht, Standard-Erinnerungen, Feiertage, ToDo-Kalender) | Drive | |
+| Geräte-Einstellungen (Design, Schrift, Ecken, Autostart, Tray, Widget-Anordnung, Vault-Pfade) | nur lokal | jedes Gerät stellt sie selbst ein |
 | Discord-Bot, Obsidian-Vaults lesen | nur Desktop | Das Handy zeigt die Verknüpfungen an, öffnet aber keinen Vault |
 | Zugangsdaten (Google, Discord) | nur lokal, verschlüsselt | werden nie hochgeladen |
 
@@ -107,7 +107,7 @@ weil Export und Import sowie die Backups damit sauberer zusammenführen können.
   Weil die Kalender-Berechtigung als „sensibel“ gilt, prüft Google die App: Datenschutzerklärung, Startseite, Begründung
   pro Berechtigung, kurzes Demo-Video. Das kostet nichts, dauert aber einige Wochen. Bis dahin gehen bis zu 100 Testnutzer
   mit dem Hinweis „nicht verifizierte App“. `drive.appdata` allein wäre nicht sensibel.
-- Handy: eigener OAuth-Client für Android (Paketname und Signatur-Fingerabdruck) bzw. iOS. Anmeldung über den
+- Handy: eigener OAuth-Client für Android (Paketname und Signatur-Fingerabdruck) im selben Cloud-Projekt. Anmeldung über den
   System-Browser (Custom Tabs) mit PKCE, wie am Desktop.
 
 ## Optionen in der App
@@ -123,23 +123,27 @@ Abschnitt „Geräte-Sync“ in den Optionen:
 ## Schritte
 
 1. **Datenmodell:** Zeitstempel und Löschmarkierungen überall, Einstellungen aufteilen, `mergeData` mit Tests. Noch ohne Netzwerk.
-2. **Drive-Sync am Desktop:** Berechtigung, Gerätedateien, Abgleich-Zeitpunkte, Optionen. Testbar mit zwei
-   Desktop-Installationen (`EMBER_USER_DATA` zeigt auf zwei Datenordner).
+2. **Drive-Sync am Desktop:** Berechtigung, Gerätedateien, Abgleich-Zeitpunkte, Optionen, optionale Verschlüsselung
+   (AES-GCM, Schlüssel aus der Passphrase per PBKDF2). Testbar mit zwei Desktop-Installationen
+   (`EMBER_USER_DATA` zeigt auf zwei Datenordner).
 3. **Termin-Zusatzangaben:** Verweise in `extendedProperties`, größere Angaben im Drive unter der Google-Termin-ID.
-4. **Handy-App:** Capacitor mit derselben Oberfläche, Speicher-Schicht statt `fs`, Anmeldung auf Android ([ROADMAP.md](ROADMAP.md), Phase 6).
-5. **Weitergabe:** eigener OAuth-Client, Datenschutzerklärung, Google-Prüfung. Kann parallel zu 3 und 4 laufen.
+4. **Android-App:** Capacitor mit derselben Oberfläche, Speicher-Schicht statt `fs`, Anmeldung auf Android ([ROADMAP.md](ROADMAP.md), Phase 6).
+5. **Weitergabe an die Öffentlichkeit:** Datenschutzerklärung, Google-Prüfung. Erst, wenn die App veröffentlicht werden soll.
 
 Später möglich:
 - **Ordner-Sync ohne Google:** Dieselben Gerätedateien in einem gewählten Ordner (Dropbox, OneDrive, Syncthing).
   Das Zusammenführen bleibt gleich, nur der Speicherort ändert sich.
-- **Verschlüsselung:** Die Gerätedateien vor dem Hochladen mit einer Passphrase verschlüsseln. Sicherer, aber wer die
-  Passphrase vergisst, kommt an den Sync-Stand nicht mehr heran (die lokalen Daten bleiben).
 - **Google Tasks** als zusätzliche Anzeige, damit ToDos auch in Googles eigener App auftauchen. Nicht als Speicher,
   dafür fehlen dort Projekte, Wiederholungen, Deadlines und Punkte.
 
-## Offene Fragen
+## Entscheidungen (27. November 2026)
 
-1. Sollen Design und Schrift auf allen Geräten gleich sein, oder pro Gerät einstellbar?
-2. Verschlüsselung mit Passphrase gleich einbauen, als Option später, oder gar nicht?
-3. Ab wann soll die App an andere gehen? Davon hängt ab, wann wir die Google-Prüfung anstoßen.
-4. Android zuerst, iPhone später – passt das so?
+1. **Design und Schrift sind Geräte-Einstellungen.** Jedes Gerät stellt sie selbst ein, sie werden nicht abgeglichen.
+2. **Verschlüsselung kommt als Option mit in Schritt 2.** Standard ist aus. Wer sie einschaltet, vergibt eine Passphrase
+   und gibt sie auf jedem weiteren Gerät einmal ein. Die App warnt deutlich, dass eine vergessene Passphrase nur den
+   Sync-Stand unbrauchbar macht, nicht die lokalen Daten.
+3. **Vorerst nur für dich und Freunde, keine Veröffentlichung.** Damit entfällt die Google-Prüfung. Wir nutzen einen
+   gemeinsamen OAuth-Client aus deinem Cloud-Projekt, Status „In Produktion“ (sonst laufen Anmeldungen nach 7 Tagen ab).
+   Freunde sehen bei der Anmeldung den Hinweis „nicht verifizierte App“ und klicken sich durch. Grenze: 100 Nutzer.
+   Schritt 5 (Weitergabe) wird erst wieder Thema, wenn die App öffentlich werden soll.
+4. **Nur Android.** iPhone ist nicht geplant. Die Handy-App bekommt nur einen Android-OAuth-Client.
