@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { applyPatch } from './patch'
 import { exportDoc, mergeDocs, newSyncState, toRecords, trackLocal, TOMBSTONE_DAYS, type DeviceDoc, type SyncState } from './sync'
-import { createDefaultData, type AppData, type Todo } from './types'
+import { createDefaultData, type AppData, type CalendarEvent, type Todo } from './types'
 
 const T0 = Date.parse('2026-11-27T10:00:00.000Z')
 
@@ -249,5 +249,73 @@ describe('exportDoc', () => {
     expect(a.doc().records['todos/x']?.del).toBe(true)
     a.now += (TOMBSTONE_DAYS + 1) * 86400000
     expect(a.doc().records['todos/x']).toBeUndefined()
+  })
+})
+
+describe('extras of Google events', () => {
+  const gcal = { id: 'g:me', name: 'Google', color: 'blue' as const, visible: true, external: { provider: 'google' as const, id: 'me@gmail.com' } }
+  const gev = (localId: string): CalendarEvent => ({
+    id: localId,
+    calendarId: 'g:me',
+    title: 'Gym',
+    start: '2026-11-28T10:00:00.000Z',
+    end: '2026-11-28T11:00:00.000Z',
+    allDay: false,
+    reminders: [],
+    external: { provider: 'google', id: 'abc123', calendarId: 'me@gmail.com' },
+    createdAt: '2026-11-20T00:00:00.000Z',
+    updatedAt: '2026-11-20T00:00:00.000Z'
+  })
+  /** what Google sync does: changes outside the UI, so nothing is stamped */
+  const pullFromGoogle = (dev: Device, ev: CalendarEvent): void => {
+    dev.data = { ...dev.data, calendars: [...dev.data.calendars, gcal], events: [...dev.data.events, ev] }
+  }
+  const setGoal = (done: boolean) => (d: AppData) => ({
+    ...d,
+    events: d.events.map((e) => (e.external ? { ...e, goal: { goalId: 'gym', done } } : e))
+  })
+
+  it('syncs only the extras, not the Google event itself', () => {
+    const a = new Device('A')
+    pullFromGoogle(a, gev('local-a'))
+    a.save(setGoal(true))
+    const keys = Object.keys(a.doc().records)
+    expect(keys).toContain('gextra/me@gmail.com/abc123')
+    expect(keys.some((k) => k.startsWith('events/'))).toBe(false)
+  })
+
+  it('puts them on the same Google event on the other device, even under another local id', () => {
+    const a = new Device('A')
+    const b = new Device('B')
+    pullFromGoogle(a, gev('local-a'))
+    pullFromGoogle(b, gev('local-b'))
+    a.save(setGoal(true))
+    b.pull(a)
+    expect(b.data.events.find((e) => e.id === 'local-b')?.goal).toEqual({ goalId: 'gym', done: true })
+  })
+
+  it('waits until Google sync has brought the event', () => {
+    const a = new Device('A')
+    const b = new Device('B')
+    pullFromGoogle(a, gev('local-a'))
+    a.save(setGoal(true))
+    const res = mergeDocs(b.state, b.data, [a.doc()])
+    expect(res).toEqual({ set: {}, remove: [] })
+    pullFromGoogle(b, gev('local-b'))
+    b.pull(a)
+    expect(b.data.events.find((e) => e.id === 'local-b')?.goal?.done).toBe(true)
+  })
+
+  it('clears them when they are removed on the other device', () => {
+    const a = new Device('A')
+    const b = new Device('B')
+    pullFromGoogle(a, gev('local-a'))
+    pullFromGoogle(b, gev('local-b'))
+    a.save(setGoal(false))
+    b.pull(a)
+    a.save((d) => ({ ...d, events: d.events.map(({ goal: _g, ...e }) => e) }))
+    b.pull(a)
+    expect(b.data.events.find((e) => e.id === 'local-b')).not.toHaveProperty('goal')
+    expect(b.data.events.find((e) => e.id === 'local-b')?.title).toBe('Gym')
   })
 })
