@@ -12,18 +12,27 @@ export function challengeFor(verifier: string): string {
   return createHash('sha256').update(verifier).digest('base64url')
 }
 
-export function buildAuthUrl(p: { clientId: string; redirectUri: string; challenge: string; state: string }): string {
+export function buildAuthUrl(p: {
+  clientId: string
+  redirectUri: string
+  challenge: string
+  state: string
+  /** extra scopes on top of the calendar ones, e.g. Drive for device sync */
+  extraScopes?: readonly string[]
+}): string {
   const q = new URLSearchParams({
     client_id: p.clientId,
     redirect_uri: p.redirectUri,
     response_type: 'code',
-    scope: GOOGLE_SCOPES.join(' '),
+    scope: [...GOOGLE_SCOPES, ...(p.extraScopes ?? [])].join(' '),
     code_challenge: p.challenge,
     code_challenge_method: 'S256',
     state: p.state,
     // offline + consent: always hand out a refresh token, even on reconnect
     access_type: 'offline',
-    prompt: 'consent'
+    prompt: 'consent',
+    // keep earlier grants when asking for more
+    include_granted_scopes: 'true'
   })
   return `${GOOGLE_AUTH_URL}?${q.toString()}`
 }
@@ -112,6 +121,7 @@ export function runLoopbackFlow(opts: {
   clientId: string
   clientSecret?: string
   openBrowser: (url: string) => void
+  extraScopes?: readonly string[]
   timeoutMs?: number
   signal?: AbortSignal
 }): Promise<TokenResponse> {
@@ -193,7 +203,8 @@ export function runLoopbackFlow(opts: {
           clientId: opts.clientId,
           redirectUri: `http://127.0.0.1:${port}`,
           challenge: challengeFor(verifier),
-          state
+          state,
+          extraScopes: opts.extraScopes
         })
       )
     })

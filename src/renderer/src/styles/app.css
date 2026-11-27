@@ -3981,3 +3981,56 @@ input[type='time'].input {
 .review-plan {
   margin-top: 12px;
 }
+
+/* ───────────── Device sync (settings) ───────────── */
+.device-sync-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.device-sync-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.device-sync-dname {
+  flex: 1;
+  color: var(--text-1);
+}
+.device-sync-dname em {
+  color: var(--text-3);
+  font-style: normal;
+}
+.device-sync-seen {
+  color: var(--text-3);
+  font-size: 12px;
+}
+.device-sync-name {
+  width: 200px;
+}
+.device-sync-pass {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 0 12px;
+}
+.device-sync-pass-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.device-sync-pass-row .input {
+  flex: 1;
+  max-width: 260px;
+}
+.device-sync-crypt .settings-label span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.device-sync-section .settings-note svg {
+  vertical-align: -2px;
+}

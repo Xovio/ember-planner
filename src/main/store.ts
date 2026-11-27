@@ -19,6 +19,8 @@ export interface StoreListener {
   onLocalChange?(diff: EventDiff, data: AppData): void
   /** a remote patch was applied and must reach the UI */
   onRemoteChange?(change: RemoteChange, data: AppData): void
+  /** every save from the UI, with the data before and after it */
+  onSave?(prev: AppData, next: AppData): void
 }
 
 /**
@@ -78,8 +80,10 @@ export class DataStore {
     const merged = applyPatches(normalizeData(next), this.log.since(baseSeq))
     this.log.ack(baseSeq)
     const diff = diffEvents(this.data.events, merged.events)
+    const prev = this.data
     this.data = merged
     this.scheduleWrite()
+    for (const l of this.listeners) l.onSave?.(prev, merged)
     if (!isEmptyDiff(diff)) for (const l of this.listeners) l.onLocalChange?.(diff, merged)
   }
 

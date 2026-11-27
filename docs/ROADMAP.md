@@ -71,7 +71,7 @@ Ideen:
 
 - Gleiche Oberfläche per Capacitor (Android zuerst)
 - Touch-Gesten: langes Drücken zum Verschieben, Wischen für „erledigt“ / „morgen“
-- Sync über Google Kalender bzw. eine eigene Sync-Lösung für ToDos
+- Sync über das Google-Konto: Termine über den Kalender, alles andere im versteckten Drive-Ordner der App ([Konzept](SYNC.md))
 
 ## ADHS-freundlich & Motivation ⭐
 
@@ -138,7 +138,7 @@ Hintergründe und Quellen sammeln wir in einer eigenen Recherche-Notiz (`docs/AD
 - SQLite statt JSON für große Datenmengen
 - ~~Export/Import (JSON, ICS, Markdown im Tasks-Format) und automatische Backups~~ ✅ 2.6 · ICS-Datei-Import siehe Phase 3 (optional)
 - ~~Wiederkehrende ToDos: Ende der Serie (am Datum / nach N) in der Oberfläche einstellbar~~ ✅ 2.8
-- **Cloud-Anbindung:** verschlüsselte Sicherung und Sync der ToDos über Geräte (auch Grundlage für Mobile) ⭐
+- **Cloud-Anbindung:** Sync der ToDos über Geräte per Google Drive, ohne eigenen Server ([Konzept](SYNC.md)) ⭐
 
 ## Mitmachen
 

@@ -14,6 +14,10 @@ import { DiscordSync } from './discord/sync'
 import { autoUpdater } from 'electron-updater'
 import { Updater } from './updater'
 import { AppTimeTracker } from './apptime'
+import { SyncTracker } from './sync/tracker'
+import { DeviceSync } from './sync/engine'
+import { registerDeviceSyncIpc } from './sync/ipc'
+import { hostname } from 'os'
 import { registerLauncherIpc } from './launcher'
 import { registerObsidianIpc } from './obsidian'
 import { PREP_WIDGET_ID, prepConfig } from '@shared/apptime'
@@ -40,6 +44,8 @@ let googleSync: GoogleSync | null = null
 let discordSync: DiscordSync | null = null
 let updater: Updater | null = null
 let appTime: AppTimeTracker | null = null
+let syncTracker: SyncTracker | null = null
+let deviceSync: DeviceSync | null = null
 let quitting = false
 
 // separate data folder, e.g. for testing without touching the real data
@@ -56,6 +62,12 @@ function init(): void {
   app.setAppUserModelId(APP_ID)
   store = new DataStore()
   applyLoginItem(store.get())
+  // change stamps for device sync; a failure here must never keep the app from starting
+  try {
+    syncTracker = new SyncTracker(app.getPath('userData'), store.get())
+  } catch (err) {
+    console.error('Device sync tracking disabled:', err)
+  }
 
   ipcMain.handle('data:load', (): LoadResult => ({ data: store.get(), seq: store.seq }))
   ipcMain.handle('data:save', (_e, next: AppData, baseSeq?: number) => {
@@ -120,7 +132,10 @@ function init(): void {
       decrypt: (data) => safeStorage.decryptString(data)
     },
     openBrowser: (url) => void shell.openExternal(url),
-    onStatus: () => sendGoogleStatus()
+    onStatus: () => {
+      sendGoogleStatus()
+      if (deviceSync) win?.webContents.send('devicesync:status', deviceSync.status())
+    }
   })
   googleSync = new GoogleSync({
     store,
@@ -133,6 +148,27 @@ function init(): void {
   const sendGoogleStatus = (): void => win?.webContents.send('google:status', googleStatus())
   registerGoogleIpc(store, google, googleSync, googleStatus)
   googleSync.start()
+
+  // device sync over the hidden Drive folder (docs/SYNC.md); needs the change stamps
+  if (syncTracker) {
+    deviceSync = new DeviceSync({
+      store,
+      tracker: syncTracker,
+      account: google,
+      dir: app.getPath('userData'),
+      box: {
+        available: () => safeStorage.isEncryptionAvailable(),
+        encrypt: (plain) => safeStorage.encryptString(plain),
+        decrypt: (data) => safeStorage.decryptString(data)
+      },
+      defaultName: hostname() || 'Desktop',
+      onStatus: (s) => win?.webContents.send('devicesync:status', s)
+    })
+    registerDeviceSyncIpc(deviceSync)
+    deviceSync.start()
+  } else {
+    ipcMain.handle('devicesync:status', () => null)
+  }
 
   const discord = new DiscordAccount({
     dir: app.getPath('userData'),
@@ -158,6 +194,14 @@ function init(): void {
   discordSync.start()
 
   store.subscribe({
+    onSave(prev, next) {
+      try {
+        syncTracker?.observe(prev, next)
+        deviceSync?.localChanged()
+      } catch (err) {
+        console.error('Device sync tracking failed:', err)
+      }
+    },
     onLocalChange(diff, data) {
       googleSync?.recordLocal(diff, data)
       discordSync?.recordLocal(diff)
@@ -227,6 +271,7 @@ function createWindow(): void {
   win.on('focus', () => {
     googleSync?.poke()
     discordSync?.poke()
+    deviceSync?.poke()
   })
 
   win.once('ready-to-show', () => {
@@ -299,6 +344,7 @@ app.on('before-quit', () => {
   updater?.stop()
   appTime?.stop()
   store?.flush()
+  syncTracker?.flush()
 })
 
 app.on('window-all-closed', () => {
