@@ -70,6 +70,13 @@ export const SHARED_SETTINGS = [
   'holidayRegion'
 ] as const satisfies readonly (keyof Settings)[]
 
+/**
+ * Fields of Google events that only the app knows. Google syncs the event itself; these ride
+ * along through device sync as `gextra/<google calendar id>/<google event id>`.
+ * `noteLinks` arrives with the Obsidian link feature and is simply absent before.
+ */
+export const EVENT_EXTRAS = ['templateId', 'goal', 'noteLinks'] as const
+
 const COLLECTION_SET = new Set<string>(SYNC_COLLECTIONS)
 const SHARED_SETTING_SET = new Set<string>(SHARED_SETTINGS)
 
@@ -86,6 +93,20 @@ function localCalendarIds(data: AppData): Set<string> {
   return new Set(data.calendars.filter((c) => !c.external).map((c) => c.id))
 }
 
+type EventLike = { external?: { provider: string; id: string; calendarId?: string } } & Record<string, unknown>
+
+/** key of a Google event that is the same on every device */
+function googleKey(ev: EventLike): string | null {
+  const x = ev.external
+  return x?.provider === 'google' && x.calendarId ? `${x.calendarId}/${x.id}` : null
+}
+
+function extrasOf(ev: EventLike): Record<string, unknown> | null {
+  let out: Record<string, unknown> | null = null
+  for (const k of EVENT_EXTRAS) if (ev[k] !== undefined) (out ??= {})[k] = ev[k]
+  return out
+}
+
 /** The synced part of the data as flat records. */
 export function toRecords(data: AppData): Map<string, unknown> {
   const out = new Map<string, unknown>()
@@ -96,6 +117,11 @@ export function toRecords(data: AppData): Map<string, unknown> {
       if ((coll === 'events' || coll === 'eventTrash') && !local.has(item.calendarId ?? '')) continue
       out.set(`${coll}/${item.id}`, item)
     }
+  }
+  for (const ev of data.events as unknown as EventLike[]) {
+    const key = googleKey(ev)
+    const extras = key && extrasOf(ev)
+    if (key && extras) out.set(`gextra/${key}`, extras)
   }
   for (const [id, entry] of Object.entries(data.points.entries)) out.set(`points/${id}`, entry)
   out.set('meta/pointsSince', data.points.since)
@@ -133,6 +159,8 @@ export function applyRecords(data: AppData, set: Record<string, unknown> = {}, r
   let points = data.points
   let character = data.character
   let settings = data.settings
+  /** Google event key → its extras, or null to clear them */
+  const extras = new Map<string, Record<string, unknown> | null>()
   for (const [key, value] of Object.entries(set)) {
     const [kind, id] = splitKey(key)
     if (COLLECTION_SET.has(kind)) {
@@ -143,6 +171,7 @@ export function applyRecords(data: AppData, set: Record<string, unknown> = {}, r
     else if (kind === 'character') character = { ...character, [id]: value }
     else if (kind === 'rewards') character = { ...character, rewards: { ...character.rewards, [id]: value as never } }
     else if (kind === 'settings' && SHARED_SETTING_SET.has(id)) settings = { ...settings, [id]: value }
+    else if (kind === 'gextra') extras.set(id, (value as Record<string, unknown>) ?? null)
   }
   for (const key of remove) {
     const [kind, id] = splitKey(key)
@@ -155,7 +184,7 @@ export function applyRecords(data: AppData, set: Record<string, unknown> = {}, r
     } else if (kind === 'rewards' && id in character.rewards) {
       const { [id]: _gone, ...rest } = character.rewards
       character = { ...character, rewards: rest }
-    }
+    } else if (kind === 'gextra') extras.set(id, null)
     // character fields and settings always exist, so they are never removed
   }
   const out: AppData = { ...data, points, character, settings }
@@ -169,7 +198,27 @@ export function applyRecords(data: AppData, set: Record<string, unknown> = {}, r
       rm ?? new Set()
     )
   }
+  if (extras.size) out.events = withExtras(out.events as unknown as EventLike[], extras) as unknown as AppData['events']
   return out
+}
+
+/** puts synced extras onto the matching Google events; events not pulled from Google yet are skipped */
+function withExtras(events: EventLike[], extras: Map<string, Record<string, unknown> | null>): EventLike[] {
+  let changed = false
+  const next = events.map((ev) => {
+    const key = googleKey(ev)
+    if (!key || !extras.has(key)) return ev
+    const want = extras.get(key)
+    const copy: EventLike = { ...ev }
+    for (const k of EVENT_EXTRAS) {
+      if (want?.[k] !== undefined) copy[k] = want[k]
+      else delete copy[k]
+    }
+    if (same(copy, ev)) return ev
+    changed = true
+    return copy
+  })
+  return changed ? next : events
 }
 
 // ---------------------------------------------------------------- stamps
@@ -292,9 +341,12 @@ export function mergeDocs(state: SyncState, data: AppData, docs: DeviceDoc[]): M
   const keys = new Set<string>(Object.keys(state.stamps))
   for (const doc of remote) for (const key of Object.keys(doc.records)) keys.add(key)
   const result: MergeResult = { set: {}, remove: [] }
+  const googleEvents = new Set((data.events as unknown as EventLike[]).map(googleKey).filter((k): k is string => !!k))
   for (const key of keys) {
     const mine = state.stamps[key]
-    let best: SyncRecord | null = mine ? { ...mine, v: mine.del ? undefined : local.get(key) } : null
+    // a live stamp without a local value (extras of a Google event not pulled yet) counts as unknown
+    const known = mine && (mine.del || local.has(key))
+    let best: SyncRecord | null = known ? { ...mine, v: mine.del ? undefined : local.get(key) } : null
     const values: unknown[] = mine && !mine.del && local.has(key) ? [local.get(key)] : []
     for (const doc of remote) {
       const rec = doc.records[key]
@@ -311,6 +363,8 @@ export function mergeDocs(state: SyncState, data: AppData, docs: DeviceDoc[]): M
     }
     const value = combine(key, best.v, values)
     state.stamps[key] = { t: best.t, d: best.d }
+    // extras wait until Google sync has brought the event itself
+    if (key.startsWith('gextra/') && !googleEvents.has(key.slice('gextra/'.length))) continue
     if (!local.has(key) || !same(local.get(key), value)) result.set[key] = value
   }
   return result

@@ -1,6 +1,6 @@
 # Geräte-Sync über das Google-Konto – Konzept
 
-**Status:** Schritte 1 und 2 gebaut (27. November 2026): Sync-Modell und Drive-Sync am Desktop. Schritte 3 und 4 sind Konzept.
+**Status:** Schritte 1–3 gebaut (27. November 2026): Sync-Modell, Drive-Sync am Desktop, Zusatzangaben an Google-Terminen. Schritt 4 (Android) ist Konzept.
 
 ## Ziel
 
@@ -25,8 +25,8 @@ Desktop-App und Handy-App zeigen dieselben Termine, ToDos, Projekte, Punkte und 
 | Daten | Wo | Bemerkung |
 |---|---|---|
 | Termine in Google-Kalendern | Google Calendar | wie heute |
-| Kleine Verweise am Termin (`todoId`, `goalId`, `templateId`) | `extendedProperties.private` am Google-Termin | `emberTodoId` gibt es schon (`src/main/google/write.ts`) |
-| Größere Zusatzangaben am Google-Termin (Obsidian-Links, Tätigkeiten) | Drive, unter der Google-Termin-ID | Google erlaubt pro Feld nur 1024 Zeichen |
+| ToDo-Verweis am Termin (`todoId`) | `extendedProperties.private` am Google-Termin | gab es schon (`src/main/google/write.ts`) |
+| App-eigene Angaben an Google-Terminen (Wochenziel, Vorlage, Obsidian-Links) | Drive, als `gextra/<Kalender>/<Termin-ID>` | wartet, bis Google den Termin auf dem anderen Gerät geliefert hat |
 | Termine in lokalen Kalendern | Drive | |
 | ToDos, Papierkorb, Projekte/Listen, Kategorien | Drive | |
 | Termin- und ToDo-Vorlagen, Boards, Wochenziele | Drive | |
@@ -138,7 +138,8 @@ Abschnitt „Geräte-Sync“ in den Optionen:
 2. ~~**Drive-Sync am Desktop:** Berechtigung, Gerätedateien, Abgleich-Zeitpunkte, Optionen, optionale Verschlüsselung
    (AES-GCM, Schlüssel aus der Passphrase per PBKDF2). Testbar mit zwei Desktop-Installationen
    (`EMBER_USER_DATA` zeigt auf zwei Datenordner).~~ ✅
-3. **Termin-Zusatzangaben:** Verweise in `extendedProperties`, größere Angaben im Drive unter der Google-Termin-ID.
+3. ~~**Termin-Zusatzangaben:** App-eigene Felder von Google-Terminen (`templateId`, `goal`, `noteLinks`) als eigene Sync-Einträge,
+   über die Google-Kalender- und Termin-ID zugeordnet. Kein zusätzliches Schreiben bei Google, keine Größengrenze.~~ ✅
 4. **Android-App:** Capacitor mit derselben Oberfläche, Speicher-Schicht statt `fs`, Anmeldung auf Android ([ROADMAP.md](ROADMAP.md), Phase 6).
 5. **Weitergabe an die Öffentlichkeit:** Datenschutzerklärung, Google-Prüfung. Erst, wenn die App veröffentlicht werden soll.
 
