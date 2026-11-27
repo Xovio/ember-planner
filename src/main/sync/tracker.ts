@@ -37,6 +37,11 @@ export class SyncTracker {
     if (trackLocal(this.state, prev, next, now)) this.scheduleWrite()
   }
 
+  /** stamps were changed from outside (merging other devices' docs) */
+  touch(): void {
+    this.scheduleWrite()
+  }
+
   private scheduleWrite(): void {
     if (this.timer) clearTimeout(this.timer)
     this.timer = setTimeout(() => this.flush(), 1000)

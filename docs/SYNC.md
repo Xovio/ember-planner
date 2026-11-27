@@ -1,6 +1,6 @@
 # Geräte-Sync über das Google-Konto – Konzept
 
-**Status:** Schritt 1 (Sync-Modell) gebaut, 27. November 2026. Schritte 2–4 sind Konzept.
+**Status:** Schritte 1 und 2 gebaut (27. November 2026): Sync-Modell und Drive-Sync am Desktop. Schritte 3 und 4 sind Konzept.
 
 ## Ziel
 
@@ -41,17 +41,18 @@ Desktop-App und Handy-App zeigen dieselben Termine, ToDos, Projekte, Punkte und 
 
 ```
 appDataFolder/
-  ember-sync.json            Formatversion, Erstellzeit
-  devices/
-    <deviceId>.json          Stand dieses Geräts: alle Einträge mit Zeitstempel
+  ember-sync.json            Formatversion, Erstellzeit, ggf. Verschlüsselung (Salt + Prüfwert)
+  device-<deviceId>.json     Stand eines Geräts: alle Einträge mit Stempel (verschlüsselt, falls eingeschaltet)
 ```
 
-- Jedes Gerät bekommt beim ersten Einschalten eine zufällige `deviceId` und einen Namen („Desktop“, „Pixel 8“).
+- Jedes Gerät hat eine zufällige `deviceId` und einen Namen (anfangs der Rechnername, in den Optionen änderbar).
 - Ein Gerät schreibt **nur** seine eigene Datei. So können zwei Geräte nie gleichzeitig dieselbe Datei überschreiben,
   und Drive muss keine Sperren können.
 - Beim Abgleich liest das Gerät alle Gerätedateien, führt sie mit dem lokalen Stand zusammen und lädt danach die eigene Datei neu hoch.
 - Datenmenge: einige hundert KB pro Gerät. Das passt locker in den Gratis-Speicher.
-- Geräte, die seit über 90 Tagen nichts geschrieben haben, zeigt die App als „inaktiv“ an. Ihre Datei kann man in den Optionen entfernen.
+- Eine unveränderte Gerätedatei wird trotzdem alle 12 Stunden neu hochgeladen, damit die Geräteliste zeigt, wann ein Gerät zuletzt aktiv war.
+  Ein Gerät lässt sich in den Optionen entfernen; gleicht es sich später wieder ab, taucht es erneut auf.
+- Umgesetzt in `src/main/sync/engine.ts` (Ablauf), `drive.ts` (Drive-Zugriff, Verschlüsselung) und `ipc.ts`.
 
 ## Zusammenführen
 
@@ -118,14 +119,25 @@ Abschnitt „Geräte-Sync“ in den Optionen:
 - Status: „Zuletzt abgeglichen vor 2 Minuten“ oder die Fehlermeldung auf Deutsch
 - Liste der Geräte mit letztem Abgleich, Gerät entfernen
 - Knopf „Jetzt abgleichen“
+- Name dieses Geräts
+- Verschlüsselung ein- und ausschalten, Passphrase ändern, auf einem neuen Gerät entsperren
 - „Sync-Daten in Google löschen“ (fragt nach, entfernt den App-Ordner)
+
+## Verschlüsselung
+
+- AES-256-GCM, Schlüssel aus der Passphrase per PBKDF2-SHA256 (210 000 Runden) mit zufälligem Salt.
+- `ember-sync.json` enthält Salt und einen verschlüsselten Prüfwert. Damit erkennt jedes Gerät eine falsche Passphrase,
+  ohne Daten entschlüsseln zu müssen.
+- Der Schlüssel liegt auf jedem Gerät mit Windows-Verschlüsselung (`safeStorage`) in `device-sync-key.bin`, die Passphrase selbst nirgends.
+- Ein- und Ausschalten oder Ändern verschlüsselt alle Gerätedateien neu. Die anderen Geräte fragen danach einmal nach der Passphrase.
+- Passphrase vergessen: „Sync-Daten in Google löschen“, dann lädt jedes Gerät seinen Stand neu hoch.
 
 ## Schritte
 
 1. ~~**Sync-Modell:** Einträge, Stempel, Löschmarkierungen, gemeinsame und Geräte-Einstellungen, Zusammenführen mit Tests, Stempel im Main-Prozess. Noch ohne Netzwerk.~~ ✅
-2. **Drive-Sync am Desktop:** Berechtigung, Gerätedateien, Abgleich-Zeitpunkte, Optionen, optionale Verschlüsselung
+2. ~~**Drive-Sync am Desktop:** Berechtigung, Gerätedateien, Abgleich-Zeitpunkte, Optionen, optionale Verschlüsselung
    (AES-GCM, Schlüssel aus der Passphrase per PBKDF2). Testbar mit zwei Desktop-Installationen
-   (`EMBER_USER_DATA` zeigt auf zwei Datenordner).
+   (`EMBER_USER_DATA` zeigt auf zwei Datenordner).~~ ✅
 3. **Termin-Zusatzangaben:** Verweise in `extendedProperties`, größere Angaben im Drive unter der Google-Termin-ID.
 4. **Android-App:** Capacitor mit derselben Oberfläche, Speicher-Schicht statt `fs`, Anmeldung auf Android ([ROADMAP.md](ROADMAP.md), Phase 6).
 5. **Weitergabe an die Öffentlichkeit:** Datenschutzerklärung, Google-Prüfung. Erst, wenn die App veröffentlicht werden soll.

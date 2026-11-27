@@ -7,6 +7,7 @@ import type { BackupInfo } from '../main/backup'
 import type { UpdateApi, UpdateInfo } from '@shared/update'
 import type { AppTimeApi, AppTimeState } from '@shared/apptime'
 import type { LauncherApi } from '@shared/launcher'
+import type { DeviceSyncApi, DeviceSyncStatus } from '@shared/devicesync'
 
 interface FileFilter {
   name: string
@@ -55,6 +56,19 @@ const appTime: AppTimeApi = {
   onUpdate: (cb: (s: AppTimeState) => void) => listen('apptime:update', cb)
 }
 
+const deviceSync: DeviceSyncApi = {
+  status: () => ipcRenderer.invoke('devicesync:status'),
+  setEnabled: (on: boolean) => ipcRenderer.invoke('devicesync:setEnabled', on),
+  grant: () => ipcRenderer.invoke('devicesync:grant'),
+  syncNow: () => ipcRenderer.invoke('devicesync:syncNow'),
+  setName: (name: string) => ipcRenderer.invoke('devicesync:setName', name),
+  removeDevice: (id: string) => ipcRenderer.invoke('devicesync:removeDevice', id),
+  setPassphrase: (p: string | null) => ipcRenderer.invoke('devicesync:setPassphrase', p),
+  unlock: (p: string) => ipcRenderer.invoke('devicesync:unlock', p),
+  wipe: () => ipcRenderer.invoke('devicesync:wipe'),
+  onStatus: (cb: (s: DeviceSyncStatus) => void) => listen('devicesync:status', cb)
+}
+
 const launcher: LauncherApi = {
   open: (targets: string[]) => ipcRenderer.invoke('launcher:open', targets),
   icon: (target: string) => ipcRenderer.invoke('launcher:icon', target),
@@ -93,6 +107,7 @@ const api = {
   onNewEvent: (cb: () => void) => listen('event:new', cb),
   google,
   discord,
+  deviceSync,
   updates,
   appTime,
   launcher

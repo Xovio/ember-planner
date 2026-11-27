@@ -20,6 +20,7 @@ Deine Daten gehen dabei nur zwischen deinem PC und Google hin und her, es gibt k
 
 1. Öffne **APIs & Dienste → Bibliothek**.
 2. Suche nach **Google Calendar API**, öffne sie und klicke auf **Aktivieren**.
+3. Für den [Geräte-Sync](#7-geräte-sync-optional) zusätzlich: **Google Drive API** suchen und ebenfalls **Aktivieren**.
 
 ## 3. Zustimmungsbildschirm (Google Auth Platform)
 
@@ -31,6 +32,7 @@ Deine Daten gehen dabei nur zwischen deinem PC und Google hin und her, es gibt k
 5. Unter **Datenzugriff → Bereiche hinzufügen** trägst du diese beiden Bereiche ein (optional, die App fragt sie ohnehin an):
    - `https://www.googleapis.com/auth/calendar.calendarlist.readonly`: Kalenderliste lesen
    - `https://www.googleapis.com/auth/calendar.events`: Termine lesen und bearbeiten
+   - `https://www.googleapis.com/auth/drive.appdata`: nur für den Geräte-Sync, eigener versteckter App-Ordner in Drive
 6. Unter **Zielgruppe → Testnutzer** fügst du dein eigenes Google-Konto hinzu.
 
 ## 4. Client-ID erstellen
@@ -63,6 +65,29 @@ Das vermeidest du so:
 Eine Überprüfung durch Google ist für den eigenen Gebrauch nicht nötig. Die Warnung „nicht überprüft“ erscheint
 weiterhin bei der Anmeldung, die Anmeldung bleibt aber gültig.
 
+## 7. Geräte-Sync (optional)
+
+Damit gleicht Ember Planner ToDos, Projekte, Punkte, Charakter und eigene Kalender mit deinen anderen Geräten ab.
+Gespeichert wird das in einem **versteckten App-Ordner** in deinem Google Drive. Den sieht man im Drive nicht, und die App
+kommt an deine anderen Dateien nicht heran. Hintergründe: [SYNC.md](SYNC.md).
+
+1. Im Cloud-Projekt die **Google Drive API** aktivieren (Schritt 2.3).
+2. In Ember Planner **Optionen → Geräte-Sync** einschalten.
+3. Auf **Freigeben** klicken. Der Browser öffnet sich noch einmal; erlaube dort zusätzlich den Zugriff auf den App-Ordner.
+4. Auf jedem weiteren Gerät mit **demselben Google-Konto** genauso einschalten.
+5. Optional: **Verschlüsseln …** und eine Passphrase festlegen. Die anderen Geräte fragen dann einmal danach.
+   Vergisst du sie, löschst du unter **Sync-Daten in Google löschen** den Sync-Stand; die Daten auf den Geräten bleiben.
+
+## 8. Freunde mitnutzen lassen
+
+Ember Planner ist nicht veröffentlicht. Damit Freunde nicht jeweils ein eigenes Cloud-Projekt anlegen müssen, können sie
+**deine** Client-ID und deinen Clientschlüssel eintragen. Jede Person meldet sich trotzdem mit ihrem **eigenen**
+Google-Konto an und sieht nur ihre eigenen Kalender und Sync-Daten.
+
+- Das Projekt muss **veröffentlicht** sein (Schritt 6), sonst laufen die Anmeldungen nach 7 Tagen ab bzw. nur Testnutzer kommen rein.
+- Bei der Anmeldung erscheint die Warnung „nicht überprüft“. Über **Erweitert → Weiter zu Ember Planner** geht es weiter.
+- Ohne Überprüfung durch Google sind höchstens **100 Personen** möglich. Für den Freundeskreis reicht das.
+
 ## Verbindung trennen
 
 **Optionen → Google Kalender → Trennen** widerruft den Zugriff und löscht das gespeicherte Token. Die Google-Kalender
@@ -77,3 +102,5 @@ Zusätzlich kannst du den Zugriff jederzeit unter [myaccount.google.com/permissi
 | „Die Anmeldung ist abgelaufen“ | Status „Testen“ und 7 Tage vorbei: neu verbinden und Schritt 6 erledigen |
 | „Es fehlt die Berechtigung für …“ | Bei der Anmeldung wurde ein Häkchen entfernt: neu verbinden und beide Häkchen setzen |
 | „Google Calendar API wurde nicht aktiviert“ | Schritt 2 im richtigen Projekt nachholen; danach ein paar Minuten warten |
+| „Die Google Drive API ist im Cloud-Projekt nicht aktiviert“ | Schritt 2.3 nachholen, ein paar Minuten warten, dann **Jetzt abgleichen** |
+| „Der Zugriff auf den App-Ordner in Google Drive fehlt“ | Unter **Optionen → Geräte-Sync** auf **Freigeben** klicken und das Häkchen für Drive setzen |
