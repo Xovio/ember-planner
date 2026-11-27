@@ -1,14 +1,23 @@
-import { createHash } from 'crypto'
-import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from 'fs'
-import { join } from 'path'
-import type { DeviceInfo, DeviceSyncStatus } from '@shared/devicesync'
-import { MIN_PASSPHRASE } from '@shared/devicesync'
-import type { DataPatch, RemoteChange } from '@shared/patch'
-import { exportDoc, mergeDocs, type DeviceDoc } from '@shared/sync'
-import type { AppData } from '@shared/types'
-import type { SecretBox } from '../google/account'
-import { AppFolder, isSealed, keyFits, newEncryption, open, seal, unlockKey, type DriveFile, type EncryptionInfo } from './drive'
-import type { SyncTracker } from './tracker'
+import type { DeviceInfo, DeviceSyncStatus } from './devicesync'
+import { MIN_PASSPHRASE } from './devicesync'
+import type { DataPatch, RemoteChange } from './patch'
+import { exportDoc, mergeDocs, type DeviceDoc, type SyncState } from './sync'
+import {
+  AppFolder,
+  fromBase64,
+  isSealed,
+  keyFits,
+  newEncryption,
+  open,
+  seal,
+  sha256,
+  toBase64,
+  unlockKey,
+  type DriveFile,
+  type EncryptionInfo,
+  type SyncKey
+} from './syncDrive'
+import type { AppData } from './types'
 
 const META = 'ember-sync.json'
 const DEVICE_PREFIX = 'device-'
@@ -29,8 +38,8 @@ interface MetaFile {
   encryption?: EncryptionInfo
 }
 
-/** local settings of device sync (`device-sync-config.json`) */
-interface Config {
+/** local settings of device sync */
+export interface DeviceSyncConfig {
   enabled: boolean
   name: string
   lastSync?: string
@@ -48,12 +57,30 @@ export interface SyncAccount {
   dropDrive(): void
 }
 
+/**
+ * Where a device keeps its sync settings and key: files on the desktop, app storage on Android.
+ * Synchronous so the engine knows its state right away; implementations may cache.
+ */
+export interface DeviceSyncStorage {
+  loadConfig(): Partial<DeviceSyncConfig> | null
+  saveConfig(cfg: DeviceSyncConfig): void
+  /** the encryption key, base64; null if none or unreadable */
+  loadKey(): string | null
+  /** stores the key safely, or removes it (null); throws if it can't be stored safely */
+  saveKey(key: string | null): void
+}
+
+/** keeps the change stamps (SyncTracker on the desktop) */
+export interface StampKeeper {
+  readonly state: SyncState
+  touch(): void
+}
+
 export interface DeviceSyncDeps {
   store: { get(): AppData; applyRemote(patch: DataPatch): RemoteChange | null }
-  tracker: Pick<SyncTracker, 'state' | 'touch'>
+  tracker: StampKeeper
   account: SyncAccount
-  dir: string
-  box: SecretBox
+  storage: DeviceSyncStorage
   defaultName: string
   onStatus?(s: DeviceSyncStatus): void
   now?: () => number
@@ -68,23 +95,19 @@ const reasonOf = (err: unknown): string | undefined => (err as { reason?: string
  * in Google Drive. Each device writes only its own file and reads the others (docs/SYNC.md).
  */
 export class DeviceSync {
-  private cfg: Config
-  private key: Buffer | null
+  private cfg: DeviceSyncConfig
+  private key: SyncKey | null
   private running: Promise<void> | null = null
   private again = false
-  private timer: NodeJS.Timeout | null = null
-  private pushTimer: NodeJS.Timeout | null = null
+  private timer: ReturnType<typeof setInterval> | null = null
+  private pushTimer: ReturnType<typeof setTimeout> | null = null
   private error: string | undefined
   private needsPassphrase = false
   private encrypted = false
   private readonly folder: AppFolder
-  private readonly cfgFile: string
-  private readonly keyFile: string
 
   constructor(private readonly deps: DeviceSyncDeps) {
     this.folder = new AppFolder(deps.account)
-    this.cfgFile = join(deps.dir, 'device-sync-config.json')
-    this.keyFile = join(deps.dir, 'device-sync-key.bin')
     this.cfg = this.readConfig()
     this.key = this.readKey()
     this.encrypted = !!this.key
@@ -96,39 +119,31 @@ export class DeviceSync {
 
   /* ── persistence ── */
 
-  private readConfig(): Config {
-    const fallback: Config = { enabled: false, name: this.deps.defaultName }
-    if (!existsSync(this.cfgFile)) return fallback
+  private readConfig(): DeviceSyncConfig {
+    const fallback: DeviceSyncConfig = { enabled: false, name: this.deps.defaultName }
     try {
-      return { ...fallback, ...(JSON.parse(readFileSync(this.cfgFile, 'utf8')) as Partial<Config>) }
+      return { ...fallback, ...(this.deps.storage.loadConfig() ?? {}) }
     } catch {
       return fallback
     }
   }
 
   private writeConfig(): void {
-    const tmp = `${this.cfgFile}.tmp`
-    writeFileSync(tmp, JSON.stringify(this.cfg, null, 2), 'utf8')
-    renameSync(tmp, this.cfgFile)
+    this.deps.storage.saveConfig(this.cfg)
   }
 
-  private readKey(): Buffer | null {
-    if (!existsSync(this.keyFile)) return null
+  private readKey(): SyncKey | null {
     try {
-      return Buffer.from(this.deps.box.decrypt(readFileSync(this.keyFile)), 'base64')
+      const k = this.deps.storage.loadKey()
+      return k ? fromBase64(k) : null
     } catch {
       return null // the passphrase is asked again
     }
   }
 
-  private saveKey(key: Buffer | null): void {
+  private saveKey(key: SyncKey | null): void {
+    this.deps.storage.saveKey(key ? toBase64(key) : null)
     this.key = key
-    if (!key) {
-      rmSync(this.keyFile, { force: true })
-      return
-    }
-    if (!this.deps.box.available()) throw new Error('Windows stellt keine Verschlüsselung bereit – der Schlüssel kann nicht sicher gespeichert werden.')
-    writeFileSync(this.keyFile, this.deps.box.encrypt(key.toString('base64')))
   }
 
   /* ── status ── */
@@ -311,7 +326,7 @@ export class DeviceSync {
         this.needsPassphrase = false
         return
       }
-      const key = unlockKey(meta.encryption, passphrase)
+      const key = await unlockKey(meta.encryption, passphrase)
       if (!key) throw new Error('Die Passphrase stimmt nicht.')
       this.saveKey(key)
       this.encrypted = true
@@ -330,21 +345,21 @@ export class DeviceSync {
       const metaFile = files.find((f) => f.name === META)
       const meta = (await this.readMeta(files)) ?? { format: 1, createdAt: new Date(this.now()).toISOString() }
       const oldKey = meta.encryption ? this.key : null
-      if (meta.encryption && (!oldKey || !keyFits(meta.encryption, oldKey)))
+      if (meta.encryption && (!oldKey || !(await keyFits(meta.encryption, oldKey))))
         throw new Error('Bitte zuerst mit der bisherigen Passphrase entsperren.')
-      const next = passphrase === null ? null : newEncryption(passphrase)
+      const next = passphrase === null ? null : await newEncryption(passphrase)
       for (const f of files.filter((x) => x.name.startsWith(DEVICE_PREFIX))) {
         const raw = await this.folder.read<unknown>(f.id)
         let doc: unknown = raw
         if (isSealed(raw)) {
           if (!oldKey) continue
           try {
-            doc = open(oldKey, raw)
+            doc = await open(oldKey, raw)
           } catch {
             continue // left by an older encryption; that device uploads anew
           }
         }
-        await this.folder.update(f.id, next ? seal(next.key, doc) : doc)
+        await this.folder.update(f.id, next ? await seal(next.key, doc) : doc)
       }
       const nextMeta: MetaFile = { format: 1, createdAt: meta.createdAt, ...(next ? { encryption: next.info } : {}) }
       if (metaFile) await this.folder.update(metaFile.id, nextMeta)
@@ -374,7 +389,7 @@ export class DeviceSync {
         await this.folder.create(META, meta)
       }
       if (meta.encryption) {
-        if (!this.key || !keyFits(meta.encryption, this.key)) {
+        if (!this.key || !(await keyFits(meta.encryption, this.key))) {
           this.needsPassphrase = true
           this.encrypted = true
           this.error = undefined
@@ -391,7 +406,7 @@ export class DeviceSync {
         if (!f.name.startsWith(DEVICE_PREFIX) || f.name === own) continue
         try {
           const raw = await this.folder.read<unknown>(f.id)
-          const doc = (isSealed(raw) ? open<DeviceDoc>(this.key!, raw) : raw) as DeviceDoc
+          const doc = (isSealed(raw) ? await open<DeviceDoc>(this.key!, raw) : raw) as DeviceDoc
           if (doc?.format !== 1 || typeof doc.deviceId !== 'string' || !doc.records) continue
           docs.push(doc)
           devices.push({ id: doc.deviceId, name: doc.name, savedAt: doc.savedAt, self: false })
@@ -405,15 +420,11 @@ export class DeviceSync {
       tracker.touch()
 
       const doc = exportDoc(tracker.state, store.get(), this.cfg.name, this.now())
-      const hash = createHash('sha256')
-        .update(JSON.stringify(doc.records))
-        .update(this.cfg.name)
-        .update(this.key ? this.key.toString('base64') : '-')
-        .digest('base64')
+      const hash = await sha256(JSON.stringify(doc.records) + this.cfg.name + (this.key ? toBase64(this.key) : '-'))
       const ownFile = files.find((f) => f.name === own)
       const stale = !this.cfg.uploadedAt || this.now() - this.cfg.uploadedAt > REFRESH_MS
       if (!ownFile || hash !== this.cfg.uploadHash || stale) {
-        const body = this.key ? seal(this.key, doc) : doc
+        const body = this.key ? await seal(this.key, doc) : doc
         if (ownFile) {
           try {
             await this.folder.update(ownFile.id, body)

@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import type { DeviceSyncResult, DeviceSyncStatus } from '@shared/devicesync'
-import type { DeviceSync } from './engine'
+import type { DeviceSync } from '@shared/syncEngine'
 
 /** errors cross IPC as plain messages */
 async function wrap(fn: () => DeviceSyncStatus | Promise<DeviceSyncStatus>): Promise<DeviceSyncResult<DeviceSyncStatus>> {
