@@ -1,6 +1,6 @@
 # Geräte-Sync über das Google-Konto – Konzept
 
-**Status:** Schritte 1–3 gebaut (27. November 2026): Sync-Modell, Drive-Sync am Desktop, Zusatzangaben an Google-Terminen. Schritt 4 (Android) ist Konzept.
+**Status:** Schritte 1–3 gebaut (27. November 2026): Sync-Modell, Drive-Sync am Desktop, Zusatzangaben an Google-Terminen. Für Schritt 4 (Android) ist der Sync-Ablauf schon plattformunabhängig (4a); der Rest ist Konzept.
 
 ## Ziel
 
@@ -52,7 +52,8 @@ appDataFolder/
 - Datenmenge: einige hundert KB pro Gerät. Das passt locker in den Gratis-Speicher.
 - Eine unveränderte Gerätedatei wird trotzdem alle 12 Stunden neu hochgeladen, damit die Geräteliste zeigt, wann ein Gerät zuletzt aktiv war.
   Ein Gerät lässt sich in den Optionen entfernen; gleicht es sich später wieder ab, taucht es erneut auf.
-- Umgesetzt in `src/main/sync/engine.ts` (Ablauf), `drive.ts` (Drive-Zugriff, Verschlüsselung) und `ipc.ts`.
+- Umgesetzt in `src/shared/syncEngine.ts` (Ablauf) und `src/shared/syncDrive.ts` (Drive-Zugriff, Verschlüsselung mit Web Crypto).
+  Beides läuft ohne Node-Funktionen, also auch am Handy. Der Desktop steuert nur den Speicher (`src/main/sync/storage.ts`) und `ipc.ts` bei.
 
 ## Zusammenführen
 
@@ -140,7 +141,12 @@ Abschnitt „Geräte-Sync“ in den Optionen:
    (`EMBER_USER_DATA` zeigt auf zwei Datenordner).~~ ✅
 3. ~~**Termin-Zusatzangaben:** App-eigene Felder von Google-Terminen (`templateId`, `goal`, `noteLinks`) als eigene Sync-Einträge,
    über die Google-Kalender- und Termin-ID zugeordnet. Kein zusätzliches Schreiben bei Google, keine Größengrenze.~~ ✅
-4. **Android-App:** Capacitor mit derselben Oberfläche, Speicher-Schicht statt `fs`, Anmeldung auf Android ([ROADMAP.md](ROADMAP.md), Phase 6).
+4. **Android-App** ([ROADMAP.md](ROADMAP.md), Phase 6):
+   - ~~**4a** Geräte-Sync plattformunabhängig: Ablauf und Verschlüsselung in `shared`, Speicher als Schnittstelle (`DeviceSyncStorage`).
+     Alte verschlüsselte Daten bleiben lesbar (Test gegen die frühere Node-Umsetzung).~~ ✅
+   - **4b** Google-Kalender-Sync (`src/main/google/sync.ts`, Outbox, Mapping) genauso nach `shared` ziehen.
+   - **4c** Capacitor-Hülle mit derselben Oberfläche: Daten im App-Speicher, `PlannerApi` fürs Handy, Anmeldung über
+     Custom Tabs mit Android-OAuth-Client. Braucht Android Studio (SDK) und JDK 17+ auf dem PC.
 5. **Weitergabe an die Öffentlichkeit:** Datenschutzerklärung, Google-Prüfung. Erst, wenn die App veröffentlicht werden soll.
 
 Später möglich:

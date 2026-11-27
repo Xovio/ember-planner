@@ -1,12 +1,9 @@
-import { mkdtempSync, rmSync } from 'fs'
-import { tmpdir } from 'os'
-import { join } from 'path'
-import { afterEach, describe, expect, it } from 'vitest'
-import { applyPatch, type DataPatch } from '@shared/patch'
-import { newSyncState, trackLocal, type SyncState } from '@shared/sync'
-import { createDefaultData, type AppData, type Todo } from '@shared/types'
-import { DeviceSync, type SyncAccount } from './engine'
-import { isSealed } from './drive'
+import { describe, expect, it } from 'vitest'
+import { applyPatch, type DataPatch } from './patch'
+import { newSyncState, trackLocal, type SyncState } from './sync'
+import { createDefaultData, type AppData, type Todo } from './types'
+import { DeviceSync, type DeviceSyncConfig, type DeviceSyncStorage, type SyncAccount } from './syncEngine'
+import { isSealed } from './syncDrive'
 
 /** in-memory stand-in for the Drive endpoints AppFolder uses */
 class FakeDrive {
@@ -52,15 +49,14 @@ class FakeDrive {
   }
 }
 
-const dirs: string[] = []
-afterEach(() => {
-  for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true })
-})
-
-const box = {
-  available: () => true,
-  encrypt: (s: string) => Buffer.from(s, 'utf8'),
-  decrypt: (b: Buffer) => b.toString('utf8')
+/** what a device keeps locally, in memory */
+class MemoryStorage implements DeviceSyncStorage {
+  cfg: DeviceSyncConfig | null = null
+  key: string | null = null
+  loadConfig = (): DeviceSyncConfig | null => this.cfg
+  saveConfig = (c: DeviceSyncConfig): void => void (this.cfg = structuredClone(c))
+  loadKey = (): string | null => this.key
+  saveKey = (k: string | null): void => void (this.key = k)
 }
 
 class Device {
@@ -75,8 +71,6 @@ class Device {
   ) {
     this.state = newSyncState(id)
     trackLocal(this.state, null, this.data, clock.t)
-    const dir = mkdtempSync(join(tmpdir(), 'ember-ds-'))
-    dirs.push(dir)
     this.account = {
       isConnected: true,
       hasDrive: true,
@@ -94,8 +88,7 @@ class Device {
       },
       tracker: { state: this.state, touch: () => undefined },
       account: this.account,
-      dir,
-      box,
+      storage: new MemoryStorage(),
       defaultName: id,
       now: () => clock.t
     })

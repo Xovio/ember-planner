@@ -15,7 +15,8 @@ import { autoUpdater } from 'electron-updater'
 import { Updater } from './updater'
 import { AppTimeTracker } from './apptime'
 import { SyncTracker } from './sync/tracker'
-import { DeviceSync } from './sync/engine'
+import { DeviceSync } from '@shared/syncEngine'
+import { FileSyncStorage } from './sync/storage'
 import { registerDeviceSyncIpc } from './sync/ipc'
 import { hostname } from 'os'
 import { registerLauncherIpc } from './launcher'
@@ -155,12 +156,11 @@ function init(): void {
       store,
       tracker: syncTracker,
       account: google,
-      dir: app.getPath('userData'),
-      box: {
+      storage: new FileSyncStorage(app.getPath('userData'), {
         available: () => safeStorage.isEncryptionAvailable(),
         encrypt: (plain) => safeStorage.encryptString(plain),
         decrypt: (data) => safeStorage.decryptString(data)
-      },
+      }),
       defaultName: hostname() || 'Desktop',
       onStatus: (s) => win?.webContents.send('devicesync:status', s)
     })
