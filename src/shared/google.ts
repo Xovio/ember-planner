@@ -5,6 +5,9 @@ export const GOOGLE_SCOPES = [
   'https://www.googleapis.com/auth/calendar.events'
 ] as const
 
+/** hidden app folder in Google Drive, used for device sync (docs/SYNC.md); asked for only when sync is switched on */
+export const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.appdata'
+
 export const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 export const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 export const GOOGLE_REVOKE_URL = 'https://oauth2.googleapis.com/revoke'

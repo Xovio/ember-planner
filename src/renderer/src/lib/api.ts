@@ -3,6 +3,7 @@ import { normalizeData, type AppData, type LoadResult, type ReminderPayload, typ
 import type { RemoteChange } from '@shared/patch'
 import type { GoogleApi } from '@shared/google'
 import type { DiscordApi } from '@shared/discord'
+import type { DeviceSyncApi } from '@shared/devicesync'
 import type { UpdateApi } from '@shared/update'
 import type { AppTimeApi } from '@shared/apptime'
 import type { LauncherApi } from '@shared/launcher'
@@ -49,6 +50,8 @@ export interface PlannerApi {
   google?: GoogleApi
   /** only in the desktop app */
   discord?: DiscordApi
+  /** device sync over the Google account; desktop only */
+  deviceSync?: DeviceSyncApi
   /** only in the desktop app */
   updates?: UpdateApi
   /** only in the desktop app */

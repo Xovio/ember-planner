@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, rmSync, writeFileSync, renameSync } from 'fs'
 import { join } from 'path'
 import {
+  DRIVE_SCOPE,
   GOOGLE_API,
   GOOGLE_REVOKE_URL,
   type GoogleAccessRole,
@@ -15,6 +16,8 @@ interface Credentials {
   clientSecret?: string
   refreshToken?: string
   account?: string
+  /** scopes Google granted with the refresh token (missing in files from before device sync) */
+  scopes?: string[]
 }
 
 export interface SecretBox {
@@ -107,6 +110,19 @@ export class GoogleAccount {
     return !!this.creds?.refreshToken
   }
 
+  /** access to the app's hidden Drive folder was granted (device sync) */
+  get hasDrive(): boolean {
+    return this.isConnected && !!this.creds?.scopes?.includes(DRIVE_SCOPE)
+  }
+
+  /** Drive access turned out to be missing (e.g. revoked in the Google account) */
+  dropDrive(): void {
+    if (!this.creds?.scopes) return
+    this.creds = { ...this.creds, scopes: this.creds.scopes.filter((s) => s !== DRIVE_SCOPE) }
+    this.write()
+    this.emit()
+  }
+
   private emit(): GoogleStatus {
     const s = this.status()
     this.deps.onStatus?.(s)
@@ -132,7 +148,12 @@ export class GoogleAccount {
     return this.emit()
   }
 
-  async connect(): Promise<GoogleStatus> {
+  /**
+   * Opens the Google sign-in. `drive` also asks for the hidden Drive folder (device sync);
+   * by default a reconnect keeps whatever was granted before.
+   */
+  async connect(opts: { drive?: boolean } = {}): Promise<GoogleStatus> {
+    const drive = opts.drive ?? this.hasDrive
     const c = this.creds
     if (!c) throw new GoogleAuthError('Bitte zuerst Client-ID eintragen.')
     this.connecting?.abort()
@@ -145,6 +166,7 @@ export class GoogleAccount {
         clientId: c.clientId,
         clientSecret: c.clientSecret,
         openBrowser: this.deps.openBrowser,
+        extraScopes: drive ? [DRIVE_SCOPE] : [],
         signal: ctrl.signal
       })
       const missing = missingScopes(tokens.scope)
@@ -154,7 +176,7 @@ export class GoogleAccount {
         )
       if (!tokens.refresh_token)
         throw new GoogleAuthError('Google hat kein dauerhaftes Token geschickt. Bitte noch einmal verbinden.')
-      this.creds = { ...c, refreshToken: tokens.refresh_token }
+      this.creds = { ...c, refreshToken: tokens.refresh_token, scopes: tokens.scope?.split(' ') }
       this.access = {
         token: tokens.access_token,
         expiresAt: Date.now() + tokens.expires_in * 1000
@@ -261,9 +283,14 @@ export class GoogleAccount {
     }
     if (!res.ok) {
       const reason = json.error?.errors?.[0]?.reason
+      const drive = path.includes('/drive/')
       const msg =
         reason === 'accessNotConfigured'
-          ? 'Die Google Calendar API ist im Cloud-Projekt nicht aktiviert (siehe Anleitung, Schritt 2).'
+          ? drive
+            ? 'Die Google Drive API ist im Cloud-Projekt nicht aktiviert (siehe Anleitung, Abschnitt Geräte-Sync).'
+            : 'Die Google Calendar API ist im Cloud-Projekt nicht aktiviert (siehe Anleitung, Schritt 2).'
+          : reason === 'insufficientPermissions' && drive
+            ? 'Der Zugriff auf den App-Ordner in Google Drive fehlt. Bitte unter Geräte-Sync freigeben.'
           : reason === 'insufficientPermissions'
             ? 'Es fehlt eine Berechtigung. Bitte neu verbinden und beide Häkchen setzen.'
             : `Google meldet einen Fehler (${res.status}${json.error?.message ? `: ${json.error.message}` : ''}).`

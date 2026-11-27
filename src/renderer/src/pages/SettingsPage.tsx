@@ -13,6 +13,7 @@ import { UpdateSection } from '../components/settings/UpdateSection'
 import { TemplatesSection } from '../components/settings/TemplatesSection'
 import { StylePromptBuilder } from '../components/settings/StylePromptBuilder'
 import { DiscordSection } from '../components/settings/DiscordSection'
+import { DeviceSyncSection } from '../components/settings/DeviceSyncSection'
 
 export function SettingsPage(): React.JSX.Element {
   const s = useStore((st) => st.data!.settings)
@@ -138,6 +139,8 @@ export function SettingsPage(): React.JSX.Element {
       <TemplatesSection />
 
       <GoogleSection />
+
+      <DeviceSyncSection />
 
       <DiscordSection />
 
