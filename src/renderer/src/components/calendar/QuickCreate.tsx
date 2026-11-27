@@ -60,7 +60,8 @@ export function QuickCreate(): React.JSX.Element | null {
       ? {
           reminders: [...tpl.reminders],
           ...(tpl.location ? { location: tpl.location } : {}),
-          ...(tpl.notes ? { notes: tpl.notes } : {})
+          ...(tpl.notes ? { notes: tpl.notes } : {}),
+          ...(tpl.noteLinks?.length ? { noteLinks: [...tpl.noteLinks] } : {})
         }
       : {}
     if (finishing && !title.trim()) return

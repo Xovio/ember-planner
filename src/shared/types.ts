@@ -1,4 +1,5 @@
 import { defaultRoom } from './room'
+import type { NoteLink, ObsidianVault } from './notes'
 
 /** ISO-8601 timestamp, e.g. "2026-11-23T14:00:00.000Z" */
 export type ISODateTime = string
@@ -116,6 +117,8 @@ export interface CalendarEvent {
   templateId?: string
   /** one building block of a weekly goal, e.g. one of "3× Gym"; checked off on the event */
   goal?: GoalLink
+  /** linked Obsidian notes; local only, never synced to Google or Discord */
+  noteLinks?: NoteLink[]
   /** set while the event lies in `AppData.eventTrash` */
   deletedAt?: ISODateTime
   createdAt: ISODateTime
@@ -293,6 +296,8 @@ export interface EventTemplate {
   discord?: TemplateDiscord
   /** placeholders before this day are skipped ("fällt aus") */
   skipUntil?: LocalDate
+  /** Obsidian notes every new event of this template gets */
+  noteLinks?: NoteLink[]
 }
 
 export interface TemplateRhythm {
@@ -316,6 +321,8 @@ export interface TodoList {
   color: CalendarColor
   /** sub-list of this list (one level): the parent becomes a project that shows all its sub-lists */
   parentId?: string
+  /** linked Obsidian notes; also shown on every ToDo of the list (and its sub-lists) */
+  noteLinks?: NoteLink[]
 }
 
 export interface Category {
@@ -351,6 +358,8 @@ export interface Todo {
   done: boolean
   doneAt?: ISODateTime
   source?: { kind: 'obsidian'; vault: string; file: string; line: number }
+  /** linked Obsidian notes */
+  noteLinks?: NoteLink[]
   /** repeating ToDo: completing it creates the next instance (exdates unused) */
   recurrence?: Recurrence | null
   /** can be ticked off again and again (after a cooldown); such a ToDo is never `done` */
@@ -478,6 +487,8 @@ export interface Settings {
   companion: boolean
   /** companion panel unfolded (false = only the small tab) */
   companionOpen: boolean
+  /** Obsidian vaults the app may read (never write); empty until set up in the options */
+  obsidianVaults: ObsidianVault[]
 }
 
 /** half = one column, wide = two columns, full = the whole row */
@@ -559,7 +570,8 @@ export const DEFAULT_SETTINGS: Settings = {
   overviewLayout: { order: [], hidden: [], sizes: {} },
   widgetConfig: {},
   companion: true,
-  companionOpen: true
+  companionOpen: true,
+  obsidianVaults: []
 }
 
 export const INBOX_ID = 'inbox'

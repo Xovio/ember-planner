@@ -66,6 +66,7 @@ export function UniversalAdd({ initialKind, prefill }: { initialKind: AddKind; p
               reminders: [...tpl.reminders],
               ...(tpl.location ? { location: tpl.location } : {}),
               ...(tpl.notes ? { notes: tpl.notes } : {}),
+              ...(tpl.noteLinks?.length ? { noteLinks: [...tpl.noteLinks] } : {}),
               templateId: tpl.id
             }
           : {})

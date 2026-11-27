@@ -37,6 +37,7 @@ export function templateFromEvent(ev: CalendarEvent, id: string): EventTemplate 
   if (!ev.allDay) t.startTime = `${pad(s.getHours())}:${pad(s.getMinutes())}`
   if (ev.location) t.location = ev.location
   if (ev.notes) t.notes = ev.notes
+  if (ev.noteLinks?.length) t.noteLinks = [...ev.noteLinks]
   return t
 }
 

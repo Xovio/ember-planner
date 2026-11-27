@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { addYears } from 'date-fns'
 import {
+  BookOpen,
   CalendarDays,
   CalendarPlus,
   CheckSquare,
@@ -20,10 +21,12 @@ import { useStore } from '../store'
 import { listPages } from '../plugins/registry'
 import { THEMES, calVar } from '../lib/theme'
 import { fmt } from '../lib/dates'
+import { searchNotes } from '@shared/notes'
+import { openNote, useNotes } from '../lib/notes'
 
 interface Cmd {
   id: string
-  group: 'Termine' | 'ToDos' | 'Befehle'
+  group: 'Termine' | 'ToDos' | 'Notizen' | 'Befehle'
   label: string
   sub?: string
   hint?: string
@@ -41,6 +44,7 @@ export function CommandPalette(): React.JSX.Element {
   const [q, setQ] = useState('')
   const [idx, setIdx] = useState(0)
   const listRef = useRef<HTMLDivElement>(null)
+  const noteEntries = useNotes((s) => s.entries)
 
   const commands = useMemo<Cmd[]>(() => {
     const st = (): ReturnType<typeof useStore.getState> => useStore.getState()
@@ -125,8 +129,19 @@ export function CommandPalette(): React.JSX.Element {
           st().selectTodo(t.id)
         }
       }))
-    return [...commands.filter((c) => match(c.label)), ...events, ...todos]
-  }, [q, commands, data.events, data.todos, data.calendars, close])
+    const notes: Cmd[] = searchNotes(noteEntries, q, { limit: 6 }).map((n) => ({
+      id: `note-${n.vault}/${n.path}`,
+      group: 'Notizen' as const,
+      label: n.title,
+      sub: [n.type, n.vault, n.folder].filter(Boolean).join(' · '),
+      icon: BookOpen,
+      run: () => {
+        close()
+        void openNote(n)
+      }
+    }))
+    return [...commands.filter((c) => match(c.label)), ...events, ...todos, ...notes]
+  }, [q, commands, data.events, data.todos, data.calendars, close, noteEntries])
 
   const run = (c?: Cmd): void => c?.run()
   const safeIdx = Math.min(idx, Math.max(0, results.length - 1))
@@ -140,7 +155,7 @@ export function CommandPalette(): React.JSX.Element {
           <input
             autoFocus
             value={q}
-            placeholder="Termine, ToDos oder Befehle suchen …"
+            placeholder={noteEntries.length ? 'Termine, ToDos, Notizen oder Befehle suchen …' : 'Termine, ToDos oder Befehle suchen …'}
             onChange={(e) => {
               setQ(e.target.value)
               setIdx(0)

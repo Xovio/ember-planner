@@ -19,6 +19,7 @@ import { DeviceSync } from './sync/engine'
 import { registerDeviceSyncIpc } from './sync/ipc'
 import { hostname } from 'os'
 import { registerLauncherIpc } from './launcher'
+import { registerObsidianIpc } from './obsidian'
 import { PREP_WIDGET_ID, prepConfig } from '@shared/apptime'
 import type { GoogleStatus } from '@shared/google'
 import type { DiscordStatus } from '@shared/discord'
@@ -239,6 +240,8 @@ function init(): void {
   appTime.start()
 
   registerLauncherIpc(() => win)
+  const closeObsidian = registerObsidianIpc(() => win)
+  app.on('will-quit', closeObsidian)
 
   createWindow()
   createTray()

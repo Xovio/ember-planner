@@ -13,6 +13,7 @@ import { CategoriesSection, ListsSection, SmartViews } from '../components/todos
 import { RightPanel } from '../components/RightPanel'
 import { TodoGoalsSection } from '../components/goals/Goals'
 import { TodoTemplatesSection } from '../components/todos/TodoTemplates'
+import { NoteLinksField } from '../components/notes/NoteLinks'
 
 /** Organising view: all lists, grouped by deadline status, fully keyboard-operable. */
 export function TodosPage(): React.JSX.Element {
@@ -36,6 +37,7 @@ export function TodosPage(): React.JSX.Element {
   const parent = list?.parentId ? data.lists.find((l) => l.id === list.parentId) : undefined
   const progress = useMemo(() => (scope && subs.length ? listProgress(data.todos, scope) : null), [data.todos, scope, subs.length])
   const setView = useStore((s) => s.setTodoView)
+  const upsertList = useStore((s) => s.upsertList)
   const openCount = visible.filter((t) => !t.done).length
   const quiet = view === 'done' || view === 'archive' || view === 'trash'
 
@@ -89,6 +91,9 @@ export function TodosPage(): React.JSX.Element {
                 </>
               )}
             </p>
+            {list && (
+              <NoteLinksField bare links={list.noteLinks} onChange={(noteLinks) => upsertList({ ...list, noteLinks })} />
+            )}
             {progress && (
               <div className="project-head">
                 <span className="project-bar" aria-label={`${progress.done} von ${progress.total} erledigt`}>

@@ -24,7 +24,7 @@ Wohin sich Ember Planner entwickeln soll. Was schon da ist: [Funktionen & Umfang
 | 2.8 | Kleine Lücken: Serientermine einzeln bearbeiten, Serienende für ToDos, mehrtägige Balken, Papierkorb für Termine, Termin-Vorlagen | ✅ fertig |
 | 3 | Google-Kalender-Sync (2-Wege, OAuth) | ✅ fertig |
 | 3.5 | Discord: Server-Events im Kalender, Termine ankündigen, mitziehen und absagen ([Konzept](DISCORD.md)) | ✅ fertig (inkl. Platzhalter für die nächste Session) |
-| 4 | Obsidian-Anbindung & Claude-Integration | geplant – Konzept vorher gemeinsam festlegen |
+| 4 | Obsidian-Anbindung & Claude-Integration | Notizen verknüpfen ✅ (Stufe 1); Vorschau, `[[`-Vorschläge, Claude folgen ([OBSIDIAN.md](OBSIDIAN.md)) |
 | 5 | Verteilung: Installer ✅ (NSIS, `npm run dist`), Auto-Update ✅ (GitHub Releases), Code-Signatur | fast fertig |
 | 6 | Mobile-Version | geplant |
 

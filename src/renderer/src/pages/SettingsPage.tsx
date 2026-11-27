@@ -13,6 +13,7 @@ import { UpdateSection } from '../components/settings/UpdateSection'
 import { TemplatesSection } from '../components/settings/TemplatesSection'
 import { StylePromptBuilder } from '../components/settings/StylePromptBuilder'
 import { DiscordSection } from '../components/settings/DiscordSection'
+import { ObsidianSection } from '../components/settings/ObsidianSection'
 import { DeviceSyncSection } from '../components/settings/DeviceSyncSection'
 
 export function SettingsPage(): React.JSX.Element {
@@ -143,6 +144,8 @@ export function SettingsPage(): React.JSX.Element {
       <DeviceSyncSection />
 
       <DiscordSection />
+
+      <ObsidianSection />
 
       <section className="settings-section">
         <h2>Erinnerungen</h2>
