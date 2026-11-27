@@ -1,12 +1,8 @@
-import { existsSync, readFileSync, renameSync, writeFileSync } from 'fs'
-import { join } from 'path'
-import type { GoogleSyncState } from '@shared/google'
-import type { EventDiff } from '@shared/patch'
-import type { AppData, CalendarEvent, CalendarInfo } from '@shared/types'
-import type { DataStore } from '../store'
-import { GoogleApiError, type GoogleAccount } from './account'
+import type { GoogleSyncState } from '../google'
+import type { DataPatch, EventDiff, RemoteChange } from '../patch'
+import type { AppData, CalendarEvent, CalendarInfo } from '../types'
+import { GoogleApiError, GoogleAuthError } from './errors'
 import { eventFromGoogle, patchFromGoogle, type GEvent } from './mapping'
-import { GoogleAuthError } from './oauth'
 import { Outbox, type OutboxEntry } from './outbox'
 import { ALL_FIELDS, changedFields, googleBody, googleIdFor, instanceId } from './write'
 
@@ -25,15 +21,22 @@ interface EventsPage {
   defaultReminders?: { method: string; minutes: number }[]
 }
 
-interface SyncFile {
+/** what the sync keeps between runs: sync tokens per calendar and unsent changes */
+export interface GoogleSyncFile {
   syncTokens?: Record<string, string>
   outbox?: OutboxEntry[]
 }
 
+/** where the sync state lives: `google-sync.json` on the desktop, app storage on Android */
+export interface GoogleSyncStorage {
+  load(): GoogleSyncFile | null
+  save(file: GoogleSyncFile): void
+}
+
 export interface SyncDeps {
-  store: DataStore
-  account: Pick<GoogleAccount, 'isConnected' | 'request'>
-  dir: string
+  store: { get(): AppData; applyRemote(patch: DataPatch): RemoteChange | null }
+  account: { readonly isConnected: boolean; request<T>(path: string, init?: RequestInit): Promise<T> }
+  storage: GoogleSyncStorage
   onState?(state: GoogleSyncState): void
   /** short German message for the user, e.g. after a conflict */
   onNotice?(text: string): void
@@ -59,16 +62,14 @@ const isTransient = (err: unknown): boolean =>
 export class GoogleSync {
   private tokens: Record<string, string>
   private readonly outbox: Outbox
-  private timer: NodeJS.Timeout | null = null
-  private pushTimer: NodeJS.Timeout | null = null
+  private timer: ReturnType<typeof setInterval> | null = null
+  private pushTimer: ReturnType<typeof setTimeout> | null = null
   private running: Promise<void> | null = null
   private again = false
-  private readonly file: string
   private readonly tz: string
   state: GoogleSyncState = { running: false, pending: 0 }
 
   constructor(private readonly deps: SyncDeps) {
-    this.file = join(deps.dir, 'google-sync.json')
     const saved = this.read()
     this.tokens = saved.syncTokens ?? {}
     this.outbox = new Outbox(saved.outbox ?? [])
@@ -76,20 +77,16 @@ export class GoogleSync {
     this.tz = deps.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone
   }
 
-  private read(): SyncFile {
-    if (!existsSync(this.file)) return {}
+  private read(): GoogleSyncFile {
     try {
-      return JSON.parse(readFileSync(this.file, 'utf8')) as SyncFile
+      return this.deps.storage.load() ?? {}
     } catch {
       return {} // a broken state file costs a full sync (and unsent changes, which stay local)
     }
   }
 
   private write(): void {
-    const tmp = `${this.file}.tmp`
-    const content: SyncFile = { syncTokens: this.tokens, outbox: this.outbox.list() }
-    writeFileSync(tmp, JSON.stringify(content, null, 2), 'utf8')
-    renameSync(tmp, this.file)
+    this.deps.storage.save({ syncTokens: this.tokens, outbox: this.outbox.list() })
   }
 
   private setState(next: Partial<GoogleSyncState>): void {

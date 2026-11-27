@@ -7,7 +7,8 @@ import { Backups } from './backup'
 import { createAppIcon } from './icon'
 import { GoogleAccount } from './google/account'
 import { registerGoogleIpc } from './google/ipc'
-import { GoogleSync } from './google/sync'
+import { GoogleSync } from '@shared/gsync/sync'
+import { FileGoogleSyncStorage } from './google/storage'
 import { DiscordAccount } from './discord/account'
 import { registerDiscordIpc } from './discord/ipc'
 import { DiscordSync } from './discord/sync'
@@ -141,7 +142,7 @@ function init(): void {
   googleSync = new GoogleSync({
     store,
     account: google,
-    dir: app.getPath('userData'),
+    storage: new FileGoogleSyncStorage(app.getPath('userData')),
     onState: () => sendGoogleStatus(),
     onNotice: (text) => win?.webContents.send('google:notice', text)
   })

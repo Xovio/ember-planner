@@ -1,6 +1,6 @@
-import { createHash } from 'crypto'
-import { toLocalDate } from '@shared/ical'
-import type { CalendarEvent, Recurrence } from '@shared/types'
+import { toLocalDate } from '../ical'
+import type { CalendarEvent, Recurrence } from '../types'
+import { sha1Hex } from './sha1'
 
 /** parts of an event we send separately, so a PATCH only touches what changed locally */
 export type GField = 'summary' | 'location' | 'description' | 'time' | 'recurrence' | 'reminders' | 'todo'
@@ -13,7 +13,7 @@ const MAX_REMINDERS = 5
  * Google event id for an event created in the app. Google lets clients choose ids
  * (base32hex, 5–1024 chars); a hash of the local id keeps retries idempotent.
  */
-export const googleIdFor = (localId: string): string => createHash('sha1').update(localId).digest('hex')
+export const googleIdFor = (localId: string): string => sha1Hex(localId)
 
 const same = (a: unknown, b: unknown): boolean => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
 

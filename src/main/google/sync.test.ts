@@ -3,13 +3,14 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CalendarInfo } from '@shared/types'
-import type { GEvent } from './mapping'
+import type { GEvent } from '@shared/gsync/mapping'
 
 let dir = ''
 vi.mock('electron', () => ({ app: { getPath: () => dir } }))
 
 const { DataStore } = await import('../store')
-const { GoogleSync } = await import('./sync')
+const { GoogleSync } = await import('@shared/gsync/sync')
+const { FileGoogleSyncStorage } = await import('./storage')
 const { GoogleApiError } = await import('./account')
 
 const cal: CalendarInfo = {
@@ -48,7 +49,7 @@ function setup(replies: Reply[]) {
       return r
     })
   }
-  const sync = new GoogleSync({ store, account: account as never, dir })
+  const sync = new GoogleSync({ store, account: account as never, storage: new FileGoogleSyncStorage(dir) })
   const titles = (): string[] => store.get().events.map((e) => e.title)
   return { store, sync, urls, titles }
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { diffEvents } from '@shared/patch'
-import { createDefaultData, type AppData, type CalendarEvent } from '@shared/types'
+import { diffEvents } from '../patch'
+import { createDefaultData, type AppData, type CalendarEvent } from '../types'
 import { Outbox } from './outbox'
 
 const G = 'g:me@example.com'

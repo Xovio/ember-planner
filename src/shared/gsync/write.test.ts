@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { parseRecurrence } from '@shared/ical'
-import { expandEvent } from '@shared/recurrence'
-import type { CalendarEvent } from '@shared/types'
+import { parseRecurrence } from '../ical'
+import { expandEvent } from '../recurrence'
+import type { CalendarEvent } from '../types'
 import { eventFromGoogle, type GEvent } from './mapping'
 import { changedFields, googleBody, googleIdFor, recurrenceLines, ALL_FIELDS } from './write'
 

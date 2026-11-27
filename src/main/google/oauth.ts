@@ -1,7 +1,12 @@
 import { createHash, randomBytes } from 'crypto'
 import { createServer, type Server } from 'http'
 import type { AddressInfo } from 'net'
-import { GOOGLE_AUTH_URL, GOOGLE_SCOPES, GOOGLE_TOKEN_URL } from '@shared/google'
+import { GOOGLE_AUTH_URL, GOOGLE_SCOPES } from '@shared/google'
+import { postToken, type TokenResponse } from '@shared/gsync/client'
+import { GoogleAuthError } from '@shared/gsync/errors'
+
+export { GoogleAuthError } from '@shared/gsync/errors'
+export { missingScopes, refreshAccessToken, type TokenResponse } from '@shared/gsync/client'
 
 /** RFC 7636: 43–128 chars from the unreserved set; base64url of 32 random bytes = 43 chars */
 export function createVerifier(): string {
@@ -37,76 +42,6 @@ export function buildAuthUrl(p: {
   return `${GOOGLE_AUTH_URL}?${q.toString()}`
 }
 
-export interface TokenResponse {
-  access_token: string
-  expires_in: number
-  refresh_token?: string
-  scope?: string
-}
-
-export class GoogleAuthError extends Error {
-  constructor(
-    message: string,
-    /** sign-in is no longer valid and must be redone */
-    readonly needsReconnect = false
-  ) {
-    super(message)
-  }
-}
-
-/** missing scopes in German, or null when everything was granted */
-export function missingScopes(granted: string | undefined): string | null {
-  if (!granted) return null
-  const have = new Set(granted.split(' '))
-  const labels: Record<string, string> = {
-    [GOOGLE_SCOPES[0]]: 'Kalenderliste',
-    [GOOGLE_SCOPES[1]]: 'Termine'
-  }
-  const missing = GOOGLE_SCOPES.filter((s) => !have.has(s)).map((s) => labels[s])
-  return missing.length ? missing.join(' und ') : null
-}
-
-async function postToken(body: Record<string, string | undefined>): Promise<TokenResponse> {
-  const form = new URLSearchParams()
-  for (const [k, v] of Object.entries(body)) if (v) form.set(k, v)
-  let res: Response
-  try {
-    res = await fetch(GOOGLE_TOKEN_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: form
-    })
-  } catch {
-    throw new GoogleAuthError('Google ist nicht erreichbar. Bist du online?')
-  }
-  const json = (await res.json().catch(() => ({}))) as Record<string, string>
-  if (!res.ok) {
-    if (json.error === 'invalid_grant')
-      throw new GoogleAuthError(
-        'Die Anmeldung bei Google ist abgelaufen oder wurde widerrufen. Bitte neu verbinden.',
-        true
-      )
-    if (json.error === 'invalid_client')
-      throw new GoogleAuthError('Client-ID oder Clientschlüssel stimmen nicht. Bitte in den Optionen prüfen.', true)
-    throw new GoogleAuthError(
-      `Google hat die Anmeldung abgelehnt (${json.error_description ?? json.error ?? res.status}).`
-    )
-  }
-  return json as unknown as TokenResponse
-}
-
-export function refreshAccessToken(c: {
-  clientId: string
-  clientSecret?: string
-  refreshToken: string
-}): Promise<TokenResponse> {
-  return postToken({
-    client_id: c.clientId,
-    client_secret: c.clientSecret,
-    refresh_token: c.refreshToken,
-    grant_type: 'refresh_token'
-  })
-}
 
 const PAGE = (title: string, text: string): string => `<!doctype html><html lang="de"><head><meta charset="utf-8">
 <title>Ember Planner</title><style>body{font-family:system-ui,sans-serif;background:#15100e;color:#e9dcd6;display:grid;

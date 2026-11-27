@@ -1,5 +1,5 @@
-import type { EventDiff } from '@shared/patch'
-import type { AppData, CalendarEvent } from '@shared/types'
+import type { EventDiff } from '../patch'
+import type { AppData, CalendarEvent } from '../types'
 
 /**
  * One event with local changes Google doesn't know yet.

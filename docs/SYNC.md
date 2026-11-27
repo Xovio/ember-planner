@@ -1,6 +1,6 @@
 # Geräte-Sync über das Google-Konto – Konzept
 
-**Status:** Schritte 1–3 gebaut (27. November 2026): Sync-Modell, Drive-Sync am Desktop, Zusatzangaben an Google-Terminen. Für Schritt 4 (Android) ist der Sync-Ablauf schon plattformunabhängig (4a); der Rest ist Konzept.
+**Status:** Schritte 1–3 gebaut (27. November 2026): Sync-Modell, Drive-Sync am Desktop, Zusatzangaben an Google-Terminen. Für Schritt 4 (Android) laufen Geräte-Sync und Google-Kalender-Sync schon plattformunabhängig (4a, 4b); die App selbst (4c) ist Konzept.
 
 ## Ziel
 
@@ -25,7 +25,7 @@ Desktop-App und Handy-App zeigen dieselben Termine, ToDos, Projekte, Punkte und 
 | Daten | Wo | Bemerkung |
 |---|---|---|
 | Termine in Google-Kalendern | Google Calendar | wie heute |
-| ToDo-Verweis am Termin (`todoId`) | `extendedProperties.private` am Google-Termin | gab es schon (`src/main/google/write.ts`) |
+| ToDo-Verweis am Termin (`todoId`) | `extendedProperties.private` am Google-Termin | gab es schon (`src/shared/gsync/write.ts`) |
 | App-eigene Angaben an Google-Terminen (Wochenziel, Vorlage, Obsidian-Links) | Drive, als `gextra/<Kalender>/<Termin-ID>` | wartet, bis Google den Termin auf dem anderen Gerät geliefert hat |
 | Termine in lokalen Kalendern | Drive | |
 | ToDos, Papierkorb, Projekte/Listen, Kategorien | Drive | |
@@ -144,7 +144,9 @@ Abschnitt „Geräte-Sync“ in den Optionen:
 4. **Android-App** ([ROADMAP.md](ROADMAP.md), Phase 6):
    - ~~**4a** Geräte-Sync plattformunabhängig: Ablauf und Verschlüsselung in `shared`, Speicher als Schnittstelle (`DeviceSyncStorage`).
      Alte verschlüsselte Daten bleiben lesbar (Test gegen die frühere Node-Umsetzung).~~ ✅
-   - **4b** Google-Kalender-Sync (`src/main/google/sync.ts`, Outbox, Mapping) genauso nach `shared` ziehen.
+   - ~~**4b** Google-Kalender-Sync plattformunabhängig: Abgleich, Outbox, Mapping, Schreiben, Token-Erneuerung und
+     API-Aufrufe in `src/shared/gsync/`, Speicher als Schnittstellen (`GoogleSyncStorage`, `CredentialStore`).
+     Der Desktop behält nur die Anmeldung über den Browser und die Dateien. Google-IDs bleiben gleich (SHA-1 ohne Node, Test gegen Node).~~ ✅
    - **4c** Capacitor-Hülle mit derselben Oberfläche: Daten im App-Speicher, `PlannerApi` fürs Handy, Anmeldung über
      Custom Tabs mit Android-OAuth-Client. Braucht Android Studio (SDK) und JDK 17+ auf dem PC.
 5. **Weitergabe an die Öffentlichkeit:** Datenschutzerklärung, Google-Prüfung. Erst, wenn die App veröffentlicht werden soll.
